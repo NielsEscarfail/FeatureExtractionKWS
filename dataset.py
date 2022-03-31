@@ -17,22 +17,18 @@
 # Adapted by: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
 
 
+import glob
 import hashlib
 import math
+import os
 import os.path
 import random
-import os
 import re
-import glob
-import time
-import torch
-import torchaudio
 
-from collections import Counter, OrderedDict
-
-import soundfile as sf
 import numpy as np
+import soundfile as sf
 import tensorflow as tf
+import torch
 
 MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 BACKGROUND_NOISE_LABEL = '_background_noise_'

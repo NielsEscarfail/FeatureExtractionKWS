@@ -63,14 +63,14 @@ remove_txt()
 
 # start = time.clock_gettime(0)
 start = time.time()
-#trainining_environment.train(model)
+trainining_environment.train(model)
 print('Finished Training on GPU in {:.2f} seconds'.format(time.time() - start))
 
 # Ignoring training, load pretrained model
-if torch.cuda.is_available():
-    model.load_state_dict(torch.load('./model.pth', map_location=torch.device('cuda')))
-else:
-    model.load_state_dict(torch.load('./model.pth'))
+# if torch.cuda.is_available():
+#    model.load_state_dict(torch.load('./model.pth', map_location=torch.device('cuda')))
+# else:
+#    model.load_state_dict(torch.load('./model.pth'))
 
 # Accuracy on the training set.
 # # print ("Training acc")
