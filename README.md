@@ -1,4 +1,9 @@
-# FeatureExtraction
+# Semester project: Feature Extraction for Speech Recognition
+### 
+
+## Abstract
+
+## 
 SP: Feature Extraction for Speech Recognition
 
 The main tasks of this project are:

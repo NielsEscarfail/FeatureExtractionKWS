@@ -15,6 +15,7 @@
 # ==============================================================================
 #
 # Author: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
+# Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
 
 import os
@@ -25,6 +26,7 @@ import numpy as np
 import seaborn as sn
 import pandas as pd
 import matplotlib.pyplot as plt
+import yaml
 
 
 def npy_to_txt(layer_number, activations):
@@ -35,7 +37,7 @@ def npy_to_txt(layer_number, activations):
         f = open('input.txt', "a")
         f.write('# input (shape [1, 49, 10]),\\\n')
         for elem in tmp:
-            if (elem < 0):
+            if elem < 0:
                 f.write(str(256 + elem) + ",\\\n")
             else:
                 f.write(str(elem) + ",\\\n")
@@ -81,16 +83,25 @@ def conf_matrix(labels, predicted, training_parameters):
 
 def parameter_generation():
     # Data processing parameters
+    with open("config.yaml", "r") as stream:
+        try:
+            params = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
 
-    data_processing_parameters = {
-        'feature_bin_count': 10
-    }
-    time_shift_ms = 200
-    sample_rate = 16000
-    clip_duration_ms = 1000
+    config_data_proc_params = params['data_processing_parameters']
+    config_training_parameters = params['training_parameters']
+
+    # Importing existing parameters
+    time_shift_ms = config_data_proc_params['time_shift_ms']
+    sample_rate = config_data_proc_params['sample_rate']
+    clip_duration_ms = config_data_proc_params['clip_duration_ms']
+
+    window_size_ms = config_data_proc_params['window_size_ms']
+    window_stride_ms = config_data_proc_params['window_stride_ms']
+
+    # Data processing computations
     time_shift_samples = int((time_shift_ms * sample_rate) / 1000)
-    window_size_ms = 40.0
-    window_stride_ms = 20.0
     desired_samples = int(sample_rate * clip_duration_ms / 1000)
     window_size_samples = int(sample_rate * window_size_ms / 1000)
     window_stride_samples = int(sample_rate * window_stride_ms / 1000)
@@ -99,30 +110,31 @@ def parameter_generation():
         spectrogram_length = 0
     else:
         spectrogram_length = 1 + int(length_minus_window / window_stride_samples)
-    data_processing_parameters['desired_samples'] = desired_samples
-    data_processing_parameters['sample_rate'] = sample_rate
-    data_processing_parameters['spectrogram_length'] = spectrogram_length
-    data_processing_parameters['window_stride_samples'] = window_stride_samples
-    data_processing_parameters['window_size_samples'] = window_size_samples
 
-    # Training parameters
+    # Regroup information to give to model
+    data_processing_parameters = {'feature_bin_count': config_data_proc_params['feature_bin_count'],
+                                  'desired_samples': desired_samples, 'sample_rate': sample_rate,
+                                  'spectrogram_length': spectrogram_length,
+                                  'window_stride_samples': window_stride_samples,
+                                  'window_size_samples': window_size_samples}
+
     training_parameters = {
-        'data_dir': 'dataset/speech_commands_v0.02',
-        'data_url': 'https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz',
-        'epochs': 40,
-        'batch_size': 128,
-        'silence_percentage': 10.0,
-        'unknown_percentage': 10.0,
-        'validation_percentage': 10.0,
-        'testing_percentage': 10.0,
-        'background_frequency': 0.8,
-        'background_volume': 0.2,
+        'data_dir': config_training_parameters['data_dir'],
+        'data_url': config_training_parameters['data_url'],
+        'epochs': config_training_parameters['epochs'],
+        'batch_size': config_training_parameters['batch_size'],
+        'silence_percentage': config_training_parameters['silence_percentage'],
+        'unknown_percentage': config_training_parameters['unknown_percentage'],
+        'validation_percentage': config_training_parameters['validation_percentage'],
+        'testing_percentage': config_training_parameters['testing_percentage'],
+        'background_frequency': config_training_parameters['background_frequency'],
+        'background_volume': config_training_parameters['background_volume'],
     }
-    target_words = 'yes,no,up,down,left,right,on,off,stop,go,'  # GSCv2 - 12 words
-    # Selecting 35 words
-    # target_words='yes,no,up,down,left,right,on,off,stop,go,backward,bed,bird,cat,dog,eight,five,follow,forward,four,happy,house,learn,marvin,nine,one,seven,sheila,six,three,tree,two,visual,wow,zero,'  # GSCv2 - 35 words
-    wanted_words = (target_words).split(',')
+
+    target_words = config_training_parameters['target_words']
+    wanted_words = target_words.split(',')
     wanted_words.pop()
+
     training_parameters['wanted_words'] = wanted_words
     training_parameters['time_shift_samples'] = time_shift_samples
 

@@ -15,6 +15,7 @@
 # ==============================================================================
 #
 # Author: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
+# Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
 
 import torch
@@ -81,7 +82,8 @@ class DSCNN(torch.nn.Module):
         # self.relu2 = torch.nn.ReLU()
 
     def forward(self, x, save=False):
-        if (save):
+        save = False
+        if save:
 
             x = self.pad1(x)
             x = self.conv1(x)

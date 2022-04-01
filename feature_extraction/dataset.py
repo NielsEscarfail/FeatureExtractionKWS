@@ -15,6 +15,7 @@
 # ==============================================================================
 #
 # Adapted by: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
+# Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
 
 import glob
@@ -29,6 +30,7 @@ import numpy as np
 import soundfile as sf
 import tensorflow as tf
 import torch
+import torchaudio
 
 MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 BACKGROUND_NOISE_LABEL = '_background_noise_'
@@ -295,12 +297,13 @@ class AudioProcessor(object):
             background_add = torch.add(background_mul, sliced_foreground)
 
             # Compute MFCCs - PyTorch
-            # melkwargs={ 'n_fft':1024, 'win_length':self.data_processing_parameters['window_size_samples'], 'hop_length':self.data_processing_parameters['window_stride_samples'],
-            #        'f_min':20, 'f_max':4000, 'n_mels':40}
-            # mfcc_transformation = torchaudio.transforms.MFCC(n_mfcc=self.data_processing_parameters['feature_bin_count'], sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs, log_mels=True, norm='ortho')
-            # data = mfcc_transformation(background_add)
-            # data_placeholder[i] = data[:,:self.data_processing_parameters['spectrogram_length']].numpy().transpose()
+            melkwargs={ 'n_fft':1024, 'win_length':self.data_processing_parameters['window_size_samples'], 'hop_length':self.data_processing_parameters['window_stride_samples'],
+                    'f_min':20, 'f_max':4000, 'n_mels':40}
+            mfcc_transformation = torchaudio.transforms.MFCC(n_mfcc=self.data_processing_parameters['feature_bin_count'], sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs, log_mels=True, norm='ortho')
+            data = mfcc_transformation(background_add)
+            data_placeholder[i] = data[:,:self.data_processing_parameters['spectrogram_length']].numpy().transpose()
 
+            """
             # Compute MFCCs - TensorFlow (matching C-based implementation)
             tf_data = tf.convert_to_tensor(background_add.numpy(), dtype=tf.float32)
             tf_stfts = tf.signal.stft(tf_data, frame_length=self.data_processing_parameters['window_size_samples'],
@@ -323,7 +326,7 @@ class AudioProcessor(object):
                        :self.data_processing_parameters['feature_bin_count']]
             mfcc = torch.Tensor(tf_mfccs.numpy())
             data_placeholder[i] = mfcc
-
+            """
             # Shift data in [0, 255] interval to match Dory request for uint8 inputs
             data_placeholder[i] = np.clip(data_placeholder[i] + 128, 0, 255)
 

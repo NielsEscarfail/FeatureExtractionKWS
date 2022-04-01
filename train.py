@@ -15,17 +15,18 @@
 # ==============================================================================
 #
 # Author: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
+# Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
 
-import dataset
+from feature_extraction import dataset
 import torch
 
-from utils import confusion_matrix, npy_to_txt
+from utils import conf_matrix, npy_to_txt
 
 import torch.nn.functional as F
 
 
-class Train():
+class Train:
 
     def __init__(self, audio_processor, training_parameters, model, device):
         self.audio_processor = audio_processor
@@ -57,12 +58,12 @@ class Train():
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
 
-            if (integer):
+            if integer:
                 model = model.cpu()
                 inputs = inputs * 255. / 255
                 inputs = inputs.type(torch.uint8).type(torch.float).cpu()
 
-            if (save):
+            if save:
                 model = model.cpu()
                 inputs = inputs.type(torch.uint8).type(torch.float).cpu()
                 outputs = F.softmax(model(inputs, save), dim=1)
@@ -76,11 +77,11 @@ class Train():
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            if statistics == True:
+            if statistics:
                 conf_matrix(labels, predicted, self.training_parameters)
 
         print('Accuracy of the network on the %s set: %.2f %%' % (mode, 100 * correct / total))
-        return (100 * correct / total)
+        return 100 * correct / total
 
     def train(self, model):
         # Train model
@@ -122,13 +123,13 @@ class Train():
                 # Print information every 20 minibatches
                 if minibatch % 20 == 0:
                     print('[%3d / %3d] loss: %.3f  accuracy: %.3f' % (
-                    minibatch + 1, len(data), running_loss / 10, 100 * correct / total))
+                        minibatch + 1, len(data), running_loss / 10, 100 * correct / total))
                     running_loss = 0.0
 
             tmp_acc = self.validate(model, 'validation', 128)
 
             # Save best performing network
-            if (tmp_acc > best_acc):
+            if tmp_acc > best_acc:
                 best_acc = tmp_acc
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
