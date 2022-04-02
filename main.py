@@ -18,7 +18,7 @@
 # Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
 import torch
-from feature_extraction import dataset
+from feature_extraction import dataset, mfcc
 import time
 from torchsummary import summary
 from models.model import DSCNN
@@ -44,7 +44,8 @@ print(device)
 training_parameters, data_processing_parameters = parameter_generation()  # To be parametrized
 
 # Dataset generation
-audio_processor = dataset.AudioProcessor(training_parameters, data_processing_parameters)
+audio_processor = mfcc.MFCCProcessor(training_parameters, data_processing_parameters)
+#audio_processor = dataset.AudioProcessor(training_parameters, data_processing_parameters)
 
 train_size = audio_processor.get_size('training')
 valid_size = audio_processor.get_size('validation')
