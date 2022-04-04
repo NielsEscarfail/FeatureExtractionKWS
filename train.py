@@ -134,5 +134,5 @@ class Train:
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
 
-        PATH = './model.pth'
+        PATH = 'dscnn.pth'
         torch.save(model.state_dict(), PATH)
