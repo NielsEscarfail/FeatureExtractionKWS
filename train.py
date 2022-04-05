@@ -16,25 +16,21 @@
 #
 # Author: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
 # Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
-
-
-from feature_extraction import dataset
+import os
 import torch
-
+import torch.nn.functional as F
+from feature_extraction import dataset
 from utils import conf_matrix, npy_to_txt
 
-import torch.nn.functional as F
 
-
-class Train:
-
+class Trainer:
     def __init__(self, audio_processor, training_parameters, model, device):
         self.audio_processor = audio_processor
         self.training_parameters = training_parameters
         self.model = model
         self.device = device
 
-        # Training hyperparameters
+        # Training hyperparameters TODO: set loss, optimizer etc. in params
         self.criterion = torch.nn.CrossEntropyLoss()
         intitial_lr = 0.001
         self.optimizer = torch.optim.Adam(model.parameters(), lr=intitial_lr)
@@ -83,7 +79,7 @@ class Train:
         print('Accuracy of the network on the %s set: %.2f %%' % (mode, 100 * correct / total))
         return 100 * correct / total
 
-    def train(self, model):
+    def train(self, model, save_path):
         # Train model
 
         best_acc = 0
@@ -134,5 +130,5 @@ class Train:
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
 
-        PATH = 'dscnn.pth'
+        PATH = os.path.join(save_path + '/model.pth')
         torch.save(model.state_dict(), PATH)

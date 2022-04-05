@@ -20,6 +20,7 @@
 
 import os
 
+import torch
 from sklearn.metrics import confusion_matrix
 
 import numpy as np
@@ -27,6 +28,21 @@ import seaborn as sn
 import pandas as pd
 import matplotlib.pyplot as plt
 import yaml
+
+# Device setup
+from feature_extraction.mel_freq_cep_coef import MFCCProcessor
+
+
+
+def setup_device():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+
+    print("Torch version: ", torch.version.__version__)
+    print("Device: ", device)
+    return device
 
 
 def npy_to_txt(layer_number, activations):
@@ -139,3 +155,24 @@ def parameter_generation():
     training_parameters['time_shift_samples'] = time_shift_samples
 
     return training_parameters, data_processing_parameters
+
+
+# TODO: parameter validation (model / feature extr compatible)
+def create_model(model_name):
+    if model_name == 'dscnn':
+        from models.dscnn import DSCNN
+        return DSCNN(use_bias=True)
+    elif model_name == 'wav2vec':
+        from models.wav2vec import Wav2Keyword
+    elif model_name == 'bcresnet':
+        from models.bcresnet import BCResNet
+
+    else:
+        raise NotImplementedError
+
+
+def create_audioprocessor(ft_extr, training_parameters, data_processing_parameters):
+    if ft_extr == 'mfcc':
+        return MFCCProcessor(training_parameters, data_processing_parameters)
+    else:
+        raise NotImplementedError

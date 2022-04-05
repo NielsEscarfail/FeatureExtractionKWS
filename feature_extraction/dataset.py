@@ -184,7 +184,6 @@ class AudioProcessor(object):
 
     def get_size(self, mode):
         # Compute data set size
-
         return len(self.data_set[mode])
 
     def get_data(self, mode, training_parameters):
@@ -207,7 +206,7 @@ class AudioGenerator(torch.utils.data.Dataset):
         # Return dataset length
 
         if self.training_parameters['batch_size'] == -1:
-            return (len(self.audio_processor.data_set[self.mode]))
+            return len(self.audio_processor.data_set[self.mode])
         else:
             return int(len(self.audio_processor.data_set[self.mode]) / self.training_parameters['batch_size'])
 
