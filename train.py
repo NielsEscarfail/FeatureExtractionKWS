@@ -17,6 +17,7 @@
 # Author: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
 # Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 import os
+import shutil
 import torch
 import torch.nn.functional as F
 from feature_extraction import dataset
@@ -130,5 +131,9 @@ class Trainer:
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
 
+        # Save model state dict
         PATH = os.path.join(save_path + '/model.pth')
         torch.save(model.state_dict(), PATH)
+
+        # Save a copy of the config file
+        shutil.copy('config.yaml', save_path)

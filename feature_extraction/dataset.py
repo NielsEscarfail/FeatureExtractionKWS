@@ -190,6 +190,7 @@ class AudioProcessor(object):
         return NotImplementedError
 
 
+
 class AudioGenerator(torch.utils.data.Dataset):
     # Returning batches of data (MFCCs) and labels
 
@@ -204,7 +205,6 @@ class AudioGenerator(torch.utils.data.Dataset):
 
     def __len__(self):
         # Return dataset length
-
         if self.training_parameters['batch_size'] == -1:
             return len(self.audio_processor.data_set[self.mode])
         else:

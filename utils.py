@@ -24,12 +24,15 @@ import torch
 from sklearn.metrics import confusion_matrix
 
 import numpy as np
-import seaborn as sn
+#import seaborn as sn
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 import yaml
 
 # Device setup
+from feature_extraction.lin_pred_coef import LPCProcessor
 from feature_extraction.mel_freq_cep_coef import MFCCProcessor
 
 
@@ -174,5 +177,7 @@ def create_model(model_name):
 def create_audioprocessor(ft_extr, training_parameters, data_processing_parameters):
     if ft_extr == 'mfcc':
         return MFCCProcessor(training_parameters, data_processing_parameters)
+    elif ft_extr == 'lpc':
+        return LPCProcessor(training_parameters, data_processing_parameters)
     else:
         raise NotImplementedError
