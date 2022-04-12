@@ -31,12 +31,16 @@ class Trainer:
         self.model = model
         self.device = device
 
-        # Training hyperparameters TODO: set loss, optimizer etc. in params
-        self.criterion = torch.nn.CrossEntropyLoss()
-        intitial_lr = 0.001
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=intitial_lr)
+        # Training hyperparameters, set in config
+        if training_parameters['criterion'] == 'CrossEnt':
+            self.criterion = torch.nn.CrossEntropyLoss()
+
+        if training_parameters['optimizer'] == 'Adam':
+            self.optimizer = torch.optim.Adam(model.parameters(), lr=training_parameters['initial_lr'])
+
         lambda_lr = lambda epoch: 1 if epoch < 15 else 1 / 5 if epoch < 25 else 1 / 10 if epoch < 35 else 1 / 20
-        self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
+        if training_parameters['scheduler'] == 'LambdaLR':
+            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
 
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
         # Validate model

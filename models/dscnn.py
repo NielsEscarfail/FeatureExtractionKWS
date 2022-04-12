@@ -25,11 +25,11 @@ import torch.nn.functional as F
 from utils import npy_to_txt
 
 
-class DSCNN(torch.nn.Module):
+class DSCNN(torch.nn.Module): # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count)
     def __init__(self, use_bias=False):
         super(DSCNN, self).__init__()
 
-        self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0)
+        self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0) # mini batch size, number of channels, height and width
         self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(10, 4), stride=(2, 2), bias=use_bias)
         self.bn1 = torch.nn.BatchNorm2d(64)
         self.relu1 = torch.nn.ReLU()

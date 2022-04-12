@@ -31,10 +31,6 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import yaml
 
-# Device setup
-from feature_extraction.lin_pred_coef import LPCProcessor
-from feature_extraction.mel_freq_cep_coef import MFCCProcessor
-
 
 
 def setup_device():
@@ -101,7 +97,7 @@ def conf_matrix(labels, predicted, training_parameters):
 
 
 def parameter_generation():
-    # Data processing parameters
+    # Import config from config.yaml file
     with open("config.yaml", "r") as stream:
         try:
             params = yaml.safe_load(stream)
@@ -135,7 +131,8 @@ def parameter_generation():
                                   'desired_samples': desired_samples, 'sample_rate': sample_rate,
                                   'spectrogram_length': spectrogram_length,
                                   'window_stride_samples': window_stride_samples,
-                                  'window_size_samples': window_size_samples}
+                                  'window_size_samples': window_size_samples,
+                                  'feature_extraction_method': config_data_proc_params['feature_extraction_method']}
 
     training_parameters = {
         'data_dir': config_training_parameters['data_dir'],
@@ -148,6 +145,10 @@ def parameter_generation():
         'testing_percentage': config_training_parameters['testing_percentage'],
         'background_frequency': config_training_parameters['background_frequency'],
         'background_volume': config_training_parameters['background_volume'],
+        'criterion': config_training_parameters['criterion'],
+        'initial_lr': config_training_parameters['initial_lr'],
+        'optimizer': config_training_parameters['optimizer'],
+        'scheduler': config_training_parameters['scheduler'],
     }
 
     target_words = config_training_parameters['target_words']
@@ -170,14 +171,5 @@ def create_model(model_name):
     elif model_name == 'bcresnet':
         from models.bcresnet import BCResNet
 
-    else:
-        raise NotImplementedError
-
-
-def create_audioprocessor(ft_extr, training_parameters, data_processing_parameters):
-    if ft_extr == 'mfcc':
-        return MFCCProcessor(training_parameters, data_processing_parameters)
-    elif ft_extr == 'lpc':
-        return LPCProcessor(training_parameters, data_processing_parameters)
     else:
         raise NotImplementedError
