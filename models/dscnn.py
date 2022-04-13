@@ -192,3 +192,6 @@ class DSCNN(torch.nn.Module): # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram
         return x  # To be compatible with Dory
         # return F.log_softmax(x, dim=1)
         # return F.softmax(x, dim=1)
+
+    def _get_name(self):
+        return 'dscnn'

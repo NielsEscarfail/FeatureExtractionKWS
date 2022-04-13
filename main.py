@@ -30,7 +30,7 @@ from models import create_model
 from feature_extraction.dataset import AudioProcessor
 
 if __name__ == '__main__':
-    device = setup_device()
+    device = setup_device()  # Set up cuda device
 
     # Gather arguments
     parser = argparse.ArgumentParser("KWS model trainer")
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument("--model_save_dir", default=None,
                         help="Directory name where the trained model will be saved, or is stored",
                         type=str)
-    parser.add_argument("--load_trained", default=False,
+    parser.add_argument("--load_trained", default=False, action='store_true',
                         help="If True, load an already trained model from models/trained_models/model_save_dir")
 
     args = parser.parse_args()
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         print("Created directory: ", model_save_dir)
 
     # Parameter generation
-    training_parameters, data_processing_parameters, model_parameters = parameter_generation()  # TODO: To be parametrized based on model
+    training_parameters, data_processing_parameters, model_parameters = parameter_generation(args.model, args.ft_extr)
 
     print("training_parameters : ", training_parameters)
     print("data_processing_parameters : ", data_processing_parameters)
@@ -74,9 +74,9 @@ if __name__ == '__main__':
 
     # Model analysis
     model.to(device)
-    summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
-    dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
-    count_ops(model, dummy_input)
+    # summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
+    # dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
+    # count_ops(model, dummy_input)
 
     # Training initialization
     training_environment = Trainer(audio_processor, training_parameters, model, device)

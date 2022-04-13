@@ -35,7 +35,11 @@ class Wav2Keyword(nn.Module):
         b, t, c = output.shape
         output = output.reshape(b, c, t)
         output = self.decoder(output).squeeze()
-        if self.training:
-            return self.softmax(output)
-        else:
-            return output
+        return output
+        #if self.training:
+            #return self.softmax(output)
+        #else:
+        #    return output
+
+    def _get_name(self):
+        return 'wav2keyword'

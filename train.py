@@ -31,9 +31,9 @@ class Trainer:
         self.model = model
         self.device = device
 
-        # Training hyperparameters, set in config
+        # Training hyperparameters, set in config.yaml
         if training_parameters['criterion'] == 'CrossEnt':
-            self.criterion = torch.nn.CrossEntropyLoss()
+            self.criterion = torch.nn.CrossEntropyLoss().cuda()
 
         if training_parameters['optimizer'] == 'Adam':
             self.optimizer = torch.optim.Adam(model.parameters(), lr=training_parameters['initial_lr'])
@@ -41,6 +41,12 @@ class Trainer:
         lambda_lr = lambda epoch: 1 if epoch < 15 else 1 / 5 if epoch < 25 else 1 / 10 if epoch < 35 else 1 / 20
         if training_parameters['scheduler'] == 'LambdaLR':
             self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
+
+        if self.model._get_name() == 'wav2keyword':
+            self.optimizer = torch.optim.Adam([
+                {'params': model.w2v_encoder.parameters(), 'lr': 1e-5},
+                {'params': model.decoder.parameters(), 'lr': 5e-4},
+            ], weight_decay=1e-5)
 
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
         # Validate model
@@ -101,9 +107,18 @@ class Trainer:
 
             for minibatch in range(len(data)):
 
-                inputs, labels = data[0]
-                inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+                inputs, labels = data[0]  # Returns a random index anyway
+
+                if self.model._get_name() == 'wav2keyword':
+                    inputs = torch.Tensor(inputs).to(self.device)
+
+                elif self.model._get_name() == 'dscnn':
+                    inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+
                 labels = torch.Tensor(labels).to(self.device).long()
+
+                print("inputs", inputs.shape)
+                print("labels", labels.shape)
 
                 # Zero out the parameter gradients after each mini-batch
                 self.optimizer.zero_grad()
@@ -132,11 +147,11 @@ class Trainer:
             # Save best performing network
             if tmp_acc > best_acc:
                 best_acc = tmp_acc
-                PATH = './model_acc_' + str(best_acc) + '.pth'
+                PATH = '/model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
 
         # Save model state dict
-        PATH = os.path.join(save_path + '/model.pth')
+        PATH = os.path.join(save_path, '/model.pth')
         torch.save(model.state_dict(), PATH)
 
         # Save a copy of the config file

@@ -97,7 +97,7 @@ def conf_matrix(labels, predicted, training_parameters):
     plt.show()
 
 
-def parameter_generation():
+def parameter_generation(model, ft_extr):
     # Import config from config.yaml file
     with open("config.yaml", "r") as stream:
         try:
@@ -105,15 +105,19 @@ def parameter_generation():
         except yaml.YAMLError as exc:
             print(exc)
 
+    # Initialise all parameter types
     config_data_proc_params = params['data_processing_parameters']
     config_training_parameters = params['training_parameters']
     model_parameters = params['model_parameters']
+
+    # Add command-line chosen model and feature extraction method to parameters
+    model_parameters['model_name'] = model
+    config_data_proc_params['feature_extraction_method'] = ft_extr
 
     # Importing existing parameters
     time_shift_ms = config_data_proc_params['time_shift_ms']
     sample_rate = config_data_proc_params['sample_rate']
     clip_duration_ms = config_data_proc_params['clip_duration_ms']
-
     window_size_ms = config_data_proc_params['window_size_ms']
     window_stride_ms = config_data_proc_params['window_stride_ms']
 
@@ -128,7 +132,6 @@ def parameter_generation():
     else:
         spectrogram_length = 1 + int(length_minus_window / window_stride_samples)
 
-    # Regroup information to give to model
     data_processing_parameters = {'feature_bin_count': config_data_proc_params['feature_bin_count'],
                                   'desired_samples': desired_samples, 'sample_rate': sample_rate,
                                   'spectrogram_length': spectrogram_length,
@@ -159,6 +162,8 @@ def parameter_generation():
 
     training_parameters['wanted_words'] = wanted_words
     training_parameters['time_shift_samples'] = time_shift_samples
+
+
 
     return training_parameters, data_processing_parameters, model_parameters
 

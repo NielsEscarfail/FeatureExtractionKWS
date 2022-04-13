@@ -7,8 +7,6 @@ data_processing_parameters:
   clip_duration_ms: 1000
   window_size_ms: 40.0
   window_stride_ms: 20.0
-  # Added
-  feature_extraction_method: 'mfcc' # can be 'raw' / 'mfcc' / ...
 
 training_parameters:
   data_dir: 'dataset/speech_commands_v0.02'
@@ -35,3 +33,4 @@ model_parameters:
 # Selecting 35 words, take below
 # target_words: 'yes,no,up,down,left,right,on,off,stop,go,backward,bed,bird,cat,dog,eight,five,follow,forward,four,
 # happy,house,learn,marvin,nine,one,seven,sheila,six,three,tree,two,visual,wow,zero,'  # GSCv2 - 35 words
+  # Added : feature_extraction_method: 'mfcc' # can be 'raw' / 'augmented / 'mfcc' / ...
