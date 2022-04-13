@@ -26,7 +26,7 @@ training_parameters:
   optimizer: 'Adam'
   scheduler: 'LambdaLR'
 
-model_parameters:
+model_parameters: # TODO: Will be moved to be specific to Wav2Vec
   pt: 'models/wav2vec/wav2vec_small.pt'
 
 

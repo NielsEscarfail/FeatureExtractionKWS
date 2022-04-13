@@ -117,9 +117,6 @@ class Trainer:
 
                 labels = torch.Tensor(labels).to(self.device).long()
 
-                print("inputs", inputs.shape)
-                print("labels", labels.shape)
-
                 # Zero out the parameter gradients after each mini-batch
                 self.optimizer.zero_grad()
 
@@ -147,7 +144,7 @@ class Trainer:
             # Save best performing network
             if tmp_acc > best_acc:
                 best_acc = tmp_acc
-                PATH = '/model_acc_' + str(best_acc) + '.pth'
+                PATH = './model_acc_' + str(best_acc) + '.pth'
                 torch.save(model.state_dict(), PATH)
 
         # Save model state dict
