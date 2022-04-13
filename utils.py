@@ -27,6 +27,7 @@ import numpy as np
 #import seaborn as sn
 import pandas as pd
 import matplotlib
+
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import yaml
@@ -106,6 +107,7 @@ def parameter_generation():
 
     config_data_proc_params = params['data_processing_parameters']
     config_training_parameters = params['training_parameters']
+    model_parameters = params['model_parameters']
 
     # Importing existing parameters
     time_shift_ms = config_data_proc_params['time_shift_ms']
@@ -158,18 +160,5 @@ def parameter_generation():
     training_parameters['wanted_words'] = wanted_words
     training_parameters['time_shift_samples'] = time_shift_samples
 
-    return training_parameters, data_processing_parameters
+    return training_parameters, data_processing_parameters, model_parameters
 
-
-# TODO: parameter validation (model / feature extr compatible)
-def create_model(model_name):
-    if model_name == 'dscnn':
-        from models.dscnn import DSCNN
-        return DSCNN(use_bias=True)
-    elif model_name == 'wav2vec':
-        from models.wav2vec import Wav2Keyword
-    elif model_name == 'bcresnet':
-        from models.bcresnet import BCResNet
-
-    else:
-        raise NotImplementedError

@@ -28,6 +28,9 @@ training_parameters:
   optimizer: 'Adam'
   scheduler: 'LambdaLR'
 
+model_parameters:
+  pt: 'models/wav2vec/wav2vec_small.pt'
+
 
 # Selecting 35 words, take below
 # target_words: 'yes,no,up,down,left,right,on,off,stop,go,backward,bed,bird,cat,dog,eight,five,follow,forward,four,

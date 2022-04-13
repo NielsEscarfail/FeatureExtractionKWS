@@ -25,7 +25,8 @@ import torch
 from pthflops import count_ops
 from torchsummary import summary
 from train import Trainer
-from utils import remove_txt, parameter_generation, setup_device, create_model
+from utils import remove_txt, parameter_generation, setup_device
+from models import create_model
 from feature_extraction.dataset import AudioProcessor
 
 if __name__ == '__main__':
@@ -56,12 +57,14 @@ if __name__ == '__main__':
         print("Created directory: ", model_save_dir)
 
     # Parameter generation
-    training_parameters, data_processing_parameters = parameter_generation()  # TODO: To be parametrized based on model
+    training_parameters, data_processing_parameters, model_parameters = parameter_generation()  # TODO: To be parametrized based on model
 
     print("training_parameters : ", training_parameters)
     print("data_processing_parameters : ", data_processing_parameters)
+    print("model_parameters : ", model_parameters)
+
     # Instantiate model and feature extraction method based on --model and --ft_extr args
-    model = create_model(args.model)
+    model = create_model(args.model, model_parameters)
     audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
 
     # Train/test/validation set split
