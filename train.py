@@ -145,10 +145,11 @@ class Trainer:
             if tmp_acc > best_acc:
                 best_acc = tmp_acc
                 PATH = './model_acc_' + str(best_acc) + '.pth'
+                PATH = os.path.join(save_path, PATH)
                 torch.save(model.state_dict(), PATH)
 
         # Save model state dict
-        PATH = os.path.join(save_path, '/model.pth')
+        PATH = os.path.join(save_path, 'model.pth')
         torch.save(model.state_dict(), PATH)
 
         # Save a copy of the config file

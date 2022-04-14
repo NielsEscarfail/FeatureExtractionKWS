@@ -72,7 +72,7 @@ if __name__ == '__main__':
     valid_size = audio_processor.get_size('validation')
     test_size = audio_processor.get_size('testing')
 
-    # Model analysis
+    # Model analysis # TODO: input variability for other inputs than MFCC input
     model.to(device)
     # summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
     # dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
