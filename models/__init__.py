@@ -15,7 +15,7 @@ def create_model(model_name, model_params):
       Model to perform KWS
     """
     if model_name == 'dscnn':
-        return DSCNN(use_bias=True)
+        return DSCNN(model_params, use_bias=True)
 
     elif model_name == 'wav2vec':
         trained_model = torch.load(model_params['pt'])

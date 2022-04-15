@@ -25,17 +25,37 @@ import torch.nn.functional as F
 from utils import npy_to_txt
 
 
-class DSCNN(torch.nn.Module): # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count)
-    def __init__(self, use_bias=False):
+class DSCNN(torch.nn.Module):  # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count)
+    def __init__(self, model_params, use_bias=False):
         super(DSCNN, self).__init__()
 
-        self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0) # mini batch size, number of channels, height and width
-        self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(10, 4), stride=(2, 2), bias=use_bias)
+        input_shape = model_params['model_input_shape']
+
+        # print("input shape ", input_shape)
+        # self.reshape_lay = nn.Upsample(size=(49, 10))
+
+        if input_shape == 16000: # TODO use computations below to depend on input_shape
+            self.pad1 = nn.ConstantPad2d((4, 4, 0, 0), value=0.0)  # l,r,t,b
+            self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(15952, 1), stride=(2, 2),
+                                         bias=use_bias)
+        else:
+            self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0)  # l,r,t,b
+            self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(10, 4), stride=(2, 2),
+                                         bias=use_bias)
+
+        # torch.Size([128, 1, 49, 10]) to torch.Size([128, 1, 59, 12])
+        # torch.Size([128, 1, 59, 12]) to torch.Size([128, 64, 25, 5])
+        # 25 = 59/2 - (10-2)/2 = 25.5 lower bound 25
+        # 25 = x/2 - (kernel_size_x-2)/2 # kernel_size_x = x-48 # must have height >=48
+
+        # 5 = 12/2 - (4-2)/2
+        # 5 = y/2 - (kernel_size_y-2)/2 # kernel_size_x = y-8 # must have padding l+r>=4
+
         self.bn1 = torch.nn.BatchNorm2d(64)
         self.relu1 = torch.nn.ReLU()
         # have first conv layer as adaptor -> takes input and makes sure it is always 25*5 then observe acc.
         # If results are bad, try to move away from 25*5 inter-shape and go larger
-        self.pad2 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.pad2 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)  # takes in torch.Size([128, 64, 25, 5])
         self.conv2 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
                                      bias=use_bias)
         self.bn2 = torch.nn.BatchNorm2d(64)
@@ -148,7 +168,6 @@ class DSCNN(torch.nn.Module): # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram
             npy_to_txt(10, x.int().cpu().detach().numpy())
 
         else:
-
             x = self.pad1(x)
             x = self.conv1(x)
             x = self.bn1(x)

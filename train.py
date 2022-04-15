@@ -61,7 +61,17 @@ class Trainer:
 
         with torch.no_grad():
             inputs, labels = data[0]
-            inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+
+            if self.model._get_name() == 'wav2keyword':
+                inputs = torch.Tensor(inputs).to(self.device)
+
+            elif self.model._get_name() == 'dscnn':
+                # inputs = torch.Tensor(inputs).to(self.device)
+                if self.audio_processor.feature_extraction_method == 'mfcc':
+                    inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+                elif self.audio_processor.feature_extraction_method == 'augmented':
+                    inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
+
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
 
@@ -113,7 +123,11 @@ class Trainer:
                     inputs = torch.Tensor(inputs).to(self.device)
 
                 elif self.model._get_name() == 'dscnn':
-                    inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+                    #inputs = torch.Tensor(inputs).to(self.device)
+                    if self.audio_processor.feature_extraction_method == 'mfcc':
+                        inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
+                    elif self.audio_processor.feature_extraction_method == 'augmented':
+                        inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
                 labels = torch.Tensor(labels).to(self.device).long()
 
