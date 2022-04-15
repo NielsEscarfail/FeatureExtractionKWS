@@ -24,14 +24,13 @@ import torch
 from sklearn.metrics import confusion_matrix
 
 import numpy as np
-#import seaborn as sn
+# import seaborn as sn
 import pandas as pd
 import matplotlib
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import yaml
-
 
 
 def setup_device():
@@ -121,6 +120,12 @@ def parameter_generation(model, ft_extr):
     window_size_ms = config_data_proc_params['window_size_ms']
     window_stride_ms = config_data_proc_params['window_stride_ms']
 
+    # Define model input shape depending on the feature extraction method used
+    if ft_extr == 'raw' or ft_extr == 'augmented':
+        model_parameters['model_input_shape'] = sample_rate
+    elif ft_extr == 'mfcc':
+        model_parameters['model_input_shape'] = {49, config_data_proc_params['feature_bin_count']}
+
     # Data processing computations
     time_shift_samples = int((time_shift_ms * sample_rate) / 1000)
     desired_samples = int(sample_rate * clip_duration_ms / 1000)
@@ -163,7 +168,4 @@ def parameter_generation(model, ft_extr):
     training_parameters['wanted_words'] = wanted_words
     training_parameters['time_shift_samples'] = time_shift_samples
 
-
-
     return training_parameters, data_processing_parameters, model_parameters
-

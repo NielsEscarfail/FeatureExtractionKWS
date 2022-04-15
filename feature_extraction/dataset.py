@@ -29,6 +29,7 @@ import numpy as np
 import soundfile as sf
 import torch
 import torchaudio
+import librosa
 
 MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 BACKGROUND_NOISE_LABEL = '_background_noise_'
@@ -253,7 +254,6 @@ class AudioProcessor(object):
 
             label_index = self.word_to_index[sample['label']]
             labels_placeholder[i] = label_index
-
         return data_placeholder, labels_placeholder
 
     def get_augmented_data(self, mode, training_parameters):
@@ -456,6 +456,11 @@ class AudioProcessor(object):
         elif self.feature_extraction_method == 'mel_spectrogram':
             data, labels = self.get_augmented_data(mode, training_parameters)
             data = np.apply_along_axis(self.get_mel_spectrogram, 1, data)
+            return data, labels
+
+        elif self.feature_extraction_method == 'lpc':
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(librosa.lpc, 1, data, order=2)
             return data, labels
 
         else:
