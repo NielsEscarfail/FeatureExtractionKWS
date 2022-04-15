@@ -33,7 +33,8 @@ class DSCNN(torch.nn.Module): # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram
         self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(10, 4), stride=(2, 2), bias=use_bias)
         self.bn1 = torch.nn.BatchNorm2d(64)
         self.relu1 = torch.nn.ReLU()
-
+        # have first conv layer as adaptor -> takes input and makes sure it is always 25*5 then observe acc.
+        # If results are bad, try to move away from 25*5 inter-shape and go larger
         self.pad2 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
         self.conv2 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
                                      bias=use_bias)
