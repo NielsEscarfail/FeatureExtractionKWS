@@ -89,7 +89,7 @@ class AudioProcessor(object):
     def generate_data_dictionary(self, training_parameters):
         """ For each data set, generate a dictionary containing the path to each file, its label, and its speaker.
         Args:
-            training_parameters: data and model parameters, described at config.yaml
+            training_parameters: data and model parameters, described at config.yaml.
         """
 
         # Make sure the shuffling and picking of unknowns is deterministic.
@@ -218,7 +218,6 @@ class AudioProcessor(object):
         pick_deterministically = (mode != 'training')
 
         for i in range(0, samples_number):
-
             # Pick which audio sample to use.
             if training_parameters['batch_size'] == -1 or pick_deterministically:
                 # The randomness is eliminated here to train on the same batch ordering
@@ -257,26 +256,6 @@ class AudioProcessor(object):
             labels_placeholder[i] = label_index
 
         return data_placeholder, labels_placeholder
-
-    def get_data(self, mode, training_parameters):
-        """ Retrieve sample data for given self.feature_extraction_method.
-        Args:
-            mode: Which partition to use, must be 'training', 'validation', or 'testing'.
-            training_parameters: data parameters, described at config.yaml
-        Returns:
-            List of sample data for the samples, and list of labels in one-hot form.
-        """
-        if self.feature_extraction_method == 'raw':
-            return self.get_raw_data(mode, training_parameters)
-
-        elif self.feature_extraction_method == 'augmented':
-            return self.get_augmented_data(mode, training_parameters)
-
-        elif self.feature_extraction_method == 'mfcc':  # for now, always uses augmented data
-            return self.get_mfcc_data(mode, training_parameters)
-
-        else:
-            return NotImplementedError("Feature extraction method is not implemented.")
 
     def get_augmented_data(self, mode, training_parameters):
         """ Retrieve sample data and perform data augmentation (shifting, scaling, background noise)
@@ -402,42 +381,54 @@ class AudioProcessor(object):
 
         return data_placeholder, labels_placeholder
 
-    def get_mfcc_data(self, mode, training_parameters):  # TODO add shape in comments
-        """ Retrieve sample data with mfcc feature extraction.
+    def get_mfcc(self, sample):
+        """ Apply MFCC feature extraction to sample.
+        Args:
+            sample: Sample on which to apply the MFCC transformation.
+        Returns:
+            MFCC computation from the sample, using melkwargs parameters.
+        """
+
+        # Create a data placeholder
+        sample = torch.Tensor(sample)
+        # Compute MFCCs - PyTorch
+        melkwargs = {'n_fft': 1024, 'win_length': self.data_processing_parameters['window_size_samples'],
+                     'hop_length': self.data_processing_parameters['window_stride_samples'],
+                     'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+        mfcc_transformation = torchaudio.transforms.MFCC(
+            n_mfcc=self.data_processing_parameters['feature_bin_count'],
+            sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs, log_mels=True,
+            norm='ortho')
+        data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
+
+        # Cut shape to (feature_bin_count, spectrogram_length)
+        data = data[:, :self.data_processing_parameters['spectrogram_length']].numpy().transpose()
+
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        data = np.clip(data + 128, 0, 255)
+        return data
+
+    def get_data(self, mode, training_parameters):
+        """ Retrieve sample data for given self.feature_extraction_method.
         Args:
             mode: Which partition to use, must be 'training', 'validation', or 'testing'.
             training_parameters: data parameters, described at config.yaml
         Returns:
             List of sample data for the samples, and list of labels in one-hot form.
         """
+        if self.feature_extraction_method == 'raw':
+            return self.get_raw_data(mode, training_parameters)
 
-        augmented_data, labels = self.get_augmented_data(mode, training_parameters)
+        elif self.feature_extraction_method == 'augmented':
+            return self.get_augmented_data(mode, training_parameters)
 
-        # Create a data placeholder
-        data_placeholder = np.zeros((len(augmented_data), self.data_processing_parameters['spectrogram_length'],
-                                     self.data_processing_parameters['feature_bin_count']), dtype='float32')
+        elif self.feature_extraction_method == 'mfcc':  # for now, always uses augmented data
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(self.get_mfcc, 1, data)
+            return data, labels
 
-        labels = torch.Tensor(labels)
-
-        for i in range(len(augmented_data)):
-            sample = torch.Tensor(augmented_data[i])
-            # Compute MFCCs - PyTorch
-            melkwargs = {'n_fft': 1024, 'win_length': self.data_processing_parameters['window_size_samples'],
-                         'hop_length': self.data_processing_parameters['window_stride_samples'],
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-            mfcc_transformation = torchaudio.transforms.MFCC(
-                n_mfcc=self.data_processing_parameters['feature_bin_count'],
-                sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs, log_mels=True,
-                norm='ortho')
-            data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
-
-            # Cut shape to (feature_bin_count, spectrogram_length)
-            data_placeholder[i] = data[:, :self.data_processing_parameters['spectrogram_length']].numpy().transpose()
-
-            # Shift data in [0, 255] interval to match Dory request for uint8 inputs
-            data_placeholder[i] = np.clip(data_placeholder[i] + 128, 0, 255)
-
-        return data_placeholder, labels
+        else:
+            return NotImplementedError("Feature extraction method is not implemented.")
 
 
 class AudioGenerator(torch.utils.data.Dataset):
