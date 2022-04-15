@@ -25,7 +25,6 @@ import os
 import os.path
 import random
 import re
-
 import numpy as np
 import soundfile as sf
 import torch
@@ -408,6 +407,33 @@ class AudioProcessor(object):
         data = np.clip(data + 128, 0, 255)
         return data
 
+    def get_mel_spectrogram(self, sample):
+        """ Get the MelSpectrogram from the sample.
+        Args:
+            sample: Sample on which to apply the transformation.
+        Returns:
+            MelSpectrogram from the sample from the sample, using melkwargs parameters.
+        """
+
+        # Create a data placeholder
+        sample = torch.Tensor(sample)
+        # Compute MelSpectrogram - PyTorch
+        melkwargs = {'n_fft': 1024, 'win_length': self.data_processing_parameters['window_size_samples'],
+                     'hop_length': self.data_processing_parameters['window_stride_samples'],
+                     'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+        melspect_transformation = torchaudio.transforms.MelSpectrogram(
+            n_mfcc=self.data_processing_parameters['feature_bin_count'],
+            sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs,
+            norm='ortho')
+        data = melspect_transformation(sample)
+
+        # Cut shape to (feature_bin_count, spectrogram_length)
+        data = data[:, :self.data_processing_parameters['spectrogram_length']].numpy().transpose()
+
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        data = np.clip(data + 128, 0, 255)
+        return data
+
     def get_data(self, mode, training_parameters):
         """ Retrieve sample data for given self.feature_extraction_method.
         Args:
@@ -425,6 +451,11 @@ class AudioProcessor(object):
         elif self.feature_extraction_method == 'mfcc':  # for now, always uses augmented data
             data, labels = self.get_augmented_data(mode, training_parameters)
             data = np.apply_along_axis(self.get_mfcc, 1, data)
+            return data, labels
+
+        elif self.feature_extraction_method == 'mel_spectrogram':
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(self.get_mel_spectrogram, 1, data)
             return data, labels
 
         else:
@@ -452,6 +483,5 @@ class AudioGenerator(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         """Returns a random batch of data, unless training_parameters['batch_size'] == -1."""
-
         data, labels = self.audio_processor.get_data(self.mode, self.training_parameters)
         return data, labels
