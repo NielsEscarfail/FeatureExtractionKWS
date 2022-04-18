@@ -257,9 +257,10 @@ class AudioProcessor(object):
         return data_placeholder, labels_placeholder
 
     def get_augmented_data(self, mode, training_parameters):
-        """ Retrieve sample data and perform data augmentation (shifting, scaling, background noise)
+        """ Retrieve sample data and perform data augmentation (shifting, scaling, background noise).
         Args:
             mode: Which partition to use, must be 'training', 'validation', or 'testing'.
+            In training mode, data augmentation is performed.
             training_parameters: data parameters, described at config.yaml
         Returns:
             List of sample data for the samples, and list of labels in one-hot form.

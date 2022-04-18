@@ -25,31 +25,38 @@ import torch.nn.functional as F
 from utils import npy_to_txt
 
 
-class DSCNN(torch.nn.Module):  # Input shape: (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count)
+class DSCNN(torch.nn.Module):
+    """DSCNN model Input shape:
+    (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count) for MFCC or
+    (1, 1, 16000) for augmented data.
+    """
     def __init__(self, model_params, use_bias=False):
         super(DSCNN, self).__init__()
 
-        input_shape = model_params['model_input_shape']
+        self.input_shape = model_params['model_input_shape']
 
-        # print("input shape ", input_shape)
-        # self.reshape_lay = nn.Upsample(size=(49, 10))
+        if self.input_shape == 16000:  # Shape [128, 1, 16000] for augmented data
+            self.conv0 = torch.nn.Conv1d(in_channels=1, out_channels=4, kernel_size=80, stride=8)  # to [128, 4, 1991]
+            self.bn0 = torch.nn.BatchNorm1d(4)
+            self.relu0 = torch.nn.ReLU()
 
-        if input_shape == 16000: # TODO use computations below to depend on input_shape
-            self.pad1 = nn.ConstantPad2d((4, 4, 0, 0), value=0.0)  # l,r,t,b
-            self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(15952, 1), stride=(2, 2),
-                                         bias=use_bias)
-        else:
-            self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0)  # l,r,t,b
+            self.conv0_0 = torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=40, stride=4)  # to [128, 4, 1991]
+            self.bn0_0 = torch.nn.BatchNorm1d(4)
+            self.relu0_0 = torch.nn.ReLU()
+
+            self.pad0_1 = nn.ConstantPad2d((11, 10, 0, 0), value=0.0)  # to [128, 4, 488, 22]
+            self.conv0_1 = torch.nn.Conv2d(in_channels=4, out_channels=16, kernel_size=(20, 4), stride=(4, 2),
+                                           bias=use_bias)  # to [128, 16, 118, 10]
+            self.bn0_1 = torch.nn.BatchNorm2d(16)
+            self.relu0_1 = torch.nn.ReLU()
+
+            self.pad0_2 = nn.ConstantPad2d((1, 1, 0, 0), value=0.0)  # to [128, 16, 118, 12]
+            self.conv0_2 = torch.nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(20, 3), stride=(4, 2),
+                                           bias=use_bias)  # to [128, 64, 25, 5]
+        else:  # original implementation for MFCC data
+            self.pad1 = nn.ConstantPad2d((1, 1, 5, 5), value=0.0)  # [128, 1, 49, 10] to [128, 1, 59, 12]
             self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(10, 4), stride=(2, 2),
-                                         bias=use_bias)
-
-        # torch.Size([128, 1, 49, 10]) to torch.Size([128, 1, 59, 12])
-        # torch.Size([128, 1, 59, 12]) to torch.Size([128, 64, 25, 5])
-        # 25 = 59/2 - (10-2)/2 = 25.5 lower bound 25
-        # 25 = x/2 - (kernel_size_x-2)/2 # kernel_size_x = x-48 # must have height >=48
-
-        # 5 = 12/2 - (4-2)/2
-        # 5 = y/2 - (kernel_size_y-2)/2 # kernel_size_x = y-8 # must have padding l+r>=4
+                                         bias=use_bias)  # [128, 1, 59, 12] [128, 64, 25, 5]
 
         self.bn1 = torch.nn.BatchNorm2d(64)
         self.relu1 = torch.nn.ReLU()
@@ -93,19 +100,10 @@ class DSCNN(torch.nn.Module):  # Input shape: (1, 1, 49, 10) = (1, 1, spectrogra
 
         self.avg = torch.nn.AvgPool2d(kernel_size=(25, 5), stride=1)
         self.fc1 = torch.nn.Linear(64, 12, bias=use_bias)
-        # self.soft  = torch.nn.Softmax(dim=1)
-        # self.soft = F.log_softmax(x, dim=1)
-
-        # CONV2D replacing Block1 for evaluation purposes
-        # self.pad2  = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
-        # self.conv2 = torch.nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = (3, 3), stride = (1, 1), groups = 1, bias = use_bias)
-        # self.bn2   = torch.nn.BatchNorm2d(64)
-        # self.relu2 = torch.nn.ReLU()
 
     def forward(self, x, save=False):
         save = False
         if save:
-
             x = self.pad1(x)
             x = self.conv1(x)
             x = self.bn1(x)
@@ -168,8 +166,31 @@ class DSCNN(torch.nn.Module):  # Input shape: (1, 1, 49, 10) = (1, 1, spectrogra
             npy_to_txt(10, x.int().cpu().detach().numpy())
 
         else:
-            x = self.pad1(x)
-            x = self.conv1(x)
+            if self.input_shape == 16000:
+                # For augmented data input without MFCC preprocessing.
+                # reshapes the input from [batch_size, 1, 16000] to [batch_size, 64, 25, 5] for compatibility.
+                x = self.conv0(x)
+                x = self.bn0(x)
+                x = self.relu0(x)
+
+                x = self.conv0_0(x)
+                x = self.bn0_0(x)
+                x = self.relu0_0(x)
+
+                x = x[:, :, :, None]
+
+                x = self.pad0_1(x)
+                x = self.conv0_1(x)
+                x = self.bn0_1(x)
+                x = self.relu0_1(x)
+
+                x = self.pad0_2(x)
+                x = self.conv0_2(x)
+
+            else:
+                x = self.pad1(x)
+                x = self.conv1(x)
+
             x = self.bn1(x)
             x = self.relu1(x)
 
@@ -209,9 +230,7 @@ class DSCNN(torch.nn.Module):  # Input shape: (1, 1, 49, 10) = (1, 1, spectrogra
             x = torch.flatten(x, 1)
             x = self.fc1(x)
 
-        return x  # To be compatible with Dory
-        # return F.log_softmax(x, dim=1)
-        # return F.softmax(x, dim=1)
+        return x
 
     def _get_name(self):
         return 'dscnn'

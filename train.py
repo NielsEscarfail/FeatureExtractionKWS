@@ -41,6 +41,9 @@ class Trainer:
         lambda_lr = lambda epoch: 1 if epoch < 15 else 1 / 5 if epoch < 25 else 1 / 10 if epoch < 35 else 1 / 20
         if training_parameters['scheduler'] == 'LambdaLR':
             self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
+        elif training_parameters['scheduler'] == 'ReduceLROnPlateau':
+            self.metric = 0  # used for learning rate policy 'plateau'
+            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min')
 
         if self.model._get_name() == 'wav2keyword':
             self.optimizer = torch.optim.Adam([
@@ -70,7 +73,7 @@ class Trainer:
                 if self.audio_processor.feature_extraction_method == 'mfcc':
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
                 elif self.audio_processor.feature_extraction_method == 'augmented':
-                    inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
+                    inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
@@ -109,7 +112,12 @@ class Trainer:
             print("Epoch: " + str(epoch + 1) + "/" + str(self.training_parameters['epochs']))
             data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
             model.train()
-            self.scheduler.step()
+
+            # TODO : I think this should be moved to the end instead
+            if self.training_parameters['scheduler'] == 'ReduceLROnPlateau': # requires metrics param
+                self.scheduler.step(self.metric)
+            else:
+                self.scheduler.step()
 
             running_loss = 0.0
             total = 0
@@ -127,7 +135,9 @@ class Trainer:
                     if self.audio_processor.feature_extraction_method == 'mfcc':
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
                     elif self.audio_processor.feature_extraction_method == 'augmented':
-                        inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
+                        inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+                        # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+                        # inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
                 labels = torch.Tensor(labels).to(self.device).long()
 

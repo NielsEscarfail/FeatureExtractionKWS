@@ -72,6 +72,8 @@ if __name__ == '__main__':
     valid_size = audio_processor.get_size('validation')
     test_size = audio_processor.get_size('testing')
 
+    # Get input shape # TODO
+
     # Model analysis # TODO: input variability for other inputs than MFCC input
     model.to(device)
     # summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
@@ -100,6 +102,7 @@ if __name__ == '__main__':
     # Quantization and validation phase
     # Initiating quantization process: making the model quantization aware
     quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 49, 10)).to(device))
+    # quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 16000)).to(device))
 
     precision_8 = {
         "conv1": {"W_bits": 7},
