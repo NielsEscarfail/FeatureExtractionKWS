@@ -413,7 +413,7 @@ class AudioProcessor(object):
         Args:
             sample: Sample on which to apply the transformation.
         Returns:
-            MelSpectrogram from the sample from the sample, using melkwargs parameters.
+            MelSpectrogram from the sample, using parameters from data_processing_parameters.
         """
 
         # Create a data placeholder
@@ -432,6 +432,32 @@ class AudioProcessor(object):
         # Shift data in [0, 255] interval to match Dory request for uint8 inputs
         data = np.clip(data + 128, 0, 255)
         return data
+
+    def get_lpcc(self, sample, order):
+        """ Get the LPCC coefficients from an LPC input.
+        Args:
+            sample: LPC on which to apply the transformation.
+        Returns:
+            LPCC derived from the LPC sample.
+        """
+        nin, ncol = sample.shape
+        nout = order + 1
+
+        cep = np.zeros((nout, ncol))
+        cep[0, :] = -np.log(sample[0, :])
+
+        norm_a = np.divide(sample, np.add(np.tile(sample[0, :], (nin, 1)), 1e-8))
+
+        for n in range(1, nout):
+            sum_var = 0
+            for m in range(1, n):
+                sum_var = np.add(
+                    sum_var,
+                    np.multiply(np.multiply((n - m), norm_a[m, :]),
+                                cep[(n - m), :]))
+
+            cep[n, :] = -np.add(norm_a[n, :], np.divide(sum_var, n))
+        return cep
 
     def get_data(self, mode, training_parameters):
         """ Retrieve sample data for given self.feature_extraction_method.
@@ -458,8 +484,18 @@ class AudioProcessor(object):
             return data, labels
 
         elif self.feature_extraction_method == 'lpc':
+            order = 30
             data, labels = self.get_augmented_data(mode, training_parameters)
-            data = np.apply_along_axis(librosa.lpc, 1, data, order=30)
+            data = np.apply_along_axis(librosa.lpc, 1, data, order=order)
+            return data, labels
+
+        elif self.feature_extraction_method == 'lpcc':
+            order = 30
+            # get LPC coefficients
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(librosa.lpc, 1, data, order=order)
+            # Derive LPCC coefficients
+            data = self.get_lpcc(data, order)
             return data, labels
 
         else:

@@ -53,10 +53,10 @@ class Trainer:
                 {'params': model.decoder.parameters(), 'lr': 5e-4},
             ], weight_decay=1e-5)
 
-        self.time_one_sample()
+        # self.time_get_data()
 
-    def time_one_sample(self):
-        """Computes the average time to gather 100 samples with the given feature extraction method."""
+    def time_get_data(self):
+        """Computes the average time to gather a sample with the given feature extraction method."""
         start = time.time()
         data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
         for i in range(100):
@@ -71,6 +71,7 @@ class Trainer:
               .format((time.time() - start) / 100, self.audio_processor.feature_extraction_method))
         print('Dataset shape: inputs: {}, labels: {}'.format(inputs.shape, labels.shape))
 
+
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
         # Validate model
 
@@ -81,6 +82,7 @@ class Trainer:
 
         correct = 0
         total = 0
+        start = time.time()
 
         with torch.no_grad():
             inputs, labels = data[0]
@@ -121,6 +123,7 @@ class Trainer:
                 conf_matrix(labels, predicted, self.training_parameters)
 
         print('Accuracy of the network on the %s set: %.2f %%' % (mode, 100 * correct / total))
+        print('Took %.4f seconds for %.f samples, %.6f seconds per sample.' % ((time.time()-start), total, (time.time()-start)/total))
         return 100 * correct / total
 
     def train(self, model, save_path):
@@ -185,8 +188,8 @@ class Trainer:
                 PATH = os.path.join(save_path, PATH)
                 torch.save(model.state_dict(), PATH)
 
-        # TODO : I think this should be moved to the end instead
-        if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # requires metrics param
+        # Update scheduler
+        if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # ReduceLROnPlateau requires metrics param
             self.scheduler.step(self.metric)
         else:
             self.scheduler.step()
