@@ -78,10 +78,10 @@ if __name__ == '__main__':
 
     # Model analysis # TODO: input variability for other inputs than MFCC input
     model.to(device)
-    summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
-    # summary(model, (1, 16000, 1))
-    dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
-    # dummy_input = torch.rand(1, 1, 16000, 1).to(device)
+    # summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
+    summary(model, (1, 16000, 1))
+    # dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
+    dummy_input = torch.rand(1, 1, 16000, 1).to(device)
     count_ops(model, dummy_input)
 
     # Training initialization
@@ -108,8 +108,8 @@ if __name__ == '__main__':
     acc = training_environment.validate(model=model, mode='testing', batch_size=-1)
 
     # Initiating quantization process: making the model quantization aware
-    quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 49, 10)).to(device))
-    # quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 16000, 1)).to(device))
+    # quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 49, 10)).to(device))
+    quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 16000, 1)).to(device))
 
     precision_8 = {
         "conv1": {"W_bits": 7},

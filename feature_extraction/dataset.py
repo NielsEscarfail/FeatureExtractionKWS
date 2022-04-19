@@ -20,6 +20,7 @@
 
 import glob
 import hashlib
+import itertools
 import math
 import os
 import os.path
@@ -30,6 +31,9 @@ import soundfile as sf
 import torch
 import torchaudio
 import librosa
+import pywt
+
+# from kaldi.feat import PLP
 
 MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 BACKGROUND_NOISE_LABEL = '_background_noise_'
@@ -78,7 +82,6 @@ class AudioProcessor(object):
     """Handles the loading, partitioning, and feature extraction of audio training data."""
 
     def __init__(self, training_parameters, data_processing_parameters):
-
         self.data_directory = training_parameters['data_dir']
         self.data_processing_parameters = data_processing_parameters
         self.feature_extraction_method = data_processing_parameters['feature_extraction_method']
@@ -193,7 +196,7 @@ class AudioProcessor(object):
         """Returns data set size, given which partition to use, must be 'training', 'validation', or 'testing'."""
         return len(self.data_set[mode])
 
-    def get_raw_data(self, mode, training_parameters):  # Not used by any models so far
+    def get_raw_data(self, mode, training_parameters):
         """ Retrieve sample data with no transformation. Will be set as get_data if feature_extraction_method == 'raw'.
         Args:
           mode: Which partition to use, must be 'training', 'validation', or 'testing'.
@@ -214,7 +217,6 @@ class AudioProcessor(object):
         data_placeholder = np.zeros((samples_number, desired_samples))
         labels_placeholder = np.zeros(samples_number)
 
-        use_background = (self.background_noise and (mode == 'training'))
         pick_deterministically = (mode != 'training')
 
         for i in range(0, samples_number):
@@ -459,6 +461,44 @@ class AudioProcessor(object):
             cep[n, :] = -np.add(norm_a[n, :], np.divide(sum_var, n))
         return cep
 
+    def get_lsf(self, sample):  # TODO implement
+        """ Get the Line Spectral Frequencies (also Line Spectrum Pairs) from an LPC input.
+        Args:
+            sample: LPC on which to apply the transformation.
+        Returns:
+            LSF derived from the LPC sample.
+        """
+        # the rhs does not have a constant expression and we reverse the coefficients
+        print(sample.shape)
+
+        rhs = [0] + sample[::-1] + [1]
+        rectify = True
+        # The P polynomial
+        P = []
+        # The Q polynomial
+        Q = []
+        # Assuming constant coefficient is 1, which is required. Moreover z^{-p+1} does not exist on the lhs, thus appending 0
+        sample = [1] + sample[:] + [0]
+        for l, r in itertools.zip_longest(sample, rhs):
+            P.append(l + r)
+            Q.append(l - r)
+        # Find the roots of the polynomials P,Q (numpy assumes we have the form of: p[0] * x**n + p[1] * x**(n-1) + ... + p[n-1]*x + p[n]
+        # mso we need to reverse the order)
+        print(P[0].shape)
+        p_roots = np.roots(P[::-1])
+        q_roots = np.roots(Q[::-1])
+        # Keep the roots in order
+        lsf_p = sorted(np.angle(p_roots))
+        lsf_q = sorted(np.angle(q_roots))
+        # print sorted(lsf_p+lsf_q),len([i for  i in lsf_p+lsf_q if i > 0.])
+        if rectify:
+            # We only return the positive elements, and also remove the final Pi (3.14) value at the end,
+            # since it always occurs
+            return sorted(i for i in lsf_q + lsf_p if (i > 0))[:-1]
+        else:
+            # Remove the -Pi and +pi at the beginning and end in the list
+            return sorted(i for i in lsf_q + lsf_p)[1:-1]
+
     def get_data(self, mode, training_parameters):
         """ Retrieve sample data for given self.feature_extraction_method.
         Args:
@@ -496,6 +536,35 @@ class AudioProcessor(object):
             data = np.apply_along_axis(librosa.lpc, 1, data, order=order)
             # Derive LPCC coefficients
             data = self.get_lpcc(data, order)
+            return data, labels
+
+        elif self.feature_extraction_method == 'lsf':  # TODO
+            order = 30
+            # get LPC coefficients
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(librosa.lpc, 1, data, order=order)
+
+            # Derive LSF coefficients
+            data = self.get_lsf(data)
+            return data, labels
+
+        elif self.feature_extraction_method == 'dwt':
+            # data, labels = self.get_augmented_data(mode, training_parameters)
+            data, labels = self.get_raw_data(mode, training_parameters)
+            (cA, cD) = pywt.dwt(data, 'db1')  # Approximation and detail coefficients
+            """'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus',
+            'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'"""
+            # cf https://ataspinar.com/2018/12/21/a-guide-for-using-the-wavelet-transform-in-machine-learning/
+            # print(pywt.wavelist())
+            data = np.concatenate((cA, cD), axis=-1)  # verify if we want to keep it (batch_size, 16000)
+            # The data contains all information from the original set (signal can be recovered),
+            # it would be interesting to add an extra step from here before running the model.
+            # Might also explore normalizing / treating sides
+            return data, labels
+
+        elif self.feature_extraction_method == 'plp':  # TODO
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = PLP(data)
             return data, labels
 
         else:

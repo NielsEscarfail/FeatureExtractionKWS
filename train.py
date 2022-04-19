@@ -53,7 +53,7 @@ class Trainer:
                 {'params': model.decoder.parameters(), 'lr': 5e-4},
             ], weight_decay=1e-5)
 
-        # self.time_get_data()
+        self.time_get_data()
 
     def time_get_data(self):
         """Computes the average time to gather a sample with the given feature extraction method."""
@@ -93,7 +93,9 @@ class Trainer:
             elif self.model._get_name() == 'dscnn':
                 if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw':
+                elif self.audio_processor.feature_extraction_method == 'augmented' or\
+                        self.audio_processor.feature_extraction_method == 'raw' or\
+                        self.audio_processor.feature_extraction_method == 'dwt':
                     inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
                     # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
@@ -151,7 +153,7 @@ class Trainer:
                     # inputs = torch.Tensor(inputs).to(self.device)
                     if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                    elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw':
+                    elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw' or self.audio_processor.feature_extraction_method == 'dwt':
                         inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
                         # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
