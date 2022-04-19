@@ -419,13 +419,11 @@ class AudioProcessor(object):
         # Create a data placeholder
         sample = torch.Tensor(sample)
         # Compute MelSpectrogram - PyTorch
-        melkwargs = {'n_fft': 1024, 'win_length': self.data_processing_parameters['window_size_samples'],
-                     'hop_length': self.data_processing_parameters['window_stride_samples'],
-                     'f_min': 20, 'f_max': 4000, 'n_mels': 40}
         melspect_transformation = torchaudio.transforms.MelSpectrogram(
-            n_mfcc=self.data_processing_parameters['feature_bin_count'],
-            sample_rate=self.data_processing_parameters['desired_samples'], melkwargs=melkwargs,
-            norm='ortho')
+            sample_rate=self.data_processing_parameters['sample_rate'],
+            n_fft=1024, win_length=self.data_processing_parameters['window_size_samples'],
+            hop_length=self.data_processing_parameters['window_stride_samples'], f_min=20, f_max=4000, n_mels=10
+        )
         data = melspect_transformation(sample)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
@@ -461,7 +459,7 @@ class AudioProcessor(object):
 
         elif self.feature_extraction_method == 'lpc':
             data, labels = self.get_augmented_data(mode, training_parameters)
-            data = np.apply_along_axis(librosa.lpc, 1, data, order=2)
+            data = np.apply_along_axis(librosa.lpc, 1, data, order=30)
             return data, labels
 
         else:

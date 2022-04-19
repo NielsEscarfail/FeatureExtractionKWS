@@ -89,11 +89,11 @@ class Trainer:
                 inputs = torch.Tensor(inputs).to(self.device)
 
             elif self.model._get_name() == 'dscnn':
-                # inputs = torch.Tensor(inputs).to(self.device)
-                if self.audio_processor.feature_extraction_method == 'mfcc':
+                if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                elif self.audio_processor.feature_extraction_method == 'augmented':
-                    inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+                elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw':
+                    inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
+                    # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
@@ -133,12 +133,6 @@ class Trainer:
             data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
             model.train()
 
-            # TODO : I think this should be moved to the end instead
-            if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # requires metrics param
-                self.scheduler.step(self.metric)
-            else:
-                self.scheduler.step()
-
             running_loss = 0.0
             total = 0
             correct = 0
@@ -152,12 +146,11 @@ class Trainer:
 
                 elif self.model._get_name() == 'dscnn':
                     # inputs = torch.Tensor(inputs).to(self.device)
-                    if self.audio_processor.feature_extraction_method == 'mfcc':
+                    if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                    elif self.audio_processor.feature_extraction_method == 'augmented':
-                        inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+                    elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw':
+                        inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
                         # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
-                        # inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
                 labels = torch.Tensor(labels).to(self.device).long()
 
@@ -191,6 +184,12 @@ class Trainer:
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 PATH = os.path.join(save_path, PATH)
                 torch.save(model.state_dict(), PATH)
+
+        # TODO : I think this should be moved to the end instead
+        if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # requires metrics param
+            self.scheduler.step(self.metric)
+        else:
+            self.scheduler.step()
 
         # Save model state dict
         PATH = os.path.join(save_path, 'model.pth')

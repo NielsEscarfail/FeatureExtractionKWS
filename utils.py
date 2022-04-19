@@ -123,8 +123,10 @@ def parameter_generation(model, ft_extr):
     # Define model input shape depending on the feature extraction method used
     if ft_extr == 'raw' or ft_extr == 'augmented':
         model_parameters['model_input_shape'] = sample_rate
-    elif ft_extr == 'mfcc':
+    elif ft_extr == 'mfcc' or 'mel_spectrogram':
         model_parameters['model_input_shape'] = {49, config_data_proc_params['feature_bin_count']}
+    else:
+        model_parameters['model_input_shape'] = sample_rate
 
     # Data processing computations
     time_shift_samples = int((time_shift_ms * sample_rate) / 1000)

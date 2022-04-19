@@ -36,13 +36,15 @@ class DSCNN(torch.nn.Module):
         self.input_shape = model_params['model_input_shape']
 
         if self.input_shape == 16000:  # Shape [128, 1, 16000] for augmented data
-            self.conv0 = torch.nn.Conv1d(in_channels=1, out_channels=4, kernel_size=80, stride=8)  # to [128, 4, 1991]
-            self.bn0 = torch.nn.BatchNorm1d(4)
+            self.conv0 = torch.nn.Conv2d(in_channels=1, out_channels=4, kernel_size=(80, 1), stride=(8, 1))  # to [128, 4, 1991]
+            self.bn0 = torch.nn.BatchNorm2d(4)
             self.relu0 = torch.nn.ReLU()
 
-            self.conv0_0 = torch.nn.Conv1d(in_channels=4, out_channels=4, kernel_size=40, stride=4)  # to [128, 4, 1991]
-            self.bn0_0 = torch.nn.BatchNorm1d(4)
+            self.conv0_0 = torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(40, 1), stride=(4, 1))  # to [128, 4, 1991]
+            self.bn0_0 = torch.nn.BatchNorm2d(4)
             self.relu0_0 = torch.nn.ReLU()
+
+            # self.reshape = torch.nn.Reshape()
 
             self.pad0_1 = nn.ConstantPad2d((11, 10, 0, 0), value=0.0)  # to [128, 4, 488, 22]
             self.conv0_1 = torch.nn.Conv2d(in_channels=4, out_channels=16, kernel_size=(20, 4), stride=(4, 2),
@@ -177,7 +179,7 @@ class DSCNN(torch.nn.Module):
                 x = self.bn0_0(x)
                 x = self.relu0_0(x)
 
-                x = x[:, :, :, None]
+                # x = x[:, :, :, None]
 
                 x = self.pad0_1(x)
                 x = self.conv0_1(x)

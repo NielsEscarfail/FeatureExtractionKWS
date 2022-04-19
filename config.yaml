@@ -24,7 +24,7 @@ training_parameters:
   criterion: 'CrossEnt'
   initial_lr: 0.001
   optimizer: 'Adam'
-  scheduler: 'ReduceLROnPlateau' # 'LambdaLR' or 'ReduceLROnPlateau'
+  scheduler: 'LambdaLR' # 'LambdaLR' or 'ReduceLROnPlateau'
 
 model_parameters: # TODO: Will be moved to be specific to Wav2Vec
   pt: 'models/wav2vec/wav2vec_small.pt'
