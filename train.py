@@ -18,6 +18,8 @@
 # Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 import os
 import shutil
+import time
+
 import torch
 import torch.nn.functional as F
 from feature_extraction import dataset
@@ -50,6 +52,24 @@ class Trainer:
                 {'params': model.w2v_encoder.parameters(), 'lr': 1e-5},
                 {'params': model.decoder.parameters(), 'lr': 5e-4},
             ], weight_decay=1e-5)
+
+        self.time_one_sample()
+
+    def time_one_sample(self):
+        """Computes the average time to gather 100 samples with the given feature extraction method."""
+        start = time.time()
+        data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
+        for i in range(100):
+            inputs, labels = data[0]
+        print('Can read a training batch in {:.4f} seconds with the following feature extraction method: {}'
+              .format((time.time()-start)/100, self.audio_processor.feature_extraction_method))
+        start = time.time()
+        data = dataset.AudioGenerator('validation', self.audio_processor, self.training_parameters)
+        for i in range(100):
+            inputs, labels = data[0]
+        print('Can read a validation/testing batch in {:.4f} seconds with the following feature extraction method: {}'
+              .format((time.time() - start) / 100, self.audio_processor.feature_extraction_method))
+        print('Dataset shape: inputs: {}, labels: {}'.format(inputs.shape, labels.shape))
 
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
         # Validate model
@@ -114,7 +134,7 @@ class Trainer:
             model.train()
 
             # TODO : I think this should be moved to the end instead
-            if self.training_parameters['scheduler'] == 'ReduceLROnPlateau': # requires metrics param
+            if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # requires metrics param
                 self.scheduler.step(self.metric)
             else:
                 self.scheduler.step()
@@ -131,7 +151,7 @@ class Trainer:
                     inputs = torch.Tensor(inputs).to(self.device)
 
                 elif self.model._get_name() == 'dscnn':
-                    #inputs = torch.Tensor(inputs).to(self.device)
+                    # inputs = torch.Tensor(inputs).to(self.device)
                     if self.audio_processor.feature_extraction_method == 'mfcc':
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
                     elif self.audio_processor.feature_extraction_method == 'augmented':
