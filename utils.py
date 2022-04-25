@@ -128,6 +128,23 @@ def parameter_generation(model, ft_extr):
     else:
         model_parameters['model_input_shape'] = sample_rate
 
+    # Add model parameters to pass depending on the model
+    if model == 'kwt':  # might move this to argsparse
+        model_parameters['img_x'] = 40
+        model_parameters['img_y'] = 98
+        model_parameters['patch_x'] = 40
+        model_parameters['patch_y'] = 1
+        model_parameters['num_classes'] = 12
+        model_parameters['dim'] = 64
+        model_parameters['depth'] = 2
+        model_parameters['heads'] = 1
+        model_parameters['mlp_dim'] = 256
+        model_parameters['pool'] = 'cls'
+        model_parameters['channels'] = 1
+        model_parameters['dim_head'] = 64
+        model_parameters['dropout'] = 0.
+        model_parameters['emb_dropout'] = 0.
+
     # Data processing computations
     time_shift_samples = int((time_shift_ms * sample_rate) / 1000)
     desired_samples = int(sample_rate * clip_duration_ms / 1000)

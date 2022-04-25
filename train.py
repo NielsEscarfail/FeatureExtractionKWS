@@ -19,7 +19,6 @@
 import os
 import shutil
 import time
-
 import torch
 import torch.nn.functional as F
 from feature_extraction import dataset
@@ -42,10 +41,11 @@ class Trainer:
 
         lambda_lr = lambda epoch: 1 if epoch < 15 else 1 / 5 if epoch < 25 else 1 / 10 if epoch < 35 else 1 / 20
         if training_parameters['scheduler'] == 'LambdaLR':
-            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
+            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr, verbose=True)
         elif training_parameters['scheduler'] == 'ReduceLROnPlateau':
             self.metric = 0  # used for learning rate policy 'plateau'
-            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min')
+            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.2,
+                                                                        patience=5, verbose=True)
 
         if self.model._get_name() == 'wav2keyword':
             self.optimizer = torch.optim.Adam([
@@ -59,21 +59,26 @@ class Trainer:
         """Computes the average time to gather a sample with the given feature extraction method."""
         start = time.time()
         data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
-        for i in range(100):
+
+        n_batches = 10
+        for i in range(n_batches):
             inputs, labels = data[0]
-        print('Can read a training batch in {:.4f} seconds with the following feature extraction method: {}'
-              .format((time.time()-start)/100, self.audio_processor.feature_extraction_method))
+        dt = (time.time() - start)
+
+        print('\nFeature extraction method: {}'.format(self.audio_processor.feature_extraction_method))
+        print('Dataset shape: inputs: {}, labels: {}'.format(inputs.shape, labels.shape))
+        print('Time to read {} training batches: {:.2f} s.  //  {:.4f} seconds per training batch.'
+              .format(n_batches, dt, dt / n_batches))
         start = time.time()
         data = dataset.AudioGenerator('validation', self.audio_processor, self.training_parameters)
-        for i in range(100):
+        for i in range(n_batches):
             inputs, labels = data[0]
-        print('Can read a validation/testing batch in {:.4f} seconds with the following feature extraction method: {}'
-              .format((time.time() - start) / 100, self.audio_processor.feature_extraction_method))
-        print('Dataset shape: inputs: {}, labels: {}'.format(inputs.shape, labels.shape))
-
+        dt = (time.time() - start)
+        print('Time to read {} validation batches: {:.2f} s.  //  {:.4f} seconds per validation batch.'
+              .format(n_batches, dt, dt / n_batches))
 
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
-        # Validate model
+        """Validate the model."""
 
         training_parameters = self.training_parameters
         training_parameters['batch_size'] = batch_size
@@ -93,11 +98,13 @@ class Trainer:
             elif self.model._get_name() == 'dscnn':
                 if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                elif self.audio_processor.feature_extraction_method == 'augmented' or\
-                        self.audio_processor.feature_extraction_method == 'raw' or\
+                elif self.audio_processor.feature_extraction_method == 'augmented' or \
+                        self.audio_processor.feature_extraction_method == 'raw' or \
                         self.audio_processor.feature_extraction_method == 'dwt':
                     inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
-                    # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+
+            elif self.model._get_name() == 'kwt':
+                inputs = torch.Tensor(inputs).to(self.device)
 
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
@@ -125,11 +132,12 @@ class Trainer:
                 conf_matrix(labels, predicted, self.training_parameters)
 
         print('Accuracy of the network on the %s set: %.2f %%' % (mode, 100 * correct / total))
-        print('Took %.4f seconds for %.f samples, %.6f seconds per sample.' % ((time.time()-start), total, (time.time()-start)/total))
+        print('Took %.4f seconds for %.f samples, %.6f seconds per sample.' % (
+            (time.time() - start), total, (time.time() - start) / total))
         return 100 * correct / total
 
     def train(self, model, save_path):
-        # Train model
+        """Train the model."""
 
         best_acc = 0
         for epoch in range(0, self.training_parameters['epochs']):
@@ -155,7 +163,9 @@ class Trainer:
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
                     elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw' or self.audio_processor.feature_extraction_method == 'dwt':
                         inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
-                        # inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+
+                elif self.model._get_name() == 'kwt':
+                    inputs = torch.Tensor(inputs).to(self.device)
 
                 labels = torch.Tensor(labels).to(self.device).long()
 

@@ -32,6 +32,7 @@ import torch
 import torchaudio
 import librosa
 import pywt
+import scipy
 
 # from kaldi.feat import PLP
 
@@ -410,6 +411,54 @@ class AudioProcessor(object):
         data = np.clip(data + 128, 0, 255)
         return data
 
+    def get_linear_stft(self, sample):
+        """ Apply Linear STFT feature extraction to sample.
+        Args:
+            sample: Sample on which to apply the STFT transformation.
+        Returns:
+            STFT computation from the sample, using stftkwargs parameters.
+        """
+
+        # Compute STFT - librosa
+        n_fft = 1024
+
+        data = librosa.stft(y=sample,
+                            n_fft=n_fft,
+                            hop_length=self.data_processing_parameters['window_stride_samples'],
+                            win_length=self.data_processing_parameters['window_size_samples'])  # shape (513, 51)
+
+        # Cut shape to (feature_bin_count, spectrogram_length) and transpose
+        data = data[:, :self.data_processing_parameters['spectrogram_length']].transpose()
+
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        data = np.clip(data + 128, 0, 255)
+        return data
+
+    def get_melscale_stft(self, sample):
+        """ Apply Linear STFT feature extraction to sample.
+        Args:
+            sample: Sample on which to apply the STFT transformation.
+        Returns:
+            STFT computation from the sample, using stftkwargs parameters.
+        """
+
+        # Compute STFT - librosa
+        n_fft = 1024
+
+        data = librosa.stft(y=sample,
+                            n_fft=n_fft,
+                            hop_length=self.data_processing_parameters['window_stride_samples'],
+                            win_length=self.data_processing_parameters['window_size_samples'])  # shape (513, 51)
+
+        data = np.abs(data)
+        data = librosa.amplitude_to_db(data, ref=np.max)
+
+        # Cut shape to (feature_bin_count, spectrogram_length) and transpose
+        data = data[:, :self.data_processing_parameters['spectrogram_length']].transpose()
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        data = np.clip(data + 128, 0, 255)
+        return data
+
     def get_mel_spectrogram(self, sample):
         """ Get the MelSpectrogram from the sample.
         Args:
@@ -523,6 +572,16 @@ class AudioProcessor(object):
             data = np.apply_along_axis(self.get_mel_spectrogram, 1, data)
             return data, labels
 
+        elif self.feature_extraction_method == 'linear_stft':
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(self.get_linear_stft, 1, data)
+            return data, labels
+
+        elif self.feature_extraction_method == 'melscale_stft':
+            data, labels = self.get_augmented_data(mode, training_parameters)
+            data = np.apply_along_axis(self.get_melscale_stft, 1, data)
+            return data, labels
+
         elif self.feature_extraction_method == 'lpc':
             order = 30
             data, labels = self.get_augmented_data(mode, training_parameters)
@@ -535,8 +594,31 @@ class AudioProcessor(object):
             data, labels = self.get_augmented_data(mode, training_parameters)
             data = np.apply_along_axis(librosa.lpc, 1, data, order=order)
             # Derive LPCC coefficients
-            data = self.get_lpcc(data, order)
+            print(data.shape)
             return data, labels
+
+        elif self.feature_extraction_method == 'dwt':
+            data, labels = self.get_raw_data(mode, training_parameters)
+            # data, labels = self.get_raw_data(mode, training_parameters)
+            (cA, cD) = pywt.dwt(data, 'haar')  # Approximation and detail coefficients
+            """'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus',
+            'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'"""
+            # cf https://ataspinar.com/2018/12/21/a-guide-for-using-the-wavelet-transform-in-machine-learning/
+            # print(pywt.wavelist())
+            data = np.concatenate((cA, cD), axis=-1)  # verify if we want to keep it (batch_size, 16000)
+            # The data contains all information from the original set (signal can be recovered),
+            # it would be interesting to add an extra step from here before running the model.
+            # Might also explore normalizing / treating sides
+            return data, labels
+
+        elif self.feature_extraction_method == 'cwt':  # TODO : fix coefs and freqs concatenation
+            data, labels = self.get_raw_data(mode, training_parameters)
+            weights = np.arange(1, 41)
+            (coefs, freqs) = pywt.cwt(data, weights, 'gaus1')  # Coefs and frequencies
+            data = np.column_stack(
+                (coefs, freqs))  # verify if we want to keep it (batch_size, 16000) # TODO problem here
+            return data, labels
+
 
         elif self.feature_extraction_method == 'lsf':  # TODO
             order = 30
@@ -546,20 +628,6 @@ class AudioProcessor(object):
 
             # Derive LSF coefficients
             data = self.get_lsf(data)
-            return data, labels
-
-        elif self.feature_extraction_method == 'dwt':
-            # data, labels = self.get_augmented_data(mode, training_parameters)
-            data, labels = self.get_raw_data(mode, training_parameters)
-            (cA, cD) = pywt.dwt(data, 'db1')  # Approximation and detail coefficients
-            """'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus',
-            'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'"""
-            # cf https://ataspinar.com/2018/12/21/a-guide-for-using-the-wavelet-transform-in-machine-learning/
-            # print(pywt.wavelist())
-            data = np.concatenate((cA, cD), axis=-1)  # verify if we want to keep it (batch_size, 16000)
-            # The data contains all information from the original set (signal can be recovered),
-            # it would be interesting to add an extra step from here before running the model.
-            # Might also explore normalizing / treating sides
             return data, labels
 
         elif self.feature_extraction_method == 'plp':  # TODO

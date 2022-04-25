@@ -72,16 +72,23 @@ if __name__ == '__main__':
     valid_size = audio_processor.get_size('validation')
     test_size = audio_processor.get_size('testing')
 
-    # Get input shape # TODO
-    model_input_shape = model_parameters['model_input_shape']
+    # Get input shape # TODO cleaner or move to utils
+    if data_processing_parameters['feature_extraction_method'] == 'mfcc' or data_processing_parameters['feature_extraction_method'] == 'mel_spectrogram':
+        model_input_shape_summary = (1, 49, data_processing_parameters['feature_bin_count'])
+        model_input_shape = (1, 1, 49, data_processing_parameters['feature_bin_count'])
 
+    elif data_processing_parameters['feature_extraction_method'] == 'kwt':
+        model_input_shape_summary = (49, 40)
+        model_input_shape = (1, 49, 40)
 
-    # Model analysis # TODO: input variability for other inputs than MFCC input
+    else:  # raw, augmented, (dwr for now)
+        model_input_shape_summary = (1, 16000, 1)
+        model_input_shape = (1, 1, 16000, 1)
+
+    # Model analysis
     model.to(device)
-    # summary(model, (1, 49, data_processing_parameters['feature_bin_count']))
-    summary(model, (1, 16000, 1))
-    # dummy_input = torch.rand(1, 1, 49, data_processing_parameters['feature_bin_count']).to(device)
-    dummy_input = torch.rand(1, 1, 16000, 1).to(device)
+    summary(model, model_input_shape_summary)
+    dummy_input = torch.rand(model_input_shape).to(device)
     count_ops(model, dummy_input)
 
     # Training initialization
@@ -90,10 +97,9 @@ if __name__ == '__main__':
     # Removing stored inputs and activations
     remove_txt()
 
-    if args.load_trained:  # If --load_pretrained_model True, ignore training and load pretrained model
+    if args.load_trained:  # If --load_trained, ignore training and load pretrained model
         if torch.cuda.is_available():
-            model.load_state_dict(
-                torch.load(os.path.join(model_save_dir, 'model.pth', map_location=torch.device('cuda'))))
+            model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth', map_location=torch.device('cuda'))))
         else:
             model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth')))
         print("Loaded model from: ", model_save_dir)
@@ -109,7 +115,7 @@ if __name__ == '__main__':
 
     # Initiating quantization process: making the model quantization aware
     # quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 49, 10)).to(device))
-    quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 16000, 1)).to(device))
+    quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn(model_input_shape).to(device))
 
     precision_8 = {
         "conv1": {"W_bits": 7},
@@ -156,7 +162,7 @@ if __name__ == '__main__':
     acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=-1, integer=True)
 
     # Saving the model TODO rewrite path
-    nemo.utils.export_onnx(model_save_dir + '/model.onnx', quantized_model, quantized_model, (1, 49, 10))
+    nemo.utils.export_onnx(model_save_dir + '/model.onnx', quantized_model, quantized_model, model_input_shape_summary)
 
     # Saving the activations for comparison within Dory
     acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=1, integer=True, save=True)

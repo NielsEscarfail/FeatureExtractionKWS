@@ -2,6 +2,7 @@ import torch
 from models.wav2vec import wav2keyword
 from models.wav2vec.wav2vec import generate_w2v_model_params
 from models.dscnn import DSCNN
+from models.kwt import KWT
 
 
 def create_model(model_name, model_params):
@@ -16,6 +17,20 @@ def create_model(model_name, model_params):
     """
     if model_name == 'dscnn':
         return DSCNN(model_params, use_bias=True)
+
+    elif model_name == 'kwt':
+        return KWT(img_x=model_params['img_x'], img_y=model_params['img_y'],
+                   patch_x=model_params['patch_x'], patch_y=model_params['patch_y'],
+                   num_classes=model_params['num_classes'],
+                   dim=model_params['dim'],
+                   depth=model_params['depth'],
+                   heads=model_params['heads'],
+                   mlp_dim=model_params['mlp_dim'],
+                   pool=model_params['pool'],
+                   channels=model_params['channels'],
+                   dim_head=model_params['dim_head'],
+                   dropout=model_params['dropout'],
+                   emb_dropout=model_params['emb_dropout'])
 
     elif model_name == 'wav2vec':
         trained_model = torch.load(model_params['pt'])

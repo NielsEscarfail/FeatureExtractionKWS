@@ -1,7 +1,8 @@
 # Configuration parameters for feature selection and model training
 
 data_processing_parameters:
-  feature_bin_count: 10
+  feature_bin_count: 10 # dscnn
+  # feature_bin_count: 40 # kwt 98 x 40 # TODO change params to fit those in https://arxiv.org/pdf/2104.00769.pdf
   time_shift_ms: 200
   sample_rate: 16000
   clip_duration_ms: 1000
