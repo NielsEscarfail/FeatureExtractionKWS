@@ -188,3 +188,29 @@ def parameter_generation(model, ft_extr):
     training_parameters['time_shift_samples'] = time_shift_samples
 
     return training_parameters, data_processing_parameters, model_parameters
+
+
+def export_all_results_to_csv(model_save_dir, training_environment, training_parameters, data_processing_parameters, model_parameters, results):
+    """ Exports all parameters, and resulting metrics of a run to trained_models/model_save_dir/results.csv"""
+
+    # Remove unwanted data
+    del training_parameters['data_dir']
+    del training_parameters['data_url']
+    del training_parameters['wanted_words']
+    del model_parameters['pt']
+
+    # Convert incompatible types to str
+    model_parameters['model_input_shape'] = str(model_parameters['model_input_shape'])
+
+    # Prepare the data from training/data/model parameters and results  TODO could use update to be cleaner
+    cols = list(training_parameters.keys()) + list(data_processing_parameters.keys()) + list(model_parameters.keys()) + list(results.keys())
+    vals = list(training_parameters.values()) + list(data_processing_parameters.values()) + list(model_parameters.values()) + list(results.values())
+    data = dict(zip(cols, vals))
+
+    # Create the df and export to csv
+    df = pd.DataFrame({k: [v] for k, v in data.items()})
+
+    print("Exporting: ", df.columns)
+    print(df)
+
+    df.to_csv(os.path.join(model_save_dir, 'results.csv'), index=False)

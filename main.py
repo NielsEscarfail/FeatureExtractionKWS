@@ -25,7 +25,7 @@ import torch
 from pthflops import count_ops
 from torchsummary import summary
 from train import Trainer
-from utils import remove_txt, parameter_generation, setup_device
+from utils import remove_txt, parameter_generation, setup_device, export_all_results_to_csv
 from models import create_model
 from feature_extraction.dataset import AudioProcessor
 
@@ -73,7 +73,8 @@ if __name__ == '__main__':
     test_size = audio_processor.get_size('testing')
 
     # Get input shape # TODO cleaner or move to utils
-    if data_processing_parameters['feature_extraction_method'] == 'mfcc' or data_processing_parameters['feature_extraction_method'] == 'mel_spectrogram':
+    if data_processing_parameters['feature_extraction_method'] == 'mfcc' or data_processing_parameters[
+        'feature_extraction_method'] == 'mel_spectrogram':
         model_input_shape_summary = (1, 49, data_processing_parameters['feature_bin_count'])
         model_input_shape = (1, 1, 49, data_processing_parameters['feature_bin_count'])
 
@@ -96,73 +97,29 @@ if __name__ == '__main__':
 
     # Removing stored inputs and activations
     remove_txt()
+    training_time = 0
 
     if args.load_trained:  # If --load_trained, ignore training and load pretrained model
         if torch.cuda.is_available():
-            model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth', map_location=torch.device('cuda'))))
+            model.load_state_dict(
+                torch.load(os.path.join(model_save_dir, 'model.pth', map_location=torch.device('cuda'))))
         else:
             model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth')))
-        print("Loaded model from: ", model_save_dir)
+        print("\nLoaded model from: ", model_save_dir)
 
     else:  # Train and save the model
         start = time.time()
         training_environment.train(model=model, save_path=model_save_dir)
-        print('Finished Training on GPU in {:.2f} seconds'.format(time.time() - start))
+        training_time = time.time() - start
+        print('\nFinished Training on GPU in {:.2f} seconds'.format(training_time))
 
-    # Quantization and validation phase
-    print("\nPytorch implementation accuracy:")
-    acc = training_environment.validate(model=model, mode='testing', batch_size=-1)
+    # Save all results and export to csv  TODO add model size
+    test_acc, run_test_sample_time = training_environment.validate(model=model, mode='testing', batch_size=-1)
+    val_acc, run_val_sample_time = training_environment.validate(model=model, mode='validation', batch_size=-1)
 
-    # Initiating quantization process: making the model quantization aware
-    # quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn((1, 1, 49, 10)).to(device))
-    quantized_model = nemo.transform.quantize_pact(deepcopy(model), dummy_input=torch.randn(model_input_shape).to(device))
+    results = {'test_acc': test_acc, 'val_acc': val_acc,
+               'run_test_sample_time': run_test_sample_time, 'run_val_sample_time': run_val_sample_time,
+               'time_get_train_batch': training_environment.dt_train, 'time_get_val_batch': training_environment.dt_val}
 
-    precision_8 = {
-        "conv1": {"W_bits": 7},
-        "relu1": {"x_bits": 8},
-        "conv2": {"W_bits": 7},
-        "relu2": {"x_bits": 8},
-        "conv3": {"W_bits": 7},
-        "relu3": {"x_bits": 8},
-        "conv4": {"W_bits": 7},
-        "relu4": {"x_bits": 8},
-        "conv5": {"W_bits": 7},
-        "relu5": {"x_bits": 8},
-        "conv6": {"W_bits": 7},
-        "relu6": {"x_bits": 8},
-        "conv7": {"W_bits": 7},
-        "relu7": {"x_bits": 8},
-        "conv8": {"W_bits": 7},
-        "relu8": {"x_bits": 8},
-        "conv9": {"W_bits": 7},
-        "relu9": {"x_bits": 8},
-        "fc1": {"W_bits": 7}
-    }
-    quantized_model.change_precision(bits=1, min_prec_dict=precision_8, scale_weights=True, scale_activations=True)
-
-    # Calibrating model's scaling by collecting largest activations
-    with quantized_model.statistics_act():
-        training_environment.validate(model=quantized_model, mode='validation', batch_size=128)
-    quantized_model.reset_alpha_act()
-
-    # Remove biases after FQ stage
-    quantized_model.remove_bias()
-
-    print("\nFakeQuantized @ 8b accuracy (calibrated):")
-    acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=-1)
-
-    quantized_model.qd_stage(eps_in=255. / 255)  # The activations are already in 0-255
-
-    print("\nQuantizedDeployable @ mixed-precision accuracy:")
-    acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=-1)
-
-    quantized_model.id_stage()
-
-    print("\nIntegerDeployable @ mixed-precision accuracy:")
-    acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=-1, integer=True)
-
-    # Saving the model TODO rewrite path
-    nemo.utils.export_onnx(model_save_dir + '/model.onnx', quantized_model, quantized_model, model_input_shape_summary)
-
-    # Saving the activations for comparison within Dory
-    acc = training_environment.validate(model=quantized_model, mode='testing', batch_size=1, integer=True, save=True)
+    export_all_results_to_csv(model_save_dir, training_environment, training_parameters, data_processing_parameters,
+                              model_parameters, results)

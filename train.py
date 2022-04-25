@@ -41,7 +41,7 @@ class Trainer:
 
         lambda_lr = lambda epoch: 1 if epoch < 15 else 1 / 5 if epoch < 25 else 1 / 10 if epoch < 35 else 1 / 20
         if training_parameters['scheduler'] == 'LambdaLR':
-            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr, verbose=True)
+            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lambda_lr)
         elif training_parameters['scheduler'] == 'ReduceLROnPlateau':
             self.metric = 0  # used for learning rate policy 'plateau'
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.2,
@@ -53,29 +53,27 @@ class Trainer:
                 {'params': model.decoder.parameters(), 'lr': 5e-4},
             ], weight_decay=1e-5)
 
-        self.time_get_data()
+        # Save the feature extraction method run times in training and validation mode
+        self.dt_train = self.time_get_data(mode='training')
+        self.dt_val = self.time_get_data(mode='validation')
 
-    def time_get_data(self):
+    def time_get_data(self, mode):
         """Computes the average time to gather a sample with the given feature extraction method."""
         start = time.time()
-        data = dataset.AudioGenerator('training', self.audio_processor, self.training_parameters)
+        data = dataset.AudioGenerator(mode, self.audio_processor, self.training_parameters)
 
-        n_batches = 10
+        n_batches = 20  # Increase for better approximation, low for performance reasons
         for i in range(n_batches):
             inputs, labels = data[0]
         dt = (time.time() - start)
+        dt_batch = dt / n_batches
 
         print('\nFeature extraction method: {}'.format(self.audio_processor.feature_extraction_method))
         print('Dataset shape: inputs: {}, labels: {}'.format(inputs.shape, labels.shape))
         print('Time to read {} training batches: {:.2f} s.  //  {:.4f} seconds per training batch.'
-              .format(n_batches, dt, dt / n_batches))
-        start = time.time()
-        data = dataset.AudioGenerator('validation', self.audio_processor, self.training_parameters)
-        for i in range(n_batches):
-            inputs, labels = data[0]
-        dt = (time.time() - start)
-        print('Time to read {} validation batches: {:.2f} s.  //  {:.4f} seconds per validation batch.'
-              .format(n_batches, dt, dt / n_batches))
+              .format(n_batches, dt, dt_batch))
+
+        return dt_batch
 
     def validate(self, model=None, mode='validation', batch_size=-1, statistics=False, integer=False, save=False):
         """Validate the model."""
@@ -131,10 +129,10 @@ class Trainer:
             if statistics:
                 conf_matrix(labels, predicted, self.training_parameters)
 
+        total_time = (time.time() - start)
         print('Accuracy of the network on the %s set: %.2f %%' % (mode, 100 * correct / total))
-        print('Took %.4f seconds for %.f samples, %.6f seconds per sample.' % (
-            (time.time() - start), total, (time.time() - start) / total))
-        return 100 * correct / total
+        print('Took %.4f seconds for %.f samples, %.6f seconds per sample.' % (total_time, total, total_time / total))
+        return 100 * correct / total, total_time / total
 
     def train(self, model, save_path):
         """Train the model."""
