@@ -3,6 +3,13 @@
 - Wav2Vec / BCResNet implementations
 - Mel spectrogram features
 
+### Setup:
+To install and activate the environment, run:
+```
+conda env create -f environment.yml
+conda env activate kws
+```
+
 ### Training KWS models
 To train then test a model, run:
 ```

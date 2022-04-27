@@ -1,6 +1,4 @@
 import torch
-from models.wav2vec import wav2keyword
-from models.wav2vec.wav2vec import generate_w2v_model_params
 from models.dscnn import DSCNN, DSCNNMAXPOOL, DSCNNSUBCONV
 from models.kwt import KWT
 
@@ -39,6 +37,8 @@ def create_model(model_name, model_params):
                    emb_dropout=model_params['emb_dropout'])
 
     elif model_name == 'wav2vec':
+        from models.wav2vec import wav2keyword
+        from models.wav2vec.wav2vec import generate_w2v_model_params
         trained_model = torch.load(model_params['pt'])
         w2v_model_config = vars(trained_model['args'])
         w2v_model_config = generate_w2v_model_params(w2v_model_config)

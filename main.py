@@ -19,8 +19,6 @@
 import argparse
 import os
 import time
-from copy import deepcopy
-import nemo
 import torch
 from pthflops import count_ops
 from torchsummary import summary
