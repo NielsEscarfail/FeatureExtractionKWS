@@ -97,15 +97,18 @@ class Trainer:
             elif self.model._get_name() in {'dscnn_subconv', 'dscnn_maxpool'}:
                 inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
-            elif self.model._get_name() in {'dscnn', 'dscnn_subconv', 'dscnn_maxpool'}:
+            elif self.model._get_name() in {'dscnn'}:
                 # Set inputs depending on the model + feature extraction method used
                 if self.audio_processor.feature_extraction_method in {'mfcc', 'mel_spectrogram'}:
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                elif self.audio_processor.feature_extraction_method in {'augmented', 'raw','dwt'}:
+                elif self.audio_processor.feature_extraction_method in {'augmented', 'raw', 'dwt'}:
                     inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
             elif self.model._get_name() == 'kwt':
                 inputs = torch.Tensor(inputs).to(self.device)
+
+            else:
+                inputs = torch.Tensor(inputs[:, :]).to(self.device)
 
             labels = torch.Tensor(labels).long().to(self.device)
             model = model.to(self.device)
@@ -140,7 +143,6 @@ class Trainer:
     def train(self, model, save_path):
         """Train the model."""
 
-        print(model)
         best_acc = 0
         for epoch in range(0, self.training_parameters['epochs']):
 
@@ -157,13 +159,15 @@ class Trainer:
                 inputs, labels = data[0]  # Returns a random index anyway
 
                 # Set inputs depending on the model
+
+
                 if self.model._get_name() == 'wav2keyword':
                     inputs = torch.Tensor(inputs).to(self.device)
 
-                elif self.model._get_name() in {'dscnn_subconv', 'dscnn_maxpool'}:
+                elif self.model._get_name() in {'dscnn_subconv', 'dscnn_avgpool', 'dscnn_maxpool'}:
                     inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
 
-                elif self.model._get_name() in {'dscnn'}:
+                elif self.model._get_name() in {'dscnn', 'mlp'}:
                     # Set inputs depending on the model + feature extraction method used
                     if self.audio_processor.feature_extraction_method in {'mfcc', 'mel_spectrogram'}:
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
@@ -171,6 +175,9 @@ class Trainer:
                         inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
                 elif self.model._get_name() == 'kwt':
+                    inputs = torch.Tensor(inputs).to(self.device)
+
+                else:
                     inputs = torch.Tensor(inputs).to(self.device)
 
                 labels = torch.Tensor(labels).to(self.device).long()
@@ -200,11 +207,11 @@ class Trainer:
             tmp_acc, _ = self.validate(model, 'validation', 128)
 
             # Save best performing network
-            if tmp_acc > best_acc:
+            """if tmp_acc > best_acc:
                 best_acc = tmp_acc
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 PATH = os.path.join(save_path, PATH)
-                torch.save(model.state_dict(), PATH)
+                torch.save(model.state_dict(), PATH)"""
 
         # Update scheduler
         if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # ReduceLROnPlateau requires metrics param

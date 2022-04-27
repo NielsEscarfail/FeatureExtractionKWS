@@ -1,7 +1,8 @@
 import torch
-from models.dscnn import DSCNN, DSCNNMAXPOOL, DSCNNSUBCONV
+from models.dscnn import DSCNN, DSCNNAVGPOOL, DSCNNSUBCONV
 from models.kwt import KWT
-
+import torchaudio
+import fairseq
 
 def create_model(model_name, model_params):
     """
@@ -13,11 +14,38 @@ def create_model(model_name, model_params):
     Returns:
       Model to perform KWS
     """
+
+
     if model_name == 'dscnn':
         return DSCNN(model_params, use_bias=True)
 
-    elif model_name == 'dscnn_maxpool':
-        return DSCNNMAXPOOL(model_params, use_bias=True)
+    elif model_name == 'wav2vec_pt10m':
+        bundle = torchaudio.pipelines.WAV2VEC2_ASR_BASE_10M
+        return bundle.get_model()
+        # return torchaudio.models.DeepSpeech(n_feature=1, n_hidden=8, n_class=12)
+
+    elif model_name == 'wav2vec_small':
+        from torchaudio.models.wav2vec2.utils import import_fairseq_model
+        # Load model using fairseq
+        model_file = '/Users/nielsescarfail/Desktop/FeatureExtractionKWS/models/wav2vec/wav2vec_small.pt'
+        model, _, _ = fairseq.checkpoint_utils.load_model_ensemble_and_task([model_file])
+        original = model[0]
+        imported = import_fairseq_model(original)
+        return imported
+
+    elif model_name == 'mlp':
+        from mlp_mixer_pytorch import MLPMixer
+        return MLPMixer(
+            image_size=model_params['model_input_shape'],
+            channels=1,
+            patch_size=1,
+            dim=32,
+            depth=3,
+            num_classes=12
+        )
+
+    elif model_name == 'dscnn_avgpool':
+        return DSCNNAVGPOOL(model_params, use_bias=True)
 
     if model_name == 'dscnn_subconv':
         return DSCNNSUBCONV(model_params, use_bias=True)

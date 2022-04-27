@@ -236,13 +236,13 @@ class DSCNN(torch.nn.Module):
     def _get_name(self):
         return 'dscnn'
 
-class DSCNNMAXPOOL(torch.nn.Module):
+class DSCNNAVGPOOL(torch.nn.Module):
     """DSCNN model Input shape:
     (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count) for MFCC or
     (1, 1, 16000, 1) for augmented data.
     """
     def __init__(self, model_params, use_bias=False):
-        super(DSCNNMAXPOOL, self).__init__()
+        super(DSCNNAVGPOOL, self).__init__()
 
         self.input_shape = model_params['model_input_shape']
 
@@ -381,7 +381,7 @@ class DSCNNMAXPOOL(torch.nn.Module):
         return x
 
     def _get_name(self):
-        return 'dscnn_maxpool'
+        return 'dscnn_avgpool'
 
 class DSCNNSUBCONV(torch.nn.Module):
     """DSCNN model Input shape:

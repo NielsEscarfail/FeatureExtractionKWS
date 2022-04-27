@@ -124,7 +124,7 @@ def parameter_generation(model, ft_extr):
     if ft_extr in {'raw', 'augmented', 'dwt'}:
         model_parameters['model_input_shape'] = sample_rate
     elif ft_extr in {'mfcc', 'mel_spectrogram'}:
-        model_parameters['model_input_shape'] = {49, config_data_proc_params['feature_bin_count']}
+        model_parameters['model_input_shape'] = (49, config_data_proc_params['feature_bin_count'])
     else:  # default
         model_parameters['model_input_shape'] = sample_rate
 

@@ -79,7 +79,7 @@ if __name__ == '__main__':
         model_input_shape_summary = (49, 40)
         model_input_shape = (1, 49, 40)
 
-    elif args.model == 'dcsnn_maxpool':
+    elif args.model in {'dcsnn_maxpool'}:
         model_input_shape_summary = (1, 16000)
         model_input_shape = (1, 1, 16000)
 
