@@ -121,11 +121,11 @@ def parameter_generation(model, ft_extr):
     window_stride_ms = config_data_proc_params['window_stride_ms']
 
     # Define model input shape depending on the feature extraction method used
-    if ft_extr == 'raw' or ft_extr == 'augmented' or ft_extr == 'dwt':
+    if ft_extr in {'raw', 'augmented', 'dwt'}:
         model_parameters['model_input_shape'] = sample_rate
-    elif ft_extr == 'mfcc' or 'mel_spectrogram':
+    elif ft_extr in {'mfcc', 'mel_spectrogram'}:
         model_parameters['model_input_shape'] = {49, config_data_proc_params['feature_bin_count']}
-    else:
+    else:  # default
         model_parameters['model_input_shape'] = sample_rate
 
     # Add model parameters to pass depending on the model

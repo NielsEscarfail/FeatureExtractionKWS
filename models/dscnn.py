@@ -25,6 +25,7 @@ import torch.nn.functional as F
 from utils import npy_to_txt
 
 
+
 class DSCNN(torch.nn.Module):
     """DSCNN model Input shape:
     (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count) for MFCC or
@@ -234,3 +235,293 @@ class DSCNN(torch.nn.Module):
 
     def _get_name(self):
         return 'dscnn'
+
+class DSCNNMAXPOOL(torch.nn.Module):
+    """DSCNN model Input shape:
+    (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count) for MFCC or
+    (1, 1, 16000, 1) for augmented data.
+    """
+    def __init__(self, model_params, use_bias=False):
+        super(DSCNNMAXPOOL, self).__init__()
+
+        self.input_shape = model_params['model_input_shape']
+
+        # Shape [128, 1, 16000] for augmented data
+
+        self.pool1 = nn.AvgPool1d(40, stride=4)
+        self.pool2 = nn.AvgPool1d(40, stride=2)
+
+        self.conv0_0 = torch.nn.Conv1d(in_channels=1, out_channels=4, kernel_size=40, stride=4)  # to [128, 4, 1991]
+        self.bn0_0 = torch.nn.BatchNorm1d(4)
+        self.relu0_0 = torch.nn.ReLU()
+
+        self.pool3 = nn.AvgPool2d((7, 2), stride=(2, 1))
+
+        self.pad0_1 = nn.ConstantPad2d((11, 10, 0, 0), value=0.0)  # to [128, 4, 488, 22]
+        self.conv0_1 = torch.nn.Conv2d(in_channels=4, out_channels=16, kernel_size=(22, 4), stride=(4, 2), bias=use_bias)  # to [128, 16, 118, 10]
+        self.bn0_1 = torch.nn.BatchNorm2d(16)
+        self.relu0_1 = torch.nn.ReLU()
+
+        self.pad0_2 = nn.ConstantPad2d((1, 1, 0, 0), value=0.0)  # to [128, 16, 118, 12]
+        self.conv0_2 = torch.nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(6, 2), stride=(2, 2), bias=use_bias)  # to [128, 64, 25, 5]
+
+        self.bn1 = torch.nn.BatchNorm2d(64)
+        self.relu1 = torch.nn.ReLU()
+        # have first conv layer as adaptor -> takes input and makes sure it is always 25*5 then observe acc.
+        # If results are bad, try to move away from 25*5 inter-shape and go larger
+        self.pad2 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)  # takes in torch.Size([128, 64, 25, 5])
+        self.conv2 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn2 = torch.nn.BatchNorm2d(64)
+        self.relu2 = torch.nn.ReLU()
+        self.conv3 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn3 = torch.nn.BatchNorm2d(64)
+        self.relu3 = torch.nn.ReLU()
+
+        self.pad4 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv4 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn4 = torch.nn.BatchNorm2d(64)
+        self.relu4 = torch.nn.ReLU()
+        self.conv5 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn5 = torch.nn.BatchNorm2d(64)
+        self.relu5 = torch.nn.ReLU()
+
+        self.pad6 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv6 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn6 = torch.nn.BatchNorm2d(64)
+        self.relu6 = torch.nn.ReLU()
+        self.conv7 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn7 = torch.nn.BatchNorm2d(64)
+        self.relu7 = torch.nn.ReLU()
+
+        self.pad8 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv8 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn8 = torch.nn.BatchNorm2d(64)
+        self.relu8 = torch.nn.ReLU()
+        self.conv9 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn9 = torch.nn.BatchNorm2d(64)
+        self.relu9 = torch.nn.ReLU()
+
+        self.avg = torch.nn.AvgPool2d(kernel_size=(25, 5), stride=1)
+        self.fc1 = torch.nn.Linear(64, 12, bias=use_bias)
+
+    def forward(self, x, save=False): # input shape is always (1, 16000)
+        # print("1 ", x.shape)
+        x = self.pool1(x)
+        # print("2 ", x.shape)
+
+        # print("3 ", x.shape)
+        # For augmented data input without MFCC preprocessing.
+        # reshapes the input from [batch_size, 1, 16000] to [batch_size, 64, 25, 5] for compatibility.
+
+        x = self.conv0_0(x)
+        x = self.bn0_0(x)
+        x = self.relu0_0(x)
+        # print("4 ", x.shape)
+        x = self.pool2(x)
+        x = x[:, :, :, None]
+
+        x = self.pad0_1(x)
+        # print("5 ", x.shape)
+        x = self.conv0_1(x)
+        x = self.bn0_1(x)
+        x = self.relu0_1(x)
+        # print("6 ", x.shape)
+        x = self.pool3(x)
+        # print("pool3", x.shape)
+
+        x = self.pad0_2(x)
+        # print("7 ", x.shape)
+        x = self.conv0_2(x)
+
+        x = self.bn1(x)
+        x = self.relu1(x)
+        # print("last ", x.shape)
+
+        # here has to be 25x5
+        x = self.pad2(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu2(x)
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.relu3(x)
+
+        x = self.pad4(x)
+        x = self.conv4(x)
+        x = self.bn4(x)
+        x = self.relu4(x)
+        x = self.conv5(x)
+        x = self.bn5(x)
+        x = self.relu5(x)
+
+        x = self.pad6(x)
+        x = self.conv6(x)
+        x = self.bn6(x)
+        x = self.relu6(x)
+        x = self.conv7(x)
+        x = self.bn7(x)
+        x = self.relu7(x)
+
+        x = self.pad8(x)
+        x = self.conv8(x)
+        x = self.bn8(x)
+        x = self.relu8(x)
+        x = self.conv9(x)
+        x = self.bn9(x)
+        x = self.relu9(x)
+
+        x = self.avg(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+
+        return x
+
+    def _get_name(self):
+        return 'dscnn_maxpool'
+
+class DSCNNSUBCONV(torch.nn.Module):
+    """DSCNN model Input shape:
+    (1, 1, 49, 10) = (1, 1, spectrogram_length, feature_bin_count) for MFCC or
+    (1, 1, 16000, 1) for augmented data.
+    """
+    def __init__(self, model_params, use_bias=False):
+        super(DSCNNSUBCONV, self).__init__()
+
+        self.input_shape = model_params['model_input_shape']
+
+        # Shape [128, 1, 16000] for augmented data
+
+        self.transformer = nn.Transformer(d_model=16000, nhead=4, num_encoder_layers=6)
+
+        self.conv0 = torch.nn.Conv2d(in_channels=1, out_channels=4, kernel_size=(1, 1))  # to [128, 4, 1991]
+        self.bn0 = torch.nn.BatchNorm2d(4)
+        self.relu0 = torch.nn.ReLU()
+
+        self.conv0_0 = torch.nn.Conv2d(in_channels=4, out_channels=4, kernel_size=(40, 1), stride=(4, 1))  # to [128, 4, 1991]
+        self.bn0_0 = torch.nn.BatchNorm2d(4)
+        self.relu0_0 = torch.nn.ReLU()
+
+        self.pad0_1 = nn.ConstantPad2d((11, 10, 0, 0), value=0.0)  # to [128, 4, 488, 22]
+        self.conv0_1 = torch.nn.Conv2d(in_channels=4, out_channels=16, kernel_size=(20, 4), stride=(4, 2), bias=use_bias)  # to [128, 16, 118, 10]
+        self.bn0_1 = torch.nn.BatchNorm2d(16)
+        self.relu0_1 = torch.nn.ReLU()
+
+        self.pad0_2 = nn.ConstantPad2d((1, 1, 0, 0), value=0.0)  # to [128, 16, 118, 12]
+        self.conv0_2 = torch.nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(20, 3), stride=(4, 2), bias=use_bias)  # to [128, 64, 25, 5]
+
+        self.bn1 = torch.nn.BatchNorm2d(64)
+        self.relu1 = torch.nn.ReLU()
+        # have first conv layer as adaptor -> takes input and makes sure it is always 25*5 then observe acc.
+        # If results are bad, try to move away from 25*5 inter-shape and go larger
+        self.pad2 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)  # takes in torch.Size([128, 64, 25, 5])
+        self.conv2 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn2 = torch.nn.BatchNorm2d(64)
+        self.relu2 = torch.nn.ReLU()
+        self.conv3 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn3 = torch.nn.BatchNorm2d(64)
+        self.relu3 = torch.nn.ReLU()
+
+        self.pad4 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv4 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn4 = torch.nn.BatchNorm2d(64)
+        self.relu4 = torch.nn.ReLU()
+        self.conv5 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn5 = torch.nn.BatchNorm2d(64)
+        self.relu5 = torch.nn.ReLU()
+
+        self.pad6 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv6 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn6 = torch.nn.BatchNorm2d(64)
+        self.relu6 = torch.nn.ReLU()
+        self.conv7 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn7 = torch.nn.BatchNorm2d(64)
+        self.relu7 = torch.nn.ReLU()
+
+        self.pad8 = nn.ConstantPad2d((1, 1, 1, 1), value=0.)
+        self.conv8 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), stride=(1, 1), groups=64,
+                                     bias=use_bias)
+        self.bn8 = torch.nn.BatchNorm2d(64)
+        self.relu8 = torch.nn.ReLU()
+        self.conv9 = torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1, 1), stride=(1, 1), bias=use_bias)
+        self.bn9 = torch.nn.BatchNorm2d(64)
+        self.relu9 = torch.nn.ReLU()
+
+        self.avg = torch.nn.AvgPool2d(kernel_size=(25, 5), stride=1)
+        self.fc1 = torch.nn.Linear(64, 12, bias=use_bias)
+
+    def forward(self, x, save=False): # input shape is always (1, 16000)
+        # For augmented data input without MFCC preprocessing.
+        # reshapes the input from [batch_size, 1, 16000] to [batch_size, 64, 25, 5] for compatibility.
+        print("0 ", x.shape)
+        x = self.transformer(x)
+
+        print("1 ", x.shape)
+        x = self.conv0(x)
+        x = self.bn0(x)
+        x = self.relu0(x)
+        print("2 ", x.shape)
+
+        x = self.conv0_0(x)
+        x = self.bn0_0(x)
+        x = self.relu0_0(x)
+        print("3 ", x.shape)
+
+        x = self.pad0_1(x)
+        x = self.conv0_1(x)
+        x = self.bn0_1(x)
+        x = self.relu0_1(x)
+        print("4 ", x.shape)
+
+        x = self.pad0_2(x)
+        x = self.conv0_2(x)
+        x = self.bn1(x)
+        x = self.relu1(x)
+        print("5 ", x.shape)
+
+        x = self.pad2(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu2(x)
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.relu3(x)
+
+        x = self.pad4(x)
+        x = self.conv4(x)
+        x = self.bn4(x)
+        x = self.relu4(x)
+        x = self.conv5(x)
+        x = self.bn5(x)
+        x = self.relu5(x)
+
+        x = self.pad6(x)
+        x = self.conv6(x)
+        x = self.bn6(x)
+        x = self.relu6(x)
+        x = self.conv7(x)
+        x = self.bn7(x)
+        x = self.relu7(x)
+
+        x = self.pad8(x)
+        x = self.conv8(x)
+        x = self.bn8(x)
+        x = self.relu8(x)
+        x = self.conv9(x)
+        x = self.bn9(x)
+        x = self.relu9(x)
+
+        x = self.avg(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+
+        return x
+
+    def _get_name(self):
+        return 'dscnn_subconv'

@@ -90,15 +90,18 @@ class Trainer:
         with torch.no_grad():
             inputs, labels = data[0]
 
+            # Set inputs depending on the model
             if self.model._get_name() == 'wav2keyword':
                 inputs = torch.Tensor(inputs).to(self.device)
 
-            elif self.model._get_name() == 'dscnn':
-                if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
+            elif self.model._get_name() in {'dscnn_subconv', 'dscnn_maxpool'}:
+                inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+
+            elif self.model._get_name() in {'dscnn', 'dscnn_subconv', 'dscnn_maxpool'}:
+                # Set inputs depending on the model + feature extraction method used
+                if self.audio_processor.feature_extraction_method in {'mfcc', 'mel_spectrogram'}:
                     inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                elif self.audio_processor.feature_extraction_method == 'augmented' or \
-                        self.audio_processor.feature_extraction_method == 'raw' or \
-                        self.audio_processor.feature_extraction_method == 'dwt':
+                elif self.audio_processor.feature_extraction_method in {'augmented', 'raw','dwt'}:
                     inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
             elif self.model._get_name() == 'kwt':
@@ -137,6 +140,7 @@ class Trainer:
     def train(self, model, save_path):
         """Train the model."""
 
+        print(model)
         best_acc = 0
         for epoch in range(0, self.training_parameters['epochs']):
 
@@ -152,14 +156,18 @@ class Trainer:
 
                 inputs, labels = data[0]  # Returns a random index anyway
 
+                # Set inputs depending on the model
                 if self.model._get_name() == 'wav2keyword':
                     inputs = torch.Tensor(inputs).to(self.device)
 
-                elif self.model._get_name() == 'dscnn':
-                    # inputs = torch.Tensor(inputs).to(self.device)
-                    if self.audio_processor.feature_extraction_method == 'mfcc' or self.audio_processor.feature_extraction_method == 'mel_spectrogram':
+                elif self.model._get_name() in {'dscnn_subconv', 'dscnn_maxpool'}:
+                    inputs = torch.Tensor(inputs[:, None, :]).to(self.device)
+
+                elif self.model._get_name() in {'dscnn'}:
+                    # Set inputs depending on the model + feature extraction method used
+                    if self.audio_processor.feature_extraction_method in {'mfcc', 'mel_spectrogram'}:
                         inputs = torch.Tensor(inputs[:, None, :, :]).to(self.device)
-                    elif self.audio_processor.feature_extraction_method == 'augmented' or self.audio_processor.feature_extraction_method == 'raw' or self.audio_processor.feature_extraction_method == 'dwt':
+                    elif self.audio_processor.feature_extraction_method in {'augmented', 'raw', 'dwt'}:
                         inputs = torch.Tensor(inputs[:, None, :, None]).to(self.device)
 
                 elif self.model._get_name() == 'kwt':
@@ -189,7 +197,7 @@ class Trainer:
                         minibatch + 1, len(data), running_loss / 10, 100 * correct / total))
                     running_loss = 0.0
 
-            tmp_acc = self.validate(model, 'validation', 128)
+            tmp_acc, _ = self.validate(model, 'validation', 128)
 
             # Save best performing network
             if tmp_acc > best_acc:

@@ -1,7 +1,7 @@
 import torch
 from models.wav2vec import wav2keyword
 from models.wav2vec.wav2vec import generate_w2v_model_params
-from models.dscnn import DSCNN
+from models.dscnn import DSCNN, DSCNNMAXPOOL, DSCNNSUBCONV
 from models.kwt import KWT
 
 
@@ -17,6 +17,12 @@ def create_model(model_name, model_params):
     """
     if model_name == 'dscnn':
         return DSCNN(model_params, use_bias=True)
+
+    elif model_name == 'dscnn_maxpool':
+        return DSCNNMAXPOOL(model_params, use_bias=True)
+
+    if model_name == 'dscnn_subconv':
+        return DSCNNSUBCONV(model_params, use_bias=True)
 
     elif model_name == 'kwt':
         return KWT(img_x=model_params['img_x'], img_y=model_params['img_y'],

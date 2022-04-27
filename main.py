@@ -73,8 +73,7 @@ if __name__ == '__main__':
     test_size = audio_processor.get_size('testing')
 
     # Get input shape # TODO cleaner or move to utils
-    if data_processing_parameters['feature_extraction_method'] == 'mfcc' or data_processing_parameters[
-        'feature_extraction_method'] == 'mel_spectrogram':
+    if data_processing_parameters['feature_extraction_method'] in {'mfcc', 'mel_spectrogram'}:
         model_input_shape_summary = (1, 49, data_processing_parameters['feature_bin_count'])
         model_input_shape = (1, 1, 49, data_processing_parameters['feature_bin_count'])
 
@@ -82,15 +81,19 @@ if __name__ == '__main__':
         model_input_shape_summary = (49, 40)
         model_input_shape = (1, 49, 40)
 
+    elif args.model == 'dcsnn_maxpool':
+        model_input_shape_summary = (1, 16000)
+        model_input_shape = (1, 1, 16000)
+
     else:  # raw, augmented, (dwr for now)
         model_input_shape_summary = (1, 16000, 1)
         model_input_shape = (1, 1, 16000, 1)
 
     # Model analysis
     model.to(device)
-    summary(model, model_input_shape_summary)
+    # summary(model, model_input_shape_summary)
     dummy_input = torch.rand(model_input_shape).to(device)
-    count_ops(model, dummy_input)
+    # count_ops(model, dummy_input)
 
     # Training initialization
     training_environment = Trainer(audio_processor, training_parameters, model, device)
