@@ -56,3 +56,4 @@ dependencies:
     - torchsummary==1.5.1
     - typing-extensions==4.1.1
     - urllib3==1.26.9
+prefix: /usr/home/sem22f41/miniconda3/envs/kwsenv
