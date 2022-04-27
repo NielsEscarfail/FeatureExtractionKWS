@@ -102,4 +102,3 @@ dependencies:
     - urllib3==1.26.4
     - werkzeug==1.0.1
     - wrapt==1.12.1
-prefix: /user/nielsescarfail/opt/anaconda3/envs/kws
