@@ -2,21 +2,21 @@ name: kwsenv
 channels:
   - defaults
 dependencies:
-  - ca-certificates=2022.3.29=hecd8cb5_1
+  - ca-certificates=2022.3.29
   - certifi=2020.6.20=pyhd3eb1b0_3
-  - libcxx=12.0.0=h2f01273_0
-  - libffi=3.3=hb1e8313_2
-  - ncurses=6.3=hca72f7f_2
-  - openssl=1.1.1n=hca72f7f_0
-  - pip=21.2.2=py36hecd8cb5_0
-  - python=3.6.13=h88f2d9e_0
-  - readline=8.1.2=hca72f7f_1
-  - setuptools=58.0.4=py36hecd8cb5_0
-  - sqlite=3.38.2=h707629a_0
-  - tk=8.6.11=h7bc2e8c_0
+  - libcxx=12.0.0
+  - libffi=3.3
+  - ncurses=6.3
+  - openssl=1.1.1n
+  - pip=21.2.2
+  - python=3.6.13
+  - readline=8.1.2
+  - setuptools=58.0.4
+  - sqlite=3.38.2
+  - tk=8.6.11
   - wheel=0.37.1=pyhd3eb1b0_0
-  - xz=5.2.5=h1de35cc_0
-  - zlib=1.2.12=h4dc903c_2
+  - xz=5.2.5
+  - zlib=1.2.12
   - pip:
     - appdirs==1.4.4
     - audioread==2.1.9
