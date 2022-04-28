@@ -1,15 +1,39 @@
 # Semester project: Feature Extraction for Speech Recognition
 ### In progress:
-- Wav2Vec / BCResNet implementations
-- Mel spectrogram features
+- Models:
+  - Wav2Vec - in testing
+  - DSCNN - variations to first layer to enable input modularisation
+  - BCResNet - implementing
+  
+- Feature extraction:
+  - Mel spectrogram features
+  
+- Results gathering code implementation.
+- Feature extraction methods plotting.
 
-### Setup:
-To install and activate the environment, run:
+### Tested + Supported model / feature extraction method pairs:
+- No regards to accuracy so far. 
+- Best performing is wav2vec raw, but needs low batch size (<16), and dscnn mfcc.
 ```
-conda env create -f environment.yml
-conda env activate kws
+python main.py --model dscnn --ft_extr mfcc
+python main.py --model dscnn --ft_extr raw
+python main.py --model dscnn --ft_extr augmented
+python main.py --model dscnn --ft_extr dwt
+python main.py --model dscnn_avgpool --ft_extr raw
+python main.py --model dscnn_avgpool --ft_extr augmented
+python main.py --model wav2vec --ft_extr raw
+python main.py --model wav2vec --ft_extr augmented
 ```
 
+### Running from Sassauna:
+The project is accessible at: sassauna[0-4]/sem22f41/FeatureExtractionKWS
+From there you can run:
+```
+bash
+conda env activate kwsenv
+pip install fairseq
+python main.py --load_trained
+```
 ### Training KWS models
 To train then test a model, run:
 ```
