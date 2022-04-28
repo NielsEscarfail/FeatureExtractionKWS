@@ -204,7 +204,7 @@ class Trainer:
                         minibatch + 1, len(data), running_loss / 10, 100 * correct / total))
                     running_loss = 0.0
 
-            tmp_acc, _ = self.validate(model, 'validation', 16)  # used to be 128
+            tmp_acc, _ = self.validate(model, 'validation', 256)  # used to be 128
 
             # Save best performing network
             if tmp_acc > best_acc:
