@@ -35,6 +35,7 @@ import yaml
 
 def setup_device():
     if torch.cuda.is_available():
+        torch.cuda.empty_cache()
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
