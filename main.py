@@ -114,8 +114,8 @@ if __name__ == '__main__':
         print('\nFinished Training on GPU in {:.2f} seconds'.format(training_time))
 
     # Save all results and export to csv  TODO add model size
-    test_acc, run_test_sample_time = training_environment.validate(model=model, mode='testing', batch_size=256)
-    val_acc, run_val_sample_time = training_environment.validate(model=model, mode='validation', batch_size=256)
+    test_acc, run_test_sample_time = training_environment.validate(model=model, mode='testing', batch_size=1024)
+    val_acc, run_val_sample_time = training_environment.validate(model=model, mode='validation', batch_size=1024)
 
     results = {'test_acc': test_acc, 'val_acc': val_acc,
                'run_test_sample_time': run_test_sample_time, 'run_val_sample_time': run_val_sample_time,
