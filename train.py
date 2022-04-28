@@ -204,14 +204,14 @@ class Trainer:
                         minibatch + 1, len(data), running_loss / 10, 100 * correct / total))
                     running_loss = 0.0
 
-            tmp_acc, _ = self.validate(model, 'validation', 128)
+            tmp_acc, _ = self.validate(model, 'validation', 16)  # used to be 128
 
             # Save best performing network
-            """if tmp_acc > best_acc:
+            if tmp_acc > best_acc:
                 best_acc = tmp_acc
                 PATH = './model_acc_' + str(best_acc) + '.pth'
                 PATH = os.path.join(save_path, PATH)
-                torch.save(model.state_dict(), PATH)"""
+                torch.save(model.state_dict(), PATH)
 
         # Update scheduler
         if self.training_parameters['scheduler'] == 'ReduceLROnPlateau':  # ReduceLROnPlateau requires metrics param
