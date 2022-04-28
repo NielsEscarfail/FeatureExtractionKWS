@@ -102,8 +102,7 @@ if __name__ == '__main__':
 
     if args.load_trained:  # If --load_trained, ignore training and load pretrained model
         if torch.cuda.is_available():
-            model.load_state_dict(
-                torch.load(os.path.join(model_save_dir, 'model.pth', map_location=torch.device('cuda'))))
+            model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth'), map_location=torch.device('cuda')))
         else:
             model.load_state_dict(torch.load(os.path.join(model_save_dir, 'model.pth')))
         print("\nLoaded model from: ", model_save_dir)
