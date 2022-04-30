@@ -20,8 +20,6 @@ import argparse
 import os
 import time
 import torch
-from pthflops import count_ops
-from torchsummary import summary
 from train import Trainer
 from utils import remove_txt, parameter_generation, setup_device, export_all_results_to_csv
 from models import create_model

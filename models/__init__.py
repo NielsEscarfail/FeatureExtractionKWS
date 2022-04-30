@@ -1,8 +1,9 @@
 import torch
-from models.dscnn import DSCNN, DSCNNAVGPOOL, DSCNNSUBCONV
-from models.kwt import KWT
+from models.models_benchmark.dscnn import DSCNN, DSCNNAVGPOOL, DSCNNSUBCONV
+from models.models_benchmark.kwt import KWT
 import torchaudio
 import fairseq
+from ofa.model_zoo import ofa_net
 
 def create_model(model_name, model_params):
     """
@@ -15,8 +16,11 @@ def create_model(model_name, model_params):
       Model to perform KWS
     """
 
+    if model_name == 'ofa':
+        ofa_network = ofa_net('ofa_mbv3_d234_e346_k357_w1.0', pretrained=True)
 
-    if model_name == 'dscnn':
+    # Existing models
+    elif model_name == 'dscnn':
         return DSCNN(model_params, use_bias=True)
 
     elif model_name == 'wav2vec_pt10m':
@@ -27,7 +31,7 @@ def create_model(model_name, model_params):
     elif model_name == 'wav2vec_small':
         from torchaudio.models.wav2vec2.utils import import_fairseq_model
         # Load model using fairseq
-        model_file = '/Users/nielsescarfail/Desktop/FeatureExtractionKWS/models/wav2vec/wav2vec_small.pt'
+        model_file = '/models/models_benchmark/wav2vec/wav2vec_small.pt'
         model, _, _ = fairseq.checkpoint_utils.load_model_ensemble_and_task([model_file])
         original = model[0]
         imported = import_fairseq_model(original)
@@ -65,8 +69,8 @@ def create_model(model_name, model_params):
                    emb_dropout=model_params['emb_dropout'])
 
     elif model_name == 'wav2vec':
-        from models.wav2vec import wav2keyword
-        from models.wav2vec.wav2vec import generate_w2v_model_params
+        from models.models_benchmark.wav2vec import wav2keyword
+        from models.models_benchmark.wav2vec.wav2vec import generate_w2v_model_params
         trained_model = torch.load(model_params['pt'])
         w2v_model_config = vars(trained_model['args'])
         w2v_model_config = generate_w2v_model_params(w2v_model_config)
