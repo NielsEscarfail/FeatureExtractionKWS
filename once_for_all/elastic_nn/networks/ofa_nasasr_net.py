@@ -4,6 +4,13 @@
 
 # Contains MACRO ARCHITECTURE ON THE ASR NET I think, (fixed params)
 # It is also therefore possible to have multiple input shapes (using make_divisible and adjusting widths)
+from once_for_all.networks.nasasr_net import NASASRNet
+
+
+class OFAKWSNet(NASASRNet):
+    def __init__(self):
+        pass
+
 
 
 class OFAMobileNetV3(MobileNetV3):

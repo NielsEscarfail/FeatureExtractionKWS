@@ -51,7 +51,7 @@ class NASASRNet(nn.Module):
 
         blocks = []
         for block_config in config["blocks"]:
-            blocks.append(ResidualBlock.build_from_config(block_config)) # TODO ADD OUR CUSTOM BLOCK
+            blocks.append(ResidualBlock.build_from_config(block_config))  # TODO ADD OUR CUSTOM BLOCK
 
         net = NASASRNet(first_block, blocks, final_lstm_layer, classifier)
 
