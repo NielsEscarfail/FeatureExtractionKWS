@@ -22,7 +22,7 @@ import time
 import torch
 from train import Trainer
 from utils import remove_txt, parameter_generation, setup_device, export_all_results_to_csv
-from models import create_model
+from benchmark_models import create_model
 from feature_extraction.dataset import AudioProcessor
 
 if __name__ == '__main__':

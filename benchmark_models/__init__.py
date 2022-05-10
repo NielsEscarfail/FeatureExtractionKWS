@@ -1,6 +1,6 @@
 import torch
-from models.models_benchmark.dscnn import DSCNN, DSCNNAVGPOOL, DSCNNSUBCONV
-from models.models_benchmark.kwt import KWT
+from benchmark_models.dscnn import DSCNN, DSCNNAVGPOOL, DSCNNSUBCONV
+from benchmark_models.kwt import KWT
 import torchaudio
 import fairseq
 from ofa.model_zoo import ofa_net
@@ -69,8 +69,8 @@ def create_model(model_name, model_params):
                    emb_dropout=model_params['emb_dropout'])
 
     elif model_name == 'wav2vec':
-        from models.models_benchmark.wav2vec import wav2keyword
-        from models.models_benchmark.wav2vec.wav2vec import generate_w2v_model_params
+        from benchmark_models.models_benchmark.wav2vec import wav2keyword
+        from benchmark_models.models_benchmark.wav2vec.wav2vec import generate_w2v_model_params
         trained_model = torch.load(model_params['pt'])
         w2v_model_config = vars(trained_model['args'])
         w2v_model_config = generate_w2v_model_params(w2v_model_config)
