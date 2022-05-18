@@ -5,16 +5,17 @@ import random
 import torch
 import torch.nn as nn
 
+
 class DistributedRunManager:
     def __init__(
-        self,
-        path,
-        net,
-        run_config,
-        hvd_compression,
-        backward_steps=1,
-        is_root=False,
-        init=True,
+            self,
+            path,
+            net,
+            run_config,
+            hvd_compression,
+            backward_steps=1,
+            is_root=False,
+            init=True,
     ):
         import horovod.torch as hvd
 

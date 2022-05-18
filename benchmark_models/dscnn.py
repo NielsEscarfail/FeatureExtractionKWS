@@ -22,7 +22,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import npy_to_txt
+from utils_old import npy_to_txt
 
 
 

@@ -7,8 +7,12 @@ import torch
 import torch.nn as nn
 
 from collections import OrderedDict
-from ofa.utils import get_same_padding, min_divisible_value, SEModule, ShuffleLayer
-from ofa.utils import build_activation, make_divisible
+
+from utils.common_tools import get_same_padding, min_divisible_value
+from utils.pytorch_modules import build_activation, SEModule
+
+"""from ofa.utils import get_same_padding, min_divisible_value, SEModule, ShuffleLayer
+from ofa.utils import build_activation, make_divisible"""
 
 __all__ = [
     "set_layer_from_config",
@@ -19,6 +23,7 @@ __all__ = [
     "ZeroLayer",
     "MBConvLayer",
     "ResidualBlock",
+    "LSTMLayer"
 ]
 
 
@@ -46,13 +51,13 @@ def set_layer_from_config(layer_config):
 
 class My2DLayer(nn.Module):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        use_bn=True,
-        act_func="relu",
-        dropout_rate=0,
-        ops_order="weight_bn_act",
+            self,
+            in_channels,
+            out_channels,
+            use_bn=True,
+            act_func="relu",
+            dropout_rate=0,
+            ops_order="weight_bn_act",
     ):
         super(My2DLayer, self).__init__()
         self.in_channels = in_channels
@@ -144,20 +149,20 @@ class My2DLayer(nn.Module):
 
 class ConvLayer(My2DLayer):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size=3,
-        stride=1,
-        dilation=1,
-        groups=1,
-        bias=False,
-        has_shuffle=False,
-        use_se=False,
-        use_bn=True,
-        act_func="relu",
-        dropout_rate=0,
-        ops_order="weight_bn_act",
+            self,
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            dilation=1,
+            groups=1,
+            bias=False,
+            has_shuffle=False,
+            use_se=False,
+            use_bn=True,
+            act_func="relu",
+            dropout_rate=0,
+            ops_order="weight_bn_act",
     ):
         # default normal 3x3_Conv with bn and relu
         self.kernel_size = kernel_size
@@ -249,13 +254,13 @@ class ConvLayer(My2DLayer):
 
 class IdentityLayer(My2DLayer):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        use_bn=False,
-        act_func=None,
-        dropout_rate=0,
-        ops_order="weight_bn_act",
+            self,
+            in_channels,
+            out_channels,
+            use_bn=False,
+            act_func=None,
+            dropout_rate=0,
+            ops_order="weight_bn_act",
     ):
         super(IdentityLayer, self).__init__(
             in_channels, out_channels, use_bn, act_func, dropout_rate, ops_order
@@ -282,14 +287,14 @@ class IdentityLayer(My2DLayer):
 
 class LinearLayer(nn.Module):
     def __init__(
-        self,
-        in_features,
-        out_features,
-        bias=True,
-        use_bn=False,
-        act_func=None,
-        dropout_rate=0,
-        ops_order="weight_bn_act",
+            self,
+            in_features,
+            out_features,
+            bias=True,
+            use_bn=False,
+            act_func=None,
+            dropout_rate=0,
+            ops_order="weight_bn_act",
     ):
         super(LinearLayer, self).__init__()
 
@@ -378,7 +383,7 @@ class LinearLayer(nn.Module):
 
 class MultiHeadLinearLayer(nn.Module):
     def __init__(
-        self, in_features, out_features, num_heads=1, bias=True, dropout_rate=0
+            self, in_features, out_features, num_heads=1, bias=True, dropout_rate=0
     ):
         super(MultiHeadLinearLayer, self).__init__()
         self.in_features = in_features
@@ -431,14 +436,14 @@ class MultiHeadLinearLayer(nn.Module):
 
     def __repr__(self):
         return (
-            "MultiHeadLinear(in_features=%d, out_features=%d, num_heads=%d, bias=%s, dropout_rate=%s)"
-            % (
-                self.in_features,
-                self.out_features,
-                self.num_heads,
-                self.bias,
-                self.dropout_rate,
-            )
+                "MultiHeadLinear(in_features=%d, out_features=%d, num_heads=%d, bias=%s, dropout_rate=%s)"
+                % (
+                    self.in_features,
+                    self.out_features,
+                    self.num_heads,
+                    self.bias,
+                    self.dropout_rate,
+                )
         )
 
 
@@ -464,18 +469,50 @@ class ZeroLayer(nn.Module):
         return ZeroLayer()
 
 
+class LSTMLayer(nn.Module): # TODO implement bn before LSTM
+    def __init__(self,
+                 input_size,
+                 hidden_size,
+                 use_bn=False,
+                 batch_first=True,
+                 dropout_rate=0.0,
+                 ):
+        super(LSTMLayer, self).__init__()
+
+        self.lstm = nn.LSTM(input_size, hidden_size, batch_first, dropout_rate)
+
+    def forward(self, x):
+        return self.lstm(x)
+
+    @property
+    def module_str(self):
+        return "LSTM"
+
+    @property
+    def config(self):
+        return {
+            "name": LSTMLayer.__name__,
+            "input_size": self.input_size,
+            "hidden_size": self.hidden_size,
+        }
+
+    @staticmethod
+    def build_from_config(config):
+        return LSTMLayer(**config)
+
+
 class MBConvLayer(nn.Module):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size=3,
-        stride=1,
-        expand_ratio=6,
-        mid_channels=None,
-        act_func="relu6",
-        use_se=False,
-        groups=None,
+            self,
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            expand_ratio=6,
+            mid_channels=None,
+            act_func="relu6",
+            use_se=False,
+            groups=None,
     ):
         super(MBConvLayer, self).__init__()
 
@@ -644,4 +681,47 @@ class ResidualBlock(nn.Module):
         return self.conv
 
 
+class PadConvResBlock(nn.Module):
+    def __init__(self, pad, conv, shortcut):
+        super(PadConvResBlock, self).__init__()
 
+        self.pad = pad
+        self.conv = conv
+        self.shortcut = shortcut
+
+    def forward(self, x):
+        x = self.pad(x)
+
+        if self.conv is None or isinstance(self.conv, ZeroLayer):
+            res = x
+        elif self.shortcut is None or isinstance(self.shortcut, ZeroLayer):
+            res = self.conv(x)
+        else:
+            res = self.conv(x) + self.shortcut(x)
+        return res
+
+    @property
+    def module_str(self):
+        return "(%s, %s)" % (
+            self.conv.module_str if self.conv is not None else None,
+            self.shortcut.module_str if self.shortcut is not None else None,
+        )
+
+    @property
+    def config(self):
+        return {
+            "name": PadConvResBlock.__name__,
+            "pad": self.pad.config if self.pad is not None else None,
+            "conv": self.conv.config if self.conv is not None else None,
+            "shortcut": self.shortcut.config if self.shortcut is not None else None,
+        }
+
+    @staticmethod
+    def build_from_config(config):
+        pad = set_layer_from_config(config["pad"])
+        conv_config = (
+            config["conv"] if "conv" in config else config["mobile_inverted_conv"]
+        )
+        conv = set_layer_from_config(conv_config)
+        shortcut = set_layer_from_config(config["shortcut"])
+        return PadConvResBlock(pad, conv, shortcut)
