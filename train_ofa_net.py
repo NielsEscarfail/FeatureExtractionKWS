@@ -111,8 +111,19 @@ if __name__ == "__main__":
     if len(args.image_size) == 1:
         args.image_size = args.image_size[0]
 
+    # build run config from args
+    args.lr_schedule_param = None
+    args.opt_param = {
+        "momentum": args.momentum,
+        "nesterov": not args.no_nesterov,
+    }
+    args.init_lr = args.base_lr * num_gpus  # linearly rescale the learning rate
+    if args.warmup_lr < 0:
+        args.warmup_lr = args.base_lr
+
     args.train_batch_size = args.base_batch_size
     args.test_batch_size = args.base_batch_size * 4
+
     run_config = DistributedImageNetRunConfig(
         **args.__dict__, num_replicas=num_gpus, rank=hvd.rank()
     )
