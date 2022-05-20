@@ -9,13 +9,12 @@ from utils.pytorch_modules import MyGlobalAvgPool2d
 
 class KWSNet(MyNetwork):
 
-    def __init__(self, input_stem, blocks, final_lstm_layer, classifier):
+    def __init__(self, input_stem, blocks, classifier):
         super(KWSNet, self).__init__()
 
         self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
         self.global_avg_pool = MyGlobalAvgPool2d(keep_dim=True)
-        self.final_lstm_layer = final_lstm_layer
         self.classifier = classifier
 
     def forward(self, x):
@@ -24,7 +23,6 @@ class KWSNet(MyNetwork):
         for block in self.blocks:
             x = block(x)
         x = self.global_avg_pool(x)  # global average pooling
-        x = self.final_lstm_layer(x)
         x = self.classifier(x)
         return x
 
@@ -36,7 +34,6 @@ class KWSNet(MyNetwork):
         for block in self.blocks:
             _str += block.module_str + "\n"
         _str += self.global_avg_pool.__repr__() + "\n"
-        _str += self.final_lstm_layer.module_str + "\n"
         _str += self.classifier.module_str
         return _str
 
@@ -44,9 +41,9 @@ class KWSNet(MyNetwork):
     def config(self):
         return {
             "name": KWSNet.__name__,
+            "bn": self.get_bn_param(),
             "input_stem": [layer.config for layer in self.input_stem],
             "blocks": [block.config for block in self.blocks],
-            "final_lstm_layer": self.final_lstm_layer.config,
             "classifier": self.classifier.config,
         }
 
@@ -60,17 +57,44 @@ class KWSNet(MyNetwork):
         for block_config in config["blocks"]:
             blocks.append(PadConvResBlock.build_from_config(block_config))  # TODO ADD OUR CUSTOM BLOCK
 
-        final_lstm_layer = set_layer_from_config(config["final_lstm_layer"])
         classifier = set_layer_from_config(config["classifier"])
 
-        net = KWSNet(input_stem, blocks, final_lstm_layer, classifier)
+        net = KWSNet(input_stem, blocks, classifier)
 
+        if "bn" in config:
+            net.set_bn_param(**config["bn"])
+        else:
+            net.set_bn_param(momentum=0.1, eps=1e-5)
         return net
 
-    @staticmethod
-    def build_net_via_cfg(blocks_cfg, input_channel, last_channel, lstm_hidden_size, n_classes, dropout_rate):
+    def zero_last_gamma(self):
+        for m in self.modules():
+            if isinstance(m, ResidualBlock):
+                if isinstance(m.conv, MBConvLayer) and isinstance(
+                    m.shortcut, IdentityLayer
+                ):
+                    m.conv.point_linear.bn.weight.data.zero_()
 
-        # build input stem
+    @property
+    def grouped_block_index(self):
+        info_list = []
+        block_index_list = []
+        for i, block in enumerate(self.blocks[1:], 1):
+            if block.shortcut is None and len(block_index_list) > 0:
+                info_list.append(block_index_list)
+                block_index_list = []
+            block_index_list.append(i)
+        if len(block_index_list) > 0:
+            info_list.append(block_index_list)
+        return info_list
+
+    @staticmethod  # TODO IN PROGRESS
+    def build_net_via_cfg(input_stem_cfg, blocks_cfg, input_channel, n_classes, dropout_rate):
+        """
+        Possible future additions:
+        Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
+        """
+        # build input stem # TODO make that depend on input_stem_cfg
         input_stem = [
             ConvLayer(
                 3,
@@ -87,13 +111,13 @@ class KWSNet(MyNetwork):
         blocks = []
         for stage_id, block_config_list in blocks_cfg.items():
             for (
-                    k,
-                    mid_channel,
-                    out_channel,
-                    use_se,
-                    act_func,
-                    stride,
-                    expand_ratio,
+                k,
+                mid_channel,
+                out_channel,
+                use_se,
+                act_func,
+                stride,
+                expand_ratio,
             ) in block_config_list:
                 mb_conv = MBConvLayer(
                     feature_dim,
@@ -112,23 +136,12 @@ class KWSNet(MyNetwork):
                 blocks.append(ResidualBlock(mb_conv, shortcut))
                 feature_dim = out_channel
 
-        # feature mix layer
-        feature_mix_layer = ConvLayer(
-            feature_dim * 6,
-            last_channel,
-            kernel_size=1,
-            bias=False,
-            use_bn=False,
-            act_func="h_swish",
-        )
-        final_lstm_layer = LSTMLayer(45, lstm_hidden_size)  # TODO find which size
-
         # classifier
-        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
+        classifier = LinearLayer(feature_dim, n_classes, dropout_rate=dropout_rate)
 
-        return input_stem, blocks, feature_mix_layer, final_lstm_layer, classifier
+        return input_stem, blocks, classifier
 
-    @staticmethod
+    @staticmethod  # TODO CHECK
     def adjust_cfg(
             cfg, ks=None, expand_ratio=None, depth_param=None, stage_width_list=None
     ):
@@ -168,11 +181,14 @@ class KWSNetLarge(KWSNet):
             depth_param=None,
             stage_width_list=None,
     ):
-        input_channel = 16
-        last_channel = 1280
-        lstm_hidden_size = 1200
-
-        cfg = {
+        input_channel = 16  # Todo see for largest net
+        input_stem_cfg = {
+            "0": [
+                [3, 16, 16, False, "relu", 1, 1],
+            ]
+        }
+        blocks_cfg = { # Here largest depth = 6
+            #   k, mid_channel, out_channel, use_se, act_func, stride, expand_ratio
             #    k,     exp,    c,      se,         nl,         s,      e,
             "0": [
                 [3, 16, 16, False, "relu", 1, 1],
@@ -203,7 +219,7 @@ class KWSNetLarge(KWSNet):
             ],
         }
 
-        cfg = self.adjust_cfg(cfg, ks, expand_ratio, depth_param, stage_width_list)
+        blocks_cfg = self.adjust_cfg(blocks_cfg, ks, expand_ratio, depth_param, stage_width_list)
         """
         # width multiplier on mobile setting, change `exp: 1` and `c: 2`
         for stage_id, block_config_list in cfg.items():
@@ -219,13 +235,11 @@ class KWSNetLarge(KWSNet):
         (
             input_stem,
             blocks,
-            feature_mix_layer,
-            final_lstm_layer,
             classifier,
-        ) = self.build_net_via_cfg(cfg, input_channel, last_channel, lstm_hidden_size, n_classes, dropout_rate)
-        super(KWSNetLarge, self).__init__(
-            input_stem, blocks, final_lstm_layer, classifier
-        )
+        ) = self.build_net_via_cfg(
+            input_stem_cfg, blocks_cfg, input_channel, n_classes, dropout_rate)
+
+        super(KWSNetLarge, self).__init__(input_stem, blocks, classifier)
 
         # set bn param
         self.set_bn_param(*bn_param)

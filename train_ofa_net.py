@@ -9,6 +9,7 @@ from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.networks.kws_net import KWSNetLarge
 from once_for_all.run_manager.distributed_run_manager import DistributedRunManager
 from once_for_all.run_manager.run_config import DistributedImageNetRunConfig
+from once_for_all.run_manager.run_manager import RunManager
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -22,6 +23,8 @@ parser.add_argument(
         "classifier_dim",
     ],
 )
+parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
+
 
 args = parser.parse_args()
 
@@ -36,6 +39,44 @@ if args.task == "kernel":
     args.ks_list = "3,5,7"
     args.expand_list = "6"
     args.depth_list = "4"
+elif args.task == "depth":
+    args.path = "exp/kernel2kernel_depth/phase%d" % args.phase
+    args.dynamic_batch_size = 2
+    if args.phase == 1:
+        args.n_epochs = 25
+        args.base_lr = 2.5e-3
+        args.warmup_epochs = 0
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.expand_list = "6"
+        args.depth_list = "3,4"
+    else:
+        args.n_epochs = 120
+        args.base_lr = 7.5e-3
+        args.warmup_epochs = 5
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.expand_list = "6"
+        args.depth_list = "2,3,4"
+elif args.task == "expand":
+    args.path = "exp/kernel_depth2kernel_depth_width/phase%d" % args.phase
+    args.dynamic_batch_size = 4
+    if args.phase == 1:
+        args.n_epochs = 25
+        args.base_lr = 2.5e-3
+        args.warmup_epochs = 0
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.expand_list = "4,6"
+        args.depth_list = "2,3,4"
+    else:
+        args.n_epochs = 120
+        args.base_lr = 7.5e-3
+        args.warmup_epochs = 5
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.expand_list = "3,4,6"
+        args.depth_list = "2,3,4"
 else:
     raise NotImplementedError
 
@@ -172,20 +213,15 @@ if __name__ == "__main__":
         if torch.cuda.is_available():
             args.teacher_model.cuda()
 
-    """ Distributed RunManager """
-    # Horovod: (optional) compression algorithm.
-    compression = hvd.Compression.fp16 if args.fp16_allreduce else hvd.Compression.none
-    distributed_run_manager = DistributedRunManager(
+    """ RunManager """
+    run_manager = RunManager(
         args.path,
         net,
-        run_config,
-        compression,
-        backward_steps=args.dynamic_batch_size,
-        is_root=(hvd.rank() == 0),
+        run_config
     )
-    distributed_run_manager.save_config()
+    run_manager.save_config()
     # hvd broadcast
-    distributed_run_manager.broadcast()
+    run_manager.broadcast()
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (
@@ -203,25 +239,25 @@ if __name__ == "__main__":
     }
     if args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
-        if distributed_run_manager.start_epoch == 0:
+        if run_manager.start_epoch == 0:
             args.ofa_checkpoint_path = download_url(
                 "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K7",
                 model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
             )
             load_models(
-                distributed_run_manager,
-                distributed_run_manager.net,
+                run_manager,
+                run_manager.net,
                 args.ofa_checkpoint_path,
             )
-            distributed_run_manager.write_log(
+            run_manager.write_log(
                 "%.3f\t%.3f\t%.3f\t%s"
-                % validate(distributed_run_manager, is_test=True, **validate_func_dict),
+                % validate(run_manager, is_test=True, **validate_func_dict),
                 "valid",
             )
         else:
             assert args.resume
         train(
-            distributed_run_manager,
+            run_manager,
             args,
             lambda _run_manager, epoch, is_test: validate(
                 _run_manager, epoch, is_test, **validate_func_dict
@@ -242,7 +278,7 @@ if __name__ == "__main__":
                 "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D34_E6_K357",
                 model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
             )
-        train_elastic_depth(train, distributed_run_manager, args, validate_func_dict)
+        train_elastic_depth(train, run_manager, args, validate_func_dict)
     elif args.task == "expand":
         from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
             train_elastic_expand,
@@ -258,6 +294,6 @@ if __name__ == "__main__":
                 "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D234_E46_K357",
                 model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
             )
-        train_elastic_expand(train, distributed_run_manager, args, validate_func_dict)
+        train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
