@@ -2,10 +2,10 @@
 # Han Cai, Chuang Gan, Tianzhe Wang, Zhekai Zhang, Song Han
 # International Conference on Learning Representations (ICLR), 2020.
 
-"""from ofa.utils import calc_learning_rate, build_optimizer
-from ofa.imagenet_classification.data_providers import ImagenetDataProvider
-"""
-__all__ = ["RunConfig", "ImagenetRunConfig", "DistributedImageNetRunConfig"]
+__all__ = ["RunConfig", "KWSRunConfig"]
+
+from once_for_all.run_manager.data_provider import KWSDataProvider
+from utils.pytorch_utils import build_optimizer, calc_learning_rate
 
 
 class RunConfig:
@@ -107,27 +107,15 @@ class RunConfig:
             n_images, batch_size, num_worker, num_replicas, rank
         )
 
-    """ optimizer """
 
-    def build_optimizer(self, net_params):
-        return build_optimizer(
-            net_params,
-            self.opt_type,
-            self.opt_param,
-            self.init_lr,
-            self.weight_decay,
-            self.no_decay_keys,
-        )
-
-
-class ImagenetRunConfig(RunConfig):
+class KWSRunConfig(RunConfig):
     def __init__(
         self,
         n_epochs=150,
         init_lr=0.05,
         lr_schedule_type="cosine",
         lr_schedule_param=None,
-        dataset="imagenet",
+        dataset="speech-commands",
         train_batch_size=256,
         test_batch_size=500,
         valid_size=None,
@@ -140,13 +128,10 @@ class ImagenetRunConfig(RunConfig):
         model_init="he_fout",
         validation_frequency=1,
         print_frequency=10,
-        n_worker=32,
-        resize_scale=0.08,
-        distort_color="tf",
-        image_size=224,
+        ft_extr_size=(32, 10),
         **kwargs
     ):
-        super(ImagenetRunConfig, self).__init__(
+        super(KWSRunConfig, self).__init__(
             n_epochs,
             init_lr,
             lr_schedule_type,
@@ -166,100 +151,30 @@ class ImagenetRunConfig(RunConfig):
             print_frequency,
         )
 
-        self.n_worker = n_worker
-        self.resize_scale = resize_scale
-        self.distort_color = distort_color
-        self.image_size = image_size
+        self.ft_extr_size = ft_extr_size
 
     @property
     def data_provider(self):
         if self.__dict__.get("_data_provider", None) is None:
-            if self.dataset == ImagenetDataProvider.name():
-                DataProviderClass = ImagenetDataProvider
+            if self.dataset == KWSDataProvider.name():
+                DataProviderClass = KWSDataProvider
             else:
                 raise NotImplementedError
             self.__dict__["_data_provider"] = DataProviderClass(
                 train_batch_size=self.train_batch_size,
                 test_batch_size=self.test_batch_size,
                 valid_size=self.valid_size,
-                n_worker=self.n_worker,
-                resize_scale=self.resize_scale,
-                distort_color=self.distort_color,
-                image_size=self.image_size,
+                ft_extr_size=self.ft_extr_size,
             )
         return self.__dict__["_data_provider"]
 
-
-class DistributedImageNetRunConfig(ImagenetRunConfig):
-    def __init__(
-        self,
-        n_epochs=150,
-        init_lr=0.05,
-        lr_schedule_type="cosine",
-        lr_schedule_param=None,
-        dataset="imagenet",
-        train_batch_size=64,
-        test_batch_size=64,
-        valid_size=None,
-        opt_type="sgd",
-        opt_param=None,
-        weight_decay=4e-5,
-        label_smoothing=0.1,
-        no_decay_keys=None,
-        mixup_alpha=None,
-        model_init="he_fout",
-        validation_frequency=1,
-        print_frequency=10,
-        n_worker=8,
-        resize_scale=0.08,
-        distort_color="tf",
-        image_size=224,
-        **kwargs
-    ):
-        super(DistributedImageNetRunConfig, self).__init__(
-            n_epochs,
-            init_lr,
-            lr_schedule_type,
-            lr_schedule_param,
-            dataset,
-            train_batch_size,
-            test_batch_size,
-            valid_size,
-            opt_type,
-            opt_param,
-            weight_decay,
-            label_smoothing,
-            no_decay_keys,
-            mixup_alpha,
-            model_init,
-            validation_frequency,
-            print_frequency,
-            n_worker,
-            resize_scale,
-            distort_color,
-            image_size,
-            **kwargs
+    def build_optimizer(self, net_params):
+        return build_optimizer(
+            net_params,
+            self.opt_type,
+            self.opt_param,
+            self.init_lr,
+            self.weight_decay,
+            self.no_decay_keys,
         )
 
-        self._num_replicas = kwargs["num_replicas"]
-        self._rank = kwargs["rank"]
-
-    @property
-    def data_provider(self):
-        if self.__dict__.get("_data_provider", None) is None:
-            if self.dataset == ImagenetDataProvider.name():
-                DataProviderClass = ImagenetDataProvider
-            else:
-                raise NotImplementedError
-            self.__dict__["_data_provider"] = DataProviderClass(
-                train_batch_size=self.train_batch_size,
-                test_batch_size=self.test_batch_size,
-                valid_size=self.valid_size,
-                n_worker=self.n_worker,
-                resize_scale=self.resize_scale,
-                distort_color=self.distort_color,
-                image_size=self.image_size,
-                num_replicas=self._num_replicas,
-                rank=self._rank,
-            )
-        return self.__dict__["_data_provider"]

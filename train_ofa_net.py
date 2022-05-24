@@ -2,13 +2,11 @@ import argparse
 import numpy as np
 import os
 import random
-import horovod.torch as hvd
 import torch
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.networks.kws_net import KWSNetLarge
-from once_for_all.run_manager.distributed_run_manager import DistributedRunManager
-from once_for_all.run_manager.run_config import DistributedImageNetRunConfig
+from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
 
 parser = argparse.ArgumentParser()
@@ -165,8 +163,8 @@ if __name__ == "__main__":
     args.train_batch_size = args.base_batch_size
     args.test_batch_size = args.base_batch_size * 4
 
-    run_config = DistributedImageNetRunConfig(
-        **args.__dict__, num_replicas=num_gpus, rank=hvd.rank()
+    run_config = KWSRunConfig(
+        **args.__dict__, num_replicas=num_gpus
     )
 
     # Print run config information

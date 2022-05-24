@@ -15,6 +15,7 @@ import torch.optim
 from tqdm import tqdm
 
 from utils import init_models
+from utils.common_tools import AverageMeter
 from utils.pytorch_utils import get_net_info
 
 """from ofa.utils import (
@@ -58,7 +59,7 @@ class RunManager:
         # initialize model (default)
         # if init:
         #    init_models(run_config.model_init)
-
+        """
         # net info
         net_info = get_net_info(
             self.net, self.run_config.data_provider.data_shape, measure_latency, True
@@ -73,7 +74,7 @@ class RunManager:
             fout.write("%s\n" % self.run_config.data_provider.train.dataset.transform)
             fout.write("%s\n" % self.run_config.data_provider.test.dataset.transform)
             fout.write("%s\n" % self.network)
-
+        """
         # criterion
         if isinstance(self.run_config.mixup_alpha, float):
             self.train_criterion = cross_entropy_loss_with_soft_target

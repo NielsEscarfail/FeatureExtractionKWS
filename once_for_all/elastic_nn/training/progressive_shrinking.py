@@ -15,6 +15,9 @@ __all__ = [
     "train_elastic_width_mult",
 ]
 
+from once_for_all.run_manager.distributed_run_manager import DistributedRunManager
+
+
 def validate(
         run_manager,
         epoch=0,
