@@ -21,8 +21,7 @@ import shutil
 import time
 import torch
 import torch.nn.functional as F
-from feature_extraction import dataset
-from utils import conf_matrix, npy_to_txt
+from once_for_all.run_manager import dataset
 
 
 class Trainer:

@@ -18,13 +18,14 @@ def train_one_large_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0
 
     # switch to train mode
     dynamic_net.train()
-    # nBatch = len(run_manager.run_config.train_loader)
-    nBatch = 16
+    nBatch = len(run_manager.run_config.train_loader)
+
+    # nBatch = 256
+    print("nBatch: ", nBatch)
 
     data_time = AverageMeter()
     losses = AverageMeter()
     metric_dict = run_manager.get_metric_dict()
-
     with tqdm(
             total=nBatch,
             desc="Train Epoch #{}".format(epoch + 1),
@@ -46,8 +47,10 @@ def train_one_large_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0
                 new_lr = run_manager.run_config.adjust_learning_rate(
                     run_manager.optimizer, epoch - warmup_epochs, i, nBatch
                 )
-
-            images, labels = images.cuda(), labels.cuda()
+            print("Image shape: " ,images.shape)
+            print("Labels shape: " ,labels.shape)
+            # images, labels = images.cuda(), labels.cuda()
+            # images, labels = torch.Tensor(images).to(device), torch.Tensor(labels).to(device)
             target = labels
 
             # clean gradients
@@ -156,7 +159,8 @@ parser.add_argument(
 
 args = parser.parse_args()
 args.path = "testlarge"
-args.dynamic_batch_size = 1
+# args.dynamic_batch_size = 1
+args.dynamic_batch_size = 256
 args.n_epochs = 120
 args.base_lr = 3e-2
 args.warmup_epochs = 5

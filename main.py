@@ -23,7 +23,7 @@ import torch
 from train import Trainer
 from utils import remove_txt, parameter_generation, setup_device, export_all_results_to_csv
 from benchmark_models import create_model
-from feature_extraction.dataset import AudioProcessor
+from once_for_all.run_manager.dataset import AudioProcessor
 
 if __name__ == '__main__':
     device = setup_device()  # Set up cuda device

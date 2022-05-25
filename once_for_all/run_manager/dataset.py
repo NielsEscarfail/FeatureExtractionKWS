@@ -17,6 +17,7 @@
 # Adapted by: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
 # Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
 
+__all__ = ["AudioProcessor", "AudioGenerator"]
 
 import glob
 import hashlib
@@ -32,9 +33,7 @@ import torch
 import torchaudio
 import librosa
 import pywt
-import scipy
 
-# from kaldi.feat import PLP
 
 MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 BACKGROUND_NOISE_LABEL = '_background_noise_'
@@ -257,6 +256,108 @@ class AudioProcessor(object):
 
             label_index = self.word_to_index[sample['label']]
             labels_placeholder[i] = label_index
+        return data_placeholder, labels_placeholder
+
+    def get_one_augmented_data(self, mode, training_parameters):
+        # Pick one of the partitions to choose samples from
+        candidates = self.data_set[mode]
+        use_background = (self.background_noise and (mode == 'training'))
+        pick_deterministically = (mode != 'training')
+        # Pick which audio sample to use.
+        if training_parameters['batch_size'] == -1 or pick_deterministically:
+            # The randomness is eliminated here to train on the same batch ordering
+            sample_index = i
+        else:
+            sample_index = np.random.randint(len(candidates))
+        sample = candidates[sample_index]
+
+        # Compute time shift offset
+        if training_parameters['time_shift_samples'] > 0:
+            time_shift_amount = np.random.randint(-training_parameters['time_shift_samples'],
+                                                  training_parameters['time_shift_samples'])
+        else:
+            time_shift_amount = 0
+        if time_shift_amount > 0:
+            time_shift_padding = [[time_shift_amount, 0], [0, 0]]
+            time_shift_offset = [0, 0]
+        else:
+            time_shift_padding = [[0, -time_shift_amount], [0, 0]]
+            time_shift_offset = [-time_shift_amount, 0]
+
+        data_augmentation_parameters = {
+            'wav_filename': sample['file'],
+            'time_shift_padding': time_shift_padding,
+            'time_shift_offset': time_shift_offset,
+        }
+
+        # Select background noise to mix in.
+        if use_background or sample['label'] == SILENCE_LABEL:
+            background_index = np.random.randint(len(self.background_noise))
+            background_samples = self.background_noise[background_index].numpy()
+            assert (len(background_samples) > self.data_processing_parameters['desired_samples'])
+
+            background_offset = np.random.randint(0, len(background_samples) - self.data_processing_parameters[
+                'desired_samples'])
+            background_clipped = background_samples[background_offset:(
+                    background_offset + self.data_processing_parameters['desired_samples'])]
+            background_reshaped = background_clipped.reshape(
+                [self.data_processing_parameters['desired_samples'], 1])
+
+            if sample['label'] == SILENCE_LABEL:
+                background_volume = np.random.uniform(0, 1)
+            elif np.random.uniform(0, 1) < training_parameters['background_frequency']:
+                background_volume = np.random.uniform(0, training_parameters['background_volume'])
+            else:
+                background_volume = 0
+        else:
+            background_reshaped = np.zeros([self.data_processing_parameters['desired_samples'], 1])
+            background_volume = 0
+
+        data_augmentation_parameters['background_noise'] = background_reshaped
+        data_augmentation_parameters['background_volume'] = background_volume
+
+        # For silence samples, remove any sound
+        if sample['label'] == SILENCE_LABEL:
+            data_augmentation_parameters['foreground_volume'] = 0
+        else:
+            data_augmentation_parameters['foreground_volume'] = 1
+
+        # Load data
+        try:
+            sf_loader, _ = sf.read(data_augmentation_parameters['wav_filename'])
+            wav_file = torch.Tensor(np.array([sf_loader]))
+        except:
+            pass
+
+        # Ensure data length is equal to the number of desired samples
+        if len(wav_file[0]) < self.data_processing_parameters['desired_samples']:
+            wav_file = torch.nn.ConstantPad1d(
+                (0, self.data_processing_parameters['desired_samples'] - len(wav_file[0])), 0)(wav_file[0])
+        else:
+            wav_file = wav_file[0][:self.data_processing_parameters['desired_samples']]
+        scaled_foreground = torch.mul(wav_file, data_augmentation_parameters['foreground_volume'])
+
+        # Padding wrt the time shift offset
+        pad_tuple = tuple(data_augmentation_parameters['time_shift_padding'][0])
+        padded_foreground = torch.nn.ConstantPad1d(pad_tuple, 0)(scaled_foreground)
+        sliced_foreground = padded_foreground[data_augmentation_parameters['time_shift_offset'][0]:
+                                              data_augmentation_parameters['time_shift_offset'][0] +
+                                              self.data_processing_parameters['desired_samples']]
+
+        # Mix in background noise
+        background_mul = torch.mul(torch.Tensor(data_augmentation_parameters['background_noise'][:, 0]),
+                                   data_augmentation_parameters['background_volume'])
+
+        data = torch.add(background_mul, sliced_foreground)  # Size([16000])
+
+        data_placeholder = data.numpy().transpose()
+
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        # data_placeholder[i] = np.clip(data_placeholder[i] + 128, 0, 255)
+
+        label_index = self.word_to_index[sample['label']]
+        labels_placeholder = label_index
+
         return data_placeholder, labels_placeholder
 
     def get_augmented_data(self, mode, training_parameters):
@@ -563,9 +664,15 @@ class AudioProcessor(object):
             return self.get_augmented_data(mode, training_parameters)
 
         elif self.feature_extraction_method == 'mfcc':  # for now, always uses augmented data
-            data, labels = self.get_augmented_data(mode, training_parameters)
-            data = np.apply_along_axis(self.get_mfcc, 1, data)
-            return data, labels
+            data, label = self.get_one_augmented_data(mode, training_parameters)
+            data = self.get_mfcc(data)
+            return data[None, :, :], label
+            # data, labels = self.get_augmented_data(mode, training_parameters)
+            #data = np.apply_along_axis(self.get_mfcc, 1, data)
+            # data = self.get_mfcc(data)
+            # print("In audioprocessor: ", data[:, None, :, :].shape)
+            # return data[:, None, :, :], labels
+            #return data, labels
 
         elif self.feature_extraction_method == 'mel_spectrogram':
             data, labels = self.get_augmented_data(mode, training_parameters)

@@ -18,8 +18,10 @@ class KWSNet(MyNetwork):
         self.classifier = classifier
 
     def forward(self, x):
+        print("1 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
+            print("2 ", x.shape)
         for block in self.blocks:
             x = block(x)
         x = self.global_avg_pool(x)  # global average pooling
@@ -181,10 +183,10 @@ class KWSNetLarge(KWSNet):
             depth_param=None,
             stage_width_list=None,
     ):
-        input_channel = 16  # Todo see for largest net
+        input_channel = 1  # Todo see for largest net
         input_stem_cfg = {
             "0": [
-                [3, 16, 16, False, "relu", 1, 1],
+                [1, 16, 16, False, "relu", 1, 1],
             ]
         }
         blocks_cfg = { # Here largest depth = 6

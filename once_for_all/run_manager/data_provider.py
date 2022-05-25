@@ -3,6 +3,8 @@ import os
 import math
 import numpy as np
 import torch.utils.data
+from .dataset import AudioGenerator, AudioProcessor
+from utils_old import parameter_generation
 
 
 class KWSDataProvider:
@@ -15,8 +17,8 @@ class KWSDataProvider:
             test_batch_size=512,
             valid_size=None,
             ft_extr_size=(32, 10),
-            num_replicas=None,
-            rank=None
+            rank=None,
+            n_worker=0
     ):
 
         warnings.filterwarnings("ignore")
@@ -28,13 +30,13 @@ class KWSDataProvider:
             from ofa.utils.my_dataloader import MyDataLoader  # TODO
 
             assert isinstance(self.ft_extr_size, list)
-            self.image_size.sort()  # e.g., 160 -> 224
-            MyRandomResizedCrop.IMAGE_SIZE_LIST = self.image_size.copy()
-            MyRandomResizedCrop.ACTIVE_SIZE = max(self.image_size)
+            self.ft_extr_size.sort()  # e.g., 160 -> 224
+            # MyRandomResizedCrop.IMAGE_SIZE_LIST = self.ft_extr_size.copy()
+            # MyRandomResizedCrop.ACTIVE_SIZE = max(self.ft_extr_size)
 
-            for img_size in self.image_size:
-                self._valid_transform_dict[img_size] = self.build_valid_transform(
-                    img_size
+            for input_size in self.ft_extr_size:
+                self._valid_transform_dict[input_size] = self.build_valid_transform(
+                    input_size
                 )
             self.active_img_size = max(self.image_size)  # active resolution for test
             valid_transforms = self._valid_transform_dict[self.active_img_size]
@@ -44,9 +46,15 @@ class KWSDataProvider:
             # valid_transforms = self.build_valid_transform()
             train_loader_class = torch.utils.data.DataLoader
 
-        # train_dataset = self.train_dataset(self.build_train_transform())
-        # train_dataset = self.train_dataset()
+        # Parameter generation
+        # training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
 
+        # audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
+        # train_dataset = AudioGenerator(mode='training', audio_processor=audio_processor, training_parameters=training_parameters)
+        # train_dataset = self.train_dataset(self.build_train_transform())
+        train_dataset = self.train_dataset()
+        print("image shape: ", train_dataset.__getitem__(0)[0].shape)
+        print("valid_size : ", valid_size)
         if valid_size is not None:
             if not isinstance(valid_size, int):
                 assert isinstance(valid_size, float) and 0 < valid_size < 1
@@ -57,20 +65,12 @@ class KWSDataProvider:
                 len(train_dataset), valid_size
             )
 
-            if num_replicas is not None:
-                train_sampler = MyDistributedSampler(
-                    train_dataset, num_replicas, rank, True, np.array(train_indexes)
-                )
-                valid_sampler = MyDistributedSampler(
-                    valid_dataset, num_replicas, rank, True, np.array(valid_indexes)
-                )
-            else:
-                train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-                    train_indexes
-                )
-                valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-                    valid_indexes
-                )
+            train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
+                train_indexes
+            )
+            valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(
+                valid_indexes
+            )
 
             self.train = train_loader_class(
                 train_dataset,
@@ -87,47 +87,24 @@ class KWSDataProvider:
                 pin_memory=True,
             )
         else:
-            if num_replicas is not None:
-                train_sampler = torch.utils.data.distributed.DistributedSampler(
-                    train_dataset, num_replicas, rank
-                )
-                self.train = train_loader_class(
-                    train_dataset,
-                    batch_size=train_batch_size,
-                    sampler=train_sampler,
-                    num_workers=n_worker,
-                    pin_memory=True,
-                )
-            else:
-                self.train = train_loader_class(
-                    train_dataset,
-                    batch_size=train_batch_size,
-                    shuffle=True,
-                    num_workers=n_worker,
-                    pin_memory=True,
-                )
-            self.valid = None
-
-        test_dataset = self.test_dataset(valid_transforms)
-        if num_replicas is not None:
-            test_sampler = torch.utils.data.distributed.DistributedSampler(
-                test_dataset, num_replicas, rank
-            )
-            self.test = torch.utils.data.DataLoader(
-                test_dataset,
-                batch_size=test_batch_size,
-                sampler=test_sampler,
-                num_workers=n_worker,
-                pin_memory=True,
-            )
-        else:
-            self.test = torch.utils.data.DataLoader(
-                test_dataset,
-                batch_size=test_batch_size,
+            self.train = train_loader_class(
+                train_dataset,
+                batch_size=train_batch_size,
                 shuffle=True,
                 num_workers=n_worker,
                 pin_memory=True,
             )
+            self.valid = None
+
+        test_dataset = self.test_dataset()
+
+        self.test = torch.utils.data.DataLoader(
+            test_dataset,
+            batch_size=test_batch_size,
+            shuffle=True,
+            num_workers=n_worker,
+            pin_memory=True,
+        )
 
         if self.valid is None:
             self.valid = self.test
@@ -138,7 +115,7 @@ class KWSDataProvider:
 
     @property
     def data_shape(self):  # TODO n_channels
-        return 3, self.active_ft_extr_size[0], self.active_ft_extr_size[1]  # C, H, W
+        return 1, self.active_ft_extr_size[0], self.active_ft_extr_size[1]  # C, H, W
 
     @property
     def n_classes(self):
@@ -149,18 +126,26 @@ class KWSDataProvider:
         if self._save_path is None:
             self._save_path = self.DEFAULT_PATH
             if not os.path.exists(self._save_path):
-                self._save_path = os.path.expanduser("~/dataset/imagenet")
+                self._save_path = os.path.expanduser("~/dataset/speech_commands_v0.02")
         return self._save_path
 
     @property
     def data_url(self):
         raise ValueError("unable to download %s" % self.name())
 
-    def train_dataset(self, _transforms):
-        return datasets.ImageFolder(self.train_path, _transforms)
+    def train_dataset(self):
+        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
+        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
+        train_dataset = AudioGenerator(mode='training', audio_processor=audio_processor,
+                                       training_parameters=training_parameters)
+        return train_dataset
 
-    def test_dataset(self, _transforms):
-        return datasets.ImageFolder(self.valid_path, _transforms)
+    def test_dataset(self):
+        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
+        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
+        test_dataset = AudioGenerator(mode='testing', audio_processor=audio_processor,
+                                      training_parameters=training_parameters)
+        return test_dataset
 
     @property
     def train_path(self):
