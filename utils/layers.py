@@ -682,12 +682,17 @@ class ResidualBlock(nn.Module):
 
 
 class PadConvResBlock(nn.Module):
-    def __init__(self, pad, conv, shortcut):
-        super(PadConvResBlock, self).__init__()
+    """
+    # todo mettre conv config, add padding dep on kernel size, shortcut if needed
+    Mix of Res etc.
 
-        self.pad = pad
+
+    """
+    def __init__(self, conv, shortcut):
+        super(PadConvResBlock, self).__init__()
         self.conv = conv
         self.shortcut = shortcut
+        self.pad = get_same_padding(conv)
 
     def forward(self, x):
         x = self.pad(x)
@@ -725,3 +730,4 @@ class PadConvResBlock(nn.Module):
         conv = set_layer_from_config(conv_config)
         shortcut = set_layer_from_config(config["shortcut"])
         return PadConvResBlock(pad, conv, shortcut)
+

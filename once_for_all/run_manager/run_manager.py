@@ -15,8 +15,8 @@ import torch.optim
 from tqdm import tqdm
 
 from utils import init_models
-from utils.common_tools import AverageMeter
-from utils.pytorch_utils import get_net_info
+from utils.common_tools import AverageMeter, accuracy, write_log
+from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target
 
 """from ofa.utils import (
     get_net_info,
@@ -38,7 +38,7 @@ __all__ = ["RunManager"]
 
 class RunManager:
     def __init__(
-        self, path, net, run_config, init=True, measure_latency=None, no_gpu=False
+            self, path, net, run_config, init=True, measure_latency=None, no_gpu=False
     ):
         self.path = path
         self.net = net
@@ -234,14 +234,14 @@ class RunManager:
     """ train and test """
 
     def validate(
-        self,
-        epoch=0,
-        is_test=False,
-        run_str="",
-        net=None,
-        data_loader=None,
-        no_logs=False,
-        train_mode=False,
+            self,
+            epoch=0,
+            is_test=False,
+            run_str="",
+            net=None,
+            data_loader=None,
+            no_logs=False,
+            train_mode=False,
     ):
         if net is None:
             net = self.net
@@ -263,9 +263,9 @@ class RunManager:
 
         with torch.no_grad():
             with tqdm(
-                total=len(data_loader),
-                desc="Validate Epoch #{} {}".format(epoch + 1, run_str),
-                disable=no_logs,
+                    total=len(data_loader),
+                    desc="Validate Epoch #{} {}".format(epoch + 1, run_str),
+                    disable=no_logs,
             ) as t:
                 for i, (images, labels) in enumerate(data_loader):
                     images, labels = images.to(self.device), labels.to(self.device)
@@ -321,8 +321,8 @@ class RunManager:
         data_time = AverageMeter()
 
         with tqdm(
-            total=nBatch,
-            desc="{} Train Epoch #{}".format(self.run_config.dataset, epoch + 1),
+                total=nBatch,
+                desc="{} Train Epoch #{}".format(self.run_config.dataset, epoch + 1),
         ) as t:
             end = time.time()
             for i, (images, labels) in enumerate(self.run_config.train_loader):
@@ -447,7 +447,7 @@ class RunManager:
             )
 
     def reset_running_statistics(
-        self, net=None, subset_size=2000, subset_batch_size=200, data_loader=None
+            self, net=None, subset_size=2000, subset_batch_size=200, data_loader=None
     ):
         from ofa.imagenet_classification.elastic_nn.utils import set_running_statistics
 
@@ -458,3 +458,139 @@ class RunManager:
                 subset_size, subset_batch_size
             )
         set_running_statistics(net, data_loader)
+
+    def train_large_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
+        # switch to train mode
+        self.net.train()
+
+        nBatch = len(self.run_config.train_loader)
+
+        losses = AverageMeter()
+        metric_dict = self.get_metric_dict()
+        data_time = AverageMeter()
+
+        running_loss = 0.0
+        total = 0
+        correct = 0
+
+        with tqdm(
+                total=nBatch,
+                desc="{} Train Epoch #{}".format(self.run_config.dataset, epoch + 1),
+        ) as t:
+            end = time.time()
+            for minibatch, (images, labels) in enumerate(self.run_config.train_loader):
+
+                data_time.update(time.time() - end)
+                # Set lr
+                if epoch < warmup_epochs:
+                    new_lr = self.run_config.warmup_adjust_learning_rate(
+                        self.optimizer,
+                        warmup_epochs * nBatch,
+                        nBatch,
+                        epoch,
+                        minibatch,
+                        warmup_lr,
+                    )
+                else:
+                    new_lr = self.run_config.adjust_learning_rate(
+                        self.optimizer, epoch - warmup_epochs, minibatch, nBatch
+                    )
+
+                images, labels = images.to(self.device), labels.to(self.device).long()
+                target = labels
+
+                self.optimizer.zero_grad()
+                model = self.net.to(self.device)
+
+                # compute output
+                out = model(images)
+                # print(out.shape)
+                output = F.softmax(out, dim=1)
+                loss = self.train_criterion(output, labels)
+
+                # print("LOSS: ", loss)
+
+                # compute gradient and do SGD step
+                loss.backward()
+                self.optimizer.step()
+
+                # Compute training statistics
+                running_loss += loss.item()
+                _, predicted = torch.max(output.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+                # Print information every 20 minibatches
+                if minibatch % 20 == 0:
+                    print('[%3d / %3d] loss: %.3f  accuracy: %.3f' % (
+                        minibatch + 1, nBatch, running_loss / 10, 100 * correct / total))
+                    running_loss = 0.0
+
+                # measure accuracy and record loss
+                losses.update(loss.item(), images.size(0))
+                self.update_metric(metric_dict, output, target)
+
+                loss_type = 'ce'
+
+                t.set_postfix(
+                    {
+                        "loss": losses.avg,
+                        **self.get_metric_vals(metric_dict, return_dict=True),
+                        "img_size": images.size(2),
+                        "lr": new_lr,
+                        "loss_type": loss_type,
+                        "data_time": data_time.avg,
+                    }
+                )
+                t.update(1)
+                end = time.time()
+
+        return losses.avg, self.get_metric_vals(metric_dict)
+
+    def train_large_net(
+            self, args, warmup_epoch=0, warmup_lr=0
+    ):
+        for epoch in range(self.start_epoch, self.run_config.n_epochs + warmup_epoch):
+            train_loss, (train_top1, train_top5) = self.train_large_one_epoch(
+                args, epoch, warmup_epoch, warmup_lr
+            )
+
+            if (epoch + 1) % self.run_config.validation_frequency == 0:
+                val_loss, (val_acc, val_acc5) = self.validate()
+                # print(val_loss)
+                # print(val_acc)
+                is_best = np.mean(val_acc) > self.best_acc
+                self.best_acc = max(self.best_acc, val_acc)
+
+                val_log = "Valid [{0}/{1}]\tloss {2:.3f}\t{5} {3:.3f} ({4:.3f})".format(
+                    epoch + 1 - warmup_epoch,
+                    self.run_config.n_epochs,
+                    np.mean(val_loss),
+                    np.mean(val_acc),
+                    self.best_acc,
+                    self.get_metric_names()[0],
+                )
+                val_log += "\t{2} {0:.3f}\tTrain {1} {top1:.3f}\tloss {train_loss:.3f}\t".format(
+                    np.mean(val_acc5),
+                    *self.get_metric_names(),
+                    top1=train_top1,
+                    train_loss=train_loss
+                )
+                """
+                for i_s, v_a in zip(img_size, val_acc):
+                    val_log += "(%d, %.3f), " % (i_s, v_a)"""
+                self.write_log(val_log, prefix="valid", should_print=False)
+
+            else:
+                is_best = False
+
+            self.save_model(
+                {
+                    "epoch": epoch,
+                    "best_acc": self.best_acc,
+                    "optimizer": self.optimizer.state_dict(),
+                    "state_dict": self.network.state_dict(),
+                },
+                is_best=is_best,
+            )
+

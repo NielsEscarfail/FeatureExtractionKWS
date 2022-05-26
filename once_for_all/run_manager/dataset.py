@@ -266,7 +266,8 @@ class AudioProcessor(object):
         # Pick which audio sample to use.
         if training_parameters['batch_size'] == -1 or pick_deterministically:
             # The randomness is eliminated here to train on the same batch ordering
-            sample_index = i
+            # sample_index = i
+            sample_index = np.random.randint(len(candidates))
         else:
             sample_index = np.random.randint(len(candidates))
         sample = candidates[sample_index]

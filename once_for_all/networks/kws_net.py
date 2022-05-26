@@ -1,4 +1,6 @@
 import copy
+
+import torch
 import torch.nn as nn
 
 from utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
@@ -18,14 +20,18 @@ class KWSNet(MyNetwork):
         self.classifier = classifier
 
     def forward(self, x):
-        print("1 ", x.shape)
+        # print("1 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            print("2 ", x.shape)
+            # print("2 ", x.shape)
         for block in self.blocks:
             x = block(x)
+            # print("3 ", x.shape)
         x = self.global_avg_pool(x)  # global average pooling
+        # print("4 ", x.shape)
+        x = torch.flatten(x, 1)
         x = self.classifier(x)
+        # print("5 ", x.shape)
         return x
 
     @property
@@ -97,19 +103,32 @@ class KWSNet(MyNetwork):
         Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
         """
         # build input stem # TODO make that depend on input_stem_cfg
-        input_stem = [
-            ConvLayer(
-                3,
-                input_channel,
-                kernel_size=3,
-                stride=2,
-                use_bn=True,
-                act_func="relu",
-                ops_order="weight_bn_act",
-            )
-        ]
+        input_stem = []
+        for stage_id, input_stem_cfg_list in input_stem_cfg.items():
+            for (
+                k,
+                mid_channel,
+                out_channel,
+                use_se,
+                act_func,
+                stride,
+                expand_ratio,
+            ) in input_stem_cfg_list:
+                mb_conv = MBConvLayer(
+                    input_channel,
+                    out_channel,
+                    k,
+                    stride,
+                    expand_ratio,
+                    mid_channel,
+                    act_func,
+                    use_se,
+                )
+                input_stem.append(mb_conv)
+                feature_dim = out_channel
+
         # build mobile blocks
-        feature_dim = input_channel
+        # feature_dim = out_channel
         blocks = []
         for stage_id, block_config_list in blocks_cfg.items():
             for (
@@ -186,10 +205,10 @@ class KWSNetLarge(KWSNet):
         input_channel = 1  # Todo see for largest net
         input_stem_cfg = {
             "0": [
-                [1, 16, 16, False, "relu", 1, 1],
+                [1, 1, 16, False, "relu", 1, 1],
             ]
         }
-        blocks_cfg = { # Here largest depth = 6
+        blocks_cfg = {  # Here largest depth = 6
             #   k, mid_channel, out_channel, use_se, act_func, stride, expand_ratio
             #    k,     exp,    c,      se,         nl,         s,      e,
             "0": [
@@ -215,9 +234,9 @@ class KWSNetLarge(KWSNet):
                 [3, 672, 112, True, "h_swish", 1, None],  # 6
             ],
             "5": [
-                [5, 672, 160, True, "h_swish", 2, None],  # 6
-                [5, 960, 160, True, "h_swish", 1, None],  # 6
-                [5, 960, 160, True, "h_swish", 1, None],  # 6
+                [5, 100, 80, True, "h_swish", 2, None],  # 6
+                [5, 100, 80, True, "h_swish", 1, None],  # 6
+                [5, 100, 80, True, "h_swish", 1, None],  # 6
             ],
         }
 

@@ -16,7 +16,7 @@ class KWSDataProvider:
             train_batch_size=256,
             test_batch_size=512,
             valid_size=None,
-            ft_extr_size=(32, 10),
+            ft_extr_size=(49, 10),
             rank=None,
             n_worker=0
     ):
@@ -55,6 +55,8 @@ class KWSDataProvider:
         train_dataset = self.train_dataset()
         print("image shape: ", train_dataset.__getitem__(0)[0].shape)
         print("valid_size : ", valid_size)
+        # train_batch_size = 64
+        print("train batch size : ", train_batch_size)
         if valid_size is not None:
             if not isinstance(valid_size, int):
                 assert isinstance(valid_size, float) and 0 < valid_size < 1
@@ -109,6 +111,9 @@ class KWSDataProvider:
         if self.valid is None:
             self.valid = self.test
 
+        print("Train length: ", len(self.train))
+
+
     @staticmethod
     def name():
         return "speech-commands"
@@ -155,6 +160,7 @@ class KWSDataProvider:
     def valid_path(self):
         return os.path.join(self.save_path, "val")
 
+    """
     @property
     def normalize(self):
         return transforms.Normalize(
@@ -291,7 +297,7 @@ class KWSDataProvider:
         valid_indexes = rand_indexes[:valid_size]
         train_indexes = rand_indexes[valid_size:]
         return train_indexes, valid_indexes
-
+    """
     @staticmethod
     def labels_to_one_hot(n_classes, labels):
         new_labels = np.zeros((labels.shape[0], n_classes), dtype=np.float32)
