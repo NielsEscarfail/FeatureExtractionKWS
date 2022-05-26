@@ -108,6 +108,15 @@ class KWSDataProvider:
             pin_memory=True,
         )
 
+        valid_dataset = self.valid_dataset()
+        self.valid = torch.utils.data.DataLoader(
+            valid_dataset,
+            batch_size=test_batch_size,
+            shuffle=True,
+            num_workers=n_worker,
+            pin_memory=True,
+        )
+
         if self.valid is None:
             self.valid = self.test
 
@@ -151,6 +160,13 @@ class KWSDataProvider:
         test_dataset = AudioGenerator(mode='testing', audio_processor=audio_processor,
                                       training_parameters=training_parameters)
         return test_dataset
+
+    def valid_dataset(self):
+        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
+        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
+        valid_dataset = AudioGenerator(mode='validation', audio_processor=audio_processor,
+                                      training_parameters=training_parameters)
+        return valid_dataset
 
     @property
     def train_path(self):
