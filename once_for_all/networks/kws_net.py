@@ -3,9 +3,8 @@ import copy
 import torch
 import torch.nn as nn
 
-from utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
-from utils.layers import set_layer_from_config, ResidualBlock, PadConvResBlock, ConvLayer, \
-    MBConvLayer, IdentityLayer, LinearLayer, LSTMLayer
+from utils import MyNetwork
+from utils.layers import set_layer_from_config, ResidualBlock, PadConvResBlock, MBConvLayer, IdentityLayer, LinearLayer
 from utils.pytorch_modules import MyGlobalAvgPool2d
 
 
@@ -202,7 +201,7 @@ class KWSNetLarge(KWSNet):
             depth_param=None,
             stage_width_list=None,
     ):
-        input_channel = 1  # Todo see for largest net
+        input_channel = 1
         input_stem_cfg = {
             "0": [
                 [1, 1, 16, False, "relu", 1, 1],

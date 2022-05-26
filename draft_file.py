@@ -2,312 +2,399 @@
 # Han Cai, Chuang Gan, Tianzhe Wang, Zhekai Zhang, Song Han
 # International Conference on Learning Representations (ICLR), 2020.
 
-import argparse
-import numpy as np
-import os
+import copy
 import random
 
-import horovod.torch as hvd
-import torch
-
-from ofa.imagenet_classification.elastic_nn.modules.dynamic_op import (
-    DynamicSeparableConv2d,
+from ofa.imagenet_classification.elastic_nn.modules.dynamic_layers import (
+    DynamicMBConvLayer,
 )
-from ofa.imagenet_classification.elastic_nn.networks import OFAMobileNetV3
-from ofa.imagenet_classification.run_manager import DistributedImageNetRunConfig
-from ofa.imagenet_classification.networks import MobileNetV3Large
-from ofa.imagenet_classification.run_manager.distributed_run_manager import (
-    DistributedRunManager,
+from ofa.utils.layers import (
+    ConvLayer,
+    IdentityLayer,
+    LinearLayer,
+    MBConvLayer,
+    ResidualBlock,
 )
-from ofa.utils import download_url, MyRandomResizedCrop
-from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
-    load_models,
-)
+from ofa.imagenet_classification.networks import MobileNetV3
+from ofa.utils import make_divisible, val2list, MyNetwork
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--task",
-    type=str,
-    default="depth",
-    choices=[
-        "kernel",
-        "depth",
-        "expand",
-    ],
-)
-parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
-parser.add_argument("--resume", action="store_true")
-
-args = parser.parse_args()
-if args.task == "kernel":
-    args.path = "exp/normal2kernel"
-    args.dynamic_batch_size = 1
-    args.n_epochs = 120
-    args.base_lr = 3e-2
-    args.warmup_epochs = 5
-    args.warmup_lr = -1
-    args.ks_list = "3,5,7"
-    args.expand_list = "6"
-    args.depth_list = "4"
-elif args.task == "depth":
-    args.path = "exp/kernel2kernel_depth/phase%d" % args.phase
-    args.dynamic_batch_size = 2
-    if args.phase == 1:
-        args.n_epochs = 25
-        args.base_lr = 2.5e-3
-        args.warmup_epochs = 0
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.expand_list = "6"
-        args.depth_list = "3,4"
-    else:
-        args.n_epochs = 120
-        args.base_lr = 7.5e-3
-        args.warmup_epochs = 5
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.expand_list = "6"
-        args.depth_list = "2,3,4"
-elif args.task == "expand":
-    args.path = "exp/kernel_depth2kernel_depth_width/phase%d" % args.phase
-    args.dynamic_batch_size = 4
-    if args.phase == 1:
-        args.n_epochs = 25
-        args.base_lr = 2.5e-3
-        args.warmup_epochs = 0
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.expand_list = "4,6"
-        args.depth_list = "2,3,4"
-    else:
-        args.n_epochs = 120
-        args.base_lr = 7.5e-3
-        args.warmup_epochs = 5
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.expand_list = "3,4,6"
-        args.depth_list = "2,3,4"
-else:
-    raise NotImplementedError
-args.manual_seed = 0
-
-args.lr_schedule_type = "cosine"
-
-args.base_batch_size = 64
-args.valid_size = 10000
-
-args.opt_type = "sgd"
-args.momentum = 0.9
-args.no_nesterov = False
-args.weight_decay = 3e-5
-args.label_smoothing = 0.1
-args.no_decay_keys = "bn#bias"
-args.fp16_allreduce = False
-
-args.model_init = "he_fout"
-args.validation_frequency = 1
-args.print_frequency = 10
-
-args.n_worker = 8
-args.resize_scale = 0.08
-args.distort_color = "tf"
-args.image_size = "128,160,192,224"
-args.continuous_size = True
-args.not_sync_distributed_image_size = False
-
-args.bn_momentum = 0.1
-args.bn_eps = 1e-5
-args.dropout = 0.1
-args.base_stage_width = "proxyless"
-
-args.width_mult_list = "1.0"
-args.dy_conv_scaling_mode = 1
-args.independent_distributed_sampling = False
-
-args.kd_ratio = 1.0
-args.kd_type = "ce"
+__all__ = ["OFAMobileNetV3"]
 
 
-if __name__ == "__main__":
-    os.makedirs(args.path, exist_ok=True)
+class OFAMobileNetV3(MobileNetV3):
+    def __init__(
+        self,
+        n_classes=1000,
+        bn_param=(0.1, 1e-5),
+        dropout_rate=0.1,
+        base_stage_width=None,
+        width_mult=1.0,
+        ks_list=3,
+        expand_ratio_list=6,
+        depth_list=4,
+    ):
 
-    # Initialize Horovod
-    hvd.init()
-    # Pin GPU to be used to process local rank (one GPU per process)
-    torch.cuda.set_device(hvd.local_rank())
+        self.width_mult = width_mult
+        self.ks_list = val2list(ks_list, 1)
+        self.expand_ratio_list = val2list(expand_ratio_list, 1)
+        self.depth_list = val2list(depth_list, 1)
 
-    args.teacher_path = download_url(
-        "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K7",
-        model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-    )
+        self.ks_list.sort()
+        self.expand_ratio_list.sort()
+        self.depth_list.sort()
 
-    num_gpus = hvd.size()
+        base_stage_width = [16, 16, 24, 40, 80, 112, 160, 960, 1280]
 
-    torch.manual_seed(args.manual_seed)
-    torch.cuda.manual_seed_all(args.manual_seed)
-    np.random.seed(args.manual_seed)
-    random.seed(args.manual_seed)
-
-    # image size
-    args.image_size = [int(img_size) for img_size in args.image_size.split(",")]
-    if len(args.image_size) == 1:
-        args.image_size = args.image_size[0]
-    MyRandomResizedCrop.CONTINUOUS = args.continuous_size
-    MyRandomResizedCrop.SYNC_DISTRIBUTED = not args.not_sync_distributed_image_size
-
-    # build run config from args
-    args.lr_schedule_param = None
-    args.opt_param = {
-        "momentum": args.momentum,
-        "nesterov": not args.no_nesterov,
-    }
-    args.init_lr = args.base_lr * num_gpus  # linearly rescale the learning rate
-    if args.warmup_lr < 0:
-        args.warmup_lr = args.base_lr
-    args.train_batch_size = args.base_batch_size
-    args.test_batch_size = args.base_batch_size * 4
-    run_config = DistributedImageNetRunConfig(
-        **args.__dict__, num_replicas=num_gpus, rank=hvd.rank()
-    )
-
-    # print run config information
-    if hvd.rank() == 0:
-        print("Run config:")
-        for k, v in run_config.config.items():
-            print("\t%s: %s" % (k, v))
-
-    if args.dy_conv_scaling_mode == -1:
-        args.dy_conv_scaling_mode = None
-    DynamicSeparableConv2d.KERNEL_TRANSFORM_MODE = args.dy_conv_scaling_mode
-
-    # build net from args
-    args.width_mult_list = [
-        float(width_mult) for width_mult in args.width_mult_list.split(",")
-    ]
-    args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
-    args.expand_list = [int(e) for e in args.expand_list.split(",")]
-    args.depth_list = [int(d) for d in args.depth_list.split(",")]
-
-    args.width_mult_list = (
-        args.width_mult_list[0]
-        if len(args.width_mult_list) == 1
-        else args.width_mult_list
-    )
-    net = OFAMobileNetV3(
-        n_classes=run_config.data_provider.n_classes,
-        bn_param=(args.bn_momentum, args.bn_eps),
-        dropout_rate=args.dropout,
-        base_stage_width=args.base_stage_width,
-        width_mult=args.width_mult_list,
-        ks_list=args.ks_list,
-        expand_ratio_list=args.expand_list,
-        depth_list=args.depth_list,
-    )
-    # teacher model
-    if args.kd_ratio > 0:
-        args.teacher_model = MobileNetV3Large(
-            n_classes=run_config.data_provider.n_classes,
-            bn_param=(args.bn_momentum, args.bn_eps),
-            dropout_rate=0,
-            width_mult=1.0,
-            ks=7,
-            expand_ratio=6,
-            depth_param=4,
+        final_expand_width = make_divisible(
+            base_stage_width[-2] * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
         )
-        args.teacher_model.cuda()
-
-    """ Distributed RunManager """
-    # Horovod: (optional) compression algorithm.
-    compression = hvd.Compression.fp16 if args.fp16_allreduce else hvd.Compression.none
-    distributed_run_manager = DistributedRunManager(
-        args.path,
-        net,
-        run_config,
-        compression,
-        backward_steps=args.dynamic_batch_size,
-        is_root=(hvd.rank() == 0),
-    )
-    distributed_run_manager.save_config()
-    # hvd broadcast
-    distributed_run_manager.broadcast()
-
-    # load teacher net weights
-    if args.kd_ratio > 0:
-        load_models(
-            distributed_run_manager, args.teacher_model, model_path=args.teacher_path
+        last_channel = make_divisible(
+            base_stage_width[-1] * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
         )
 
-    # training
-    from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
-        validate,
-        train,
-    )
+        stride_stages = [1, 2, 2, 2, 1, 2]
+        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
+        se_stages = [False, False, True, False, True, True]
+        n_block_list = [1] + [max(self.depth_list)] * 5
+        width_list = []
+        for base_width in base_stage_width[:-2]:
+            width = make_divisible(
+                base_width * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
+            )
+            width_list.append(width)
 
-    validate_func_dict = {
-        "image_size_list": {224}
-        if isinstance(args.image_size, int)
-        else sorted({160, 224}),
-        "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
-        "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
-        "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
-    }
-    if args.task == "kernel":
-        validate_func_dict["ks_list"] = sorted(args.ks_list)
-        if distributed_run_manager.start_epoch == 0:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K7",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-            load_models(
-                distributed_run_manager,
-                distributed_run_manager.net,
-                args.ofa_checkpoint_path,
-            )
-            distributed_run_manager.write_log(
-                "%.3f\t%.3f\t%.3f\t%s"
-                % validate(distributed_run_manager, is_test=True, **validate_func_dict),
-                "valid",
-            )
+        input_channel, first_block_dim = width_list[0], width_list[1]
+        # first conv layer
+        first_conv = ConvLayer(
+            3, input_channel, kernel_size=3, stride=2, act_func="h_swish"
+        )
+        first_block_conv = MBConvLayer(
+            in_channels=input_channel,
+            out_channels=first_block_dim,
+            kernel_size=3,
+            stride=stride_stages[0],
+            expand_ratio=1,
+            act_func=act_stages[0],
+            use_se=se_stages[0],
+        )
+        first_block = ResidualBlock(
+            first_block_conv,
+            IdentityLayer(first_block_dim, first_block_dim)
+            if input_channel == first_block_dim
+            else None,
+        )
+
+        # inverted residual blocks
+        self.block_group_info = []
+        blocks = [first_block]
+        _block_index = 1
+        feature_dim = first_block_dim
+
+        for width, n_block, s, act_func, use_se in zip(
+            width_list[2:],
+            n_block_list[1:],
+            stride_stages[1:],
+            act_stages[1:],
+            se_stages[1:],
+        ):
+            self.block_group_info.append([_block_index + i for i in range(n_block)])
+            _block_index += n_block
+
+            output_channel = width
+            for i in range(n_block):
+                if i == 0:
+                    stride = s
+                else:
+                    stride = 1
+                mobile_inverted_conv = DynamicMBConvLayer(
+                    in_channel_list=val2list(feature_dim),
+                    out_channel_list=val2list(output_channel),
+                    kernel_size_list=ks_list,
+                    expand_ratio_list=expand_ratio_list,
+                    stride=stride,
+                    act_func=act_func,
+                    use_se=use_se,
+                )
+                if stride == 1 and feature_dim == output_channel:
+                    shortcut = IdentityLayer(feature_dim, feature_dim)
+                else:
+                    shortcut = None
+                blocks.append(ResidualBlock(mobile_inverted_conv, shortcut))
+                feature_dim = output_channel
+        # final expand layer, feature mix layer & classifier
+        final_expand_layer = ConvLayer(
+            feature_dim, final_expand_width, kernel_size=1, act_func="h_swish"
+        )
+        feature_mix_layer = ConvLayer(
+            final_expand_width,
+            last_channel,
+            kernel_size=1,
+            bias=False,
+            use_bn=False,
+            act_func="h_swish",
+        )
+
+        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
+
+        super(OFAMobileNetV3, self).__init__(
+            first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
+        )
+
+        # set bn param
+        self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
+
+        # runtime_depth
+        self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
+
+    """ MyNetwork required methods """
+
+    @staticmethod
+    def name():
+        return "OFAMobileNetV3"
+
+    def forward(self, x):
+        # first conv
+        x = self.first_conv(x)
+        # first block
+        x = self.blocks[0](x)
+        # blocks
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            for idx in active_idx:
+                x = self.blocks[idx](x)
+        x = self.final_expand_layer(x)
+        x = x.mean(3, keepdim=True).mean(2, keepdim=True)  # global average pooling
+        x = self.feature_mix_layer(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
+        return x
+
+    @property
+    def module_str(self):
+        _str = self.first_conv.module_str + "\n"
+        _str += self.blocks[0].module_str + "\n"
+
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            for idx in active_idx:
+                _str += self.blocks[idx].module_str + "\n"
+
+        _str += self.final_expand_layer.module_str + "\n"
+        _str += self.feature_mix_layer.module_str + "\n"
+        _str += self.classifier.module_str + "\n"
+        return _str
+
+    @property
+    def config(self):
+        return {
+            "name": OFAMobileNetV3.__name__,
+            "bn": self.get_bn_param(),
+            "first_conv": self.first_conv.config,
+            "blocks": [block.config for block in self.blocks],
+            "final_expand_layer": self.final_expand_layer.config,
+            "feature_mix_layer": self.feature_mix_layer.config,
+            "classifier": self.classifier.config,
+        }
+
+    @staticmethod
+    def build_from_config(config):
+        raise ValueError("do not support this function")
+
+    @property
+    def grouped_block_index(self):
+        return self.block_group_info
+
+    def load_state_dict(self, state_dict, **kwargs):
+        model_dict = self.state_dict()
+        for key in state_dict:
+            if ".mobile_inverted_conv." in key:
+                new_key = key.replace(".mobile_inverted_conv.", ".conv.")
+            else:
+                new_key = key
+            if new_key in model_dict:
+                pass
+            elif ".bn.bn." in new_key:
+                new_key = new_key.replace(".bn.bn.", ".bn.")
+            elif ".conv.conv.weight" in new_key:
+                new_key = new_key.replace(".conv.conv.weight", ".conv.weight")
+            elif ".linear.linear." in new_key:
+                new_key = new_key.replace(".linear.linear.", ".linear.")
+            ##############################################################################
+            elif ".linear." in new_key:
+                new_key = new_key.replace(".linear.", ".linear.linear.")
+            elif "bn." in new_key:
+                new_key = new_key.replace("bn.", "bn.bn.")
+            elif "conv.weight" in new_key:
+                new_key = new_key.replace("conv.weight", "conv.conv.weight")
+            else:
+                raise ValueError(new_key)
+            assert new_key in model_dict, "%s" % new_key
+            model_dict[new_key] = state_dict[key]
+        super(OFAMobileNetV3, self).load_state_dict(model_dict)
+
+    """ set, sample and get active sub-networks """
+
+    def set_max_net(self):
+        self.set_active_subnet(
+            ks=max(self.ks_list), e=max(self.expand_ratio_list), d=max(self.depth_list)
+        )
+
+    def set_active_subnet(self, ks=None, e=None, d=None, **kwargs):
+        ks = val2list(ks, len(self.blocks) - 1)
+        expand_ratio = val2list(e, len(self.blocks) - 1)
+        depth = val2list(d, len(self.block_group_info))
+
+        for block, k, e in zip(self.blocks[1:], ks, expand_ratio):
+            if k is not None:
+                block.conv.active_kernel_size = k
+            if e is not None:
+                block.conv.active_expand_ratio = e
+
+        for i, d in enumerate(depth):
+            if d is not None:
+                self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
+
+    def set_constraint(self, include_list, constraint_type="depth"):
+        if constraint_type == "depth":
+            self.__dict__["_depth_include_list"] = include_list.copy()
+        elif constraint_type == "expand_ratio":
+            self.__dict__["_expand_include_list"] = include_list.copy()
+        elif constraint_type == "kernel_size":
+            self.__dict__["_ks_include_list"] = include_list.copy()
         else:
-            assert args.resume
-        train(
-            distributed_run_manager,
-            args,
-            lambda _run_manager, epoch, is_test: validate(
-                _run_manager, epoch, is_test, **validate_func_dict
-            ),
+            raise NotImplementedError
+
+    def clear_constraint(self):
+        self.__dict__["_depth_include_list"] = None
+        self.__dict__["_expand_include_list"] = None
+        self.__dict__["_ks_include_list"] = None
+
+    def sample_active_subnet(self):
+        ks_candidates = (
+            self.ks_list
+            if self.__dict__.get("_ks_include_list", None) is None
+            else self.__dict__["_ks_include_list"]
         )
-    elif args.task == "depth":
-        from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
-            train_elastic_depth,
+        expand_candidates = (
+            self.expand_ratio_list
+            if self.__dict__.get("_expand_include_list", None) is None
+            else self.__dict__["_expand_include_list"]
+        )
+        depth_candidates = (
+            self.depth_list
+            if self.__dict__.get("_depth_include_list", None) is None
+            else self.__dict__["_depth_include_list"]
         )
 
-        if args.phase == 1:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        else:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D34_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        train_elastic_depth(train, distributed_run_manager, args, validate_func_dict)
-    elif args.task == "expand":
-        from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
-            train_elastic_expand,
-        )
+        # sample kernel size
+        ks_setting = []
+        if not isinstance(ks_candidates[0], list):
+            ks_candidates = [ks_candidates for _ in range(len(self.blocks) - 1)]
+        for k_set in ks_candidates:
+            k = random.choice(k_set)
+            ks_setting.append(k)
 
-        if args.phase == 1:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D234_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        else:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D234_E46_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        train_elastic_expand(train, distributed_run_manager, args, validate_func_dict)
-    else:
-        raise NotImplementedError
+        # sample expand ratio
+        expand_setting = []
+        if not isinstance(expand_candidates[0], list):
+            expand_candidates = [expand_candidates for _ in range(len(self.blocks) - 1)]
+        for e_set in expand_candidates:
+            e = random.choice(e_set)
+            expand_setting.append(e)
+
+        # sample depth
+        depth_setting = []
+        if not isinstance(depth_candidates[0], list):
+            depth_candidates = [
+                depth_candidates for _ in range(len(self.block_group_info))
+            ]
+        for d_set in depth_candidates:
+            d = random.choice(d_set)
+            depth_setting.append(d)
+
+        self.set_active_subnet(ks_setting, expand_setting, depth_setting)
+
+        return {
+            "ks": ks_setting,
+            "e": expand_setting,
+            "d": depth_setting,
+        }
+
+    def get_active_subnet(self, preserve_weight=True):
+        first_conv = copy.deepcopy(self.first_conv)
+        blocks = [copy.deepcopy(self.blocks[0])]
+
+        final_expand_layer = copy.deepcopy(self.final_expand_layer)
+        feature_mix_layer = copy.deepcopy(self.feature_mix_layer)
+        classifier = copy.deepcopy(self.classifier)
+
+        input_channel = blocks[0].conv.out_channels
+        # blocks
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            stage_blocks = []
+            for idx in active_idx:
+                stage_blocks.append(
+                    ResidualBlock(
+                        self.blocks[idx].conv.get_active_subnet(
+                            input_channel, preserve_weight
+                        ),
+                        copy.deepcopy(self.blocks[idx].shortcut),
+                    )
+                )
+                input_channel = stage_blocks[-1].conv.out_channels
+            blocks += stage_blocks
+
+        _subnet = MobileNetV3(
+            first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
+        )
+        _subnet.set_bn_param(**self.get_bn_param())
+        return _subnet
+
+    def get_active_net_config(self):
+        # first conv
+        first_conv_config = self.first_conv.config
+        first_block_config = self.blocks[0].config
+        final_expand_config = self.final_expand_layer.config
+        feature_mix_layer_config = self.feature_mix_layer.config
+        classifier_config = self.classifier.config
+
+        block_config_list = [first_block_config]
+        input_channel = first_block_config["conv"]["out_channels"]
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            stage_blocks = []
+            for idx in active_idx:
+                stage_blocks.append(
+                    {
+                        "name": ResidualBlock.__name__,
+                        "conv": self.blocks[idx].conv.get_active_subnet_config(
+                            input_channel
+                        ),
+                        "shortcut": self.blocks[idx].shortcut.config
+                        if self.blocks[idx].shortcut is not None
+                        else None,
+                    }
+                )
+                input_channel = self.blocks[idx].conv.active_out_channel
+            block_config_list += stage_blocks
+
+        return {
+            "name": MobileNetV3.__name__,
+            "bn": self.get_bn_param(),
+            "first_conv": first_conv_config,
+            "blocks": block_config_list,
+            "final_expand_layer": final_expand_config,
+            "feature_mix_layer": feature_mix_layer_config,
+            "classifier": classifier_config,
+        }
+
+    """ Width Related Methods """
+
+    def re_organize_middle_weights(self, expand_ratio_stage=0):
+        for block in self.blocks[1:]:
+            block.conv.re_organize_middle_weights(expand_ratio_stage)
