@@ -19,18 +19,18 @@ class KWSNet(MyNetwork):
         self.classifier = classifier
 
     def forward(self, x):
-        print("1 ", x.shape)
+        # print("1 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            print("2 ", x.shape)
+            # print("2 ", x.shape)
         for block in self.blocks:
             x = block(x)
-            print("3 ", x.shape)
+            # print("3 ", x.shape)
         x = self.global_avg_pool(x)  # global average pooling
-        print("4 ", x.shape)
+        # print("4 ", x.shape)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
-        print("5 ", x.shape)
+        # print("5 ", x.shape)
         return x
 
     @property
