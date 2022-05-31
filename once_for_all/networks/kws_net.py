@@ -19,18 +19,18 @@ class KWSNet(MyNetwork):
         self.classifier = classifier
 
     def forward(self, x):
-        # print("1 ", x.shape)
+        print("1 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            # print("2 ", x.shape)
+            print("2 ", x.shape)
         for block in self.blocks:
             x = block(x)
-            # print("3 ", x.shape)
+            print("3 ", x.shape)
         x = self.global_avg_pool(x)  # global average pooling
-        # print("4 ", x.shape)
+        print("4 ", x.shape)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
-        # print("5 ", x.shape)
+        print("5 ", x.shape)
         return x
 
     @property
@@ -95,13 +95,13 @@ class KWSNet(MyNetwork):
             info_list.append(block_index_list)
         return info_list
 
-    @staticmethod  # TODO IN PROGRESS
+    @staticmethod
     def build_net_via_cfg(input_stem_cfg, blocks_cfg, input_channel, n_classes, dropout_rate):
         """
         Possible future additions:
         Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
         """
-        # build input stem # TODO make that depend on input_stem_cfg
+        # build input stem
         input_stem = []
         for stage_id, input_stem_cfg_list in input_stem_cfg.items():
             for (
@@ -233,9 +233,9 @@ class KWSNetLarge(KWSNet):
                 [3, 672, 112, True, "h_swish", 1, None],  # 6
             ],
             "5": [
-                [5, 100, 80, True, "h_swish", 2, None],  # 6
-                [5, 100, 80, True, "h_swish", 1, None],  # 6
-                [5, 100, 80, True, "h_swish", 1, None],  # 6
+                [5, 672, 160, True, "h_swish", 2, None],  # 6
+                [5, 960, 160, True, "h_swish", 1, None],  # 6
+                [5, 960, 160, True, "h_swish", 1, None],  # 6
             ],
         }
 

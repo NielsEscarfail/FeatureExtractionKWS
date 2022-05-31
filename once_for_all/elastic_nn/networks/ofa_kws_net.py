@@ -1,4 +1,3 @@
-
 import copy
 import random
 
@@ -18,13 +17,7 @@ from utils.common_tools import val2list
 
 __all__ = ["OFAKWSNet"]
 
-# TODO OFA
-"""
-IN PROGRESS : 
-- methods yet to change
-- fix input_stem
 
-"""
 class OFAKWSNet(KWSNet):
     def __init__(
             self,
@@ -37,6 +30,7 @@ class OFAKWSNet(KWSNet):
             expand_ratio_list=6,
             depth_list=4,
     ):
+
         self.width_mult = width_mult
         self.ks_list = val2list(ks_list, 1)
         self.expand_ratio_list = val2list(expand_ratio_list, 1)
@@ -46,6 +40,9 @@ class OFAKWSNet(KWSNet):
         self.expand_ratio_list.sort()
         self.depth_list.sort()
 
+        width_list = [16, 24, 40, 80, 112, 160, 960, 1280]
+
+        # Set stride, activation function, and SE dim reduction
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
@@ -53,53 +50,60 @@ class OFAKWSNet(KWSNet):
         width_list = []
 
         input_channel, first_block_dim = width_list[0], width_list[1]
+
         # build input stem
-        input_stem = [
-            DynamicConvLayer(
-                val2list(3),
-                mid_input_channel,
-                3,
-                stride=2,
-                use_bn=True,
-                act_func="relu",
-            ),
-            ResidualBlock(
-                DynamicConvLayer(
-                    mid_input_channel,
-                    mid_input_channel,
-                    3,
-                    stride=1,
-                    use_bn=True,
-                    act_func="relu",
-                ),
-                IdentityLayer(mid_input_channel, mid_input_channel),
-            ),
-            DynamicConvLayer(
-                mid_input_channel,
-                input_channel,
-                3,
-                stride=1,
-                use_bn=True,
-                act_func="relu",
-            ),
-        ]
+        input_stem_width_list = [1]
+        input_stem_stride_stages = [1]
+        input_stem_act_stages = ["relu"]
+        input_stem_se_stages = [False]
+        input_stem_n_block_list = [1]
 
+        input_stem = []
+        for width, n_block, s, act_func, use_se in zip(
+            input_stem_width_list,
+            input_stem_n_block_list,
+            input_stem_stride_stages,
+            input_stem_act_stages,
+            input_stem_se_stages
+        ):
+            output_channel = width
+
+            for i in range(n_block):
+                if i == 0:
+                    stride = s
+                else:
+                    stride = 1
+                # input conv layer # TODO check if we want Residual or just MBConv
+                input_block_conv = DynamicMBConvLayer(
+                    in_channel_list=val2list(feature_dim),
+                    out_channel_list=val2list(output_channel),
+                    kernel_size_list=ks_list,
+                    expand_ratio_list=expand_ratio_list,
+                    stride=stride,
+                    act_func=act_func,
+                    use_se=use_se,
+                )
+                input_stem.append(input_block_conv)
+                feature_dim = output_channel
+
+
+        # First block
         first_block_conv = MBConvLayer(
-                in_channels=input_channel,
-                out_channels=first_block_dim,
-                kernel_size=3,
-                stride=stride_stages[0],
-                expand_ratio=1,
-                act_func=act_stages[0],
-                use_se=se_stages[0],
-            )
-
+            in_channels=input_channel,
+            out_channels=first_block_dim,
+            kernel_size=3,
+            stride=stride_stages[0],
+            expand_ratio=1,
+            act_func=act_stages[0],
+            use_se=se_stages[0],
+        )
         first_block = ResidualBlock(
             first_block_conv,
             IdentityLayer(first_block_dim, first_block_dim)
             if input_channel == first_block_dim
             else None,
         )
+
         # inverted residual blocks
         self.block_group_info = []
         blocks = [first_block]
@@ -107,11 +111,11 @@ class OFAKWSNet(KWSNet):
         feature_dim = first_block_dim
 
         for width, n_block, s, act_func, use_se in zip(
-                width_list[2:],
-                n_block_list[1:],
-                stride_stages[1:],
-                act_stages[1:],
-                se_stages[1:],
+            width_list[2:],
+            n_block_list[1:],
+            stride_stages[1:],
+            act_stages[1:],
+            se_stages[1:],
         ):
             self.block_group_info.append([_block_index + i for i in range(n_block)])
             _block_index += n_block
@@ -150,15 +154,15 @@ class OFAKWSNet(KWSNet):
         # runtime_depth
         self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
-""" MyNetwork required methods """
 
     @staticmethod
     def name():
-        return "OFAMobileNetV3"
+        return "OFAKWSNet"
 
     def forward(self, x):
-        # first conv
-        x = self.first_conv(x)
+        for layer in self.input_stem:
+            x = layer(x)
+
         # first block
         x = self.blocks[0](x)
         # blocks
@@ -167,38 +171,33 @@ class OFAKWSNet(KWSNet):
             active_idx = block_idx[:depth]
             for idx in active_idx:
                 x = self.blocks[idx](x)
-        x = self.final_expand_layer(x)
+
         x = x.mean(3, keepdim=True).mean(2, keepdim=True)  # global average pooling
-        x = self.feature_mix_layer(x)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
 
     @property
     def module_str(self):
-        _str = self.first_conv.module_str + "\n"
+        _str = ""
+        for layer in self.input_stem:
+            _str += layer.module_str + "\n"
         _str += self.blocks[0].module_str + "\n"
-
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             for idx in active_idx:
                 _str += self.blocks[idx].module_str + "\n"
-
-        _str += self.final_expand_layer.module_str + "\n"
-        _str += self.feature_mix_layer.module_str + "\n"
         _str += self.classifier.module_str + "\n"
         return _str
 
     @property
     def config(self):
         return {
-            "name": OFAMobileNetV3.__name__,
+            "name": OFAKWSNet.__name__,
             "bn": self.get_bn_param(),
-            "first_conv": self.first_conv.config,
+            "input_stem": [layer.config for layer in self.input_stem],
             "blocks": [block.config for block in self.blocks],
-            "final_expand_layer": self.final_expand_layer.config,
-            "feature_mix_layer": self.feature_mix_layer.config,
             "classifier": self.classifier.config,
         }
 
@@ -236,7 +235,7 @@ class OFAKWSNet(KWSNet):
                 raise ValueError(new_key)
             assert new_key in model_dict, "%s" % new_key
             model_dict[new_key] = state_dict[key]
-        super(OFAMobileNetV3, self).load_state_dict(model_dict)
+        super(OFAKWSNet, self).load_state_dict(model_dict)
 
     """ set, sample and get active sub-networks """
 
@@ -327,11 +326,9 @@ class OFAKWSNet(KWSNet):
         }
 
     def get_active_subnet(self, preserve_weight=True):
-        first_conv = copy.deepcopy(self.first_conv)
+        input_stem = copy.deepcopy(self.input_stem)
         blocks = [copy.deepcopy(self.blocks[0])]
 
-        final_expand_layer = copy.deepcopy(self.final_expand_layer)
-        feature_mix_layer = copy.deepcopy(self.feature_mix_layer)
         classifier = copy.deepcopy(self.classifier)
 
         input_channel = blocks[0].conv.out_channels
@@ -352,18 +349,15 @@ class OFAKWSNet(KWSNet):
                 input_channel = stage_blocks[-1].conv.out_channels
             blocks += stage_blocks
 
-        _subnet = MobileNetV3(
-            first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
+        _subnet = KWSNet(
+            input_stem, blocks, classifier
         )
         _subnet.set_bn_param(**self.get_bn_param())
         return _subnet
 
     def get_active_net_config(self):
-        # first conv
-        first_conv_config = self.first_conv.config
+        input_stem_config = self.input_stem.config
         first_block_config = self.blocks[0].config
-        final_expand_config = self.final_expand_layer.config
-        feature_mix_layer_config = self.feature_mix_layer.config
         classifier_config = self.classifier.config
 
         block_config_list = [first_block_config]
@@ -388,12 +382,10 @@ class OFAKWSNet(KWSNet):
             block_config_list += stage_blocks
 
         return {
-            "name": MobileNetV3.__name__,
+            "name": KWSNet.__name__,
             "bn": self.get_bn_param(),
-            "first_conv": first_conv_config,
+            "input_stem": input_stem_config,
             "blocks": block_config_list,
-            "final_expand_layer": final_expand_config,
-            "feature_mix_layer": feature_mix_layer_config,
             "classifier": classifier_config,
         }
 
