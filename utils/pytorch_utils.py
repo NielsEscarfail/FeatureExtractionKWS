@@ -355,3 +355,4 @@ def calc_learning_rate(
     else:
         raise ValueError("do not support: %s" % lr_schedule_type)
     return lr
+

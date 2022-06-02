@@ -1,3 +1,4 @@
+import random
 import warnings
 import os
 import math
@@ -5,6 +6,8 @@ import numpy as np
 import torch.utils.data
 from .dataset import AudioGenerator, AudioProcessor
 from utils_old import parameter_generation
+import librosa
+import pywt
 
 
 class KWSDataProvider:
@@ -16,7 +19,8 @@ class KWSDataProvider:
             train_batch_size=256,
             test_batch_size=512,
             valid_size=None,
-            ft_extr_size=(49, 10),
+            ft_extr_types=["mfcc", "mel_spectrogram"], # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
+            ft_extr_size=[(49, 10), (60, 2)],  # is actually set in runconfig, not used so far (replaced by types for clarity, shape is handled anyways)
             rank=None,
             n_worker=0
     ):
@@ -25,33 +29,37 @@ class KWSDataProvider:
         self._save_path = save_path
         self.ft_extr_size = ft_extr_size  # tuple or list of tuples
 
+        self.training_parameters, self.data_processing_parameters, self.model_parameters = parameter_generation("dscnn", "mfcc")
+        self.audio_processor = AudioProcessor(self.training_parameters, self.data_processing_parameters)
+
+        self.ft_extr_types = ft_extr_types
+
+        print("ft_extr_size: ", ft_extr_size)
+        print(type(ft_extr_size))
+
         self._valid_transform_dict = {}
         if not isinstance(self.ft_extr_size, tuple):  # Multiple feature extraction methods
-            from ofa.utils.my_dataloader import MyDataLoader  # TODO
+            # from .data_loader import MyDataLoader  # not needed actually
 
             assert isinstance(self.ft_extr_size, list)
             self.ft_extr_size.sort()  # e.g., 160 -> 224
             # MyRandomResizedCrop.IMAGE_SIZE_LIST = self.ft_extr_size.copy()
             # MyRandomResizedCrop.ACTIVE_SIZE = max(self.ft_extr_size)
 
-            for input_size in self.ft_extr_size:
-                self._valid_transform_dict[input_size] = self.build_valid_transform(
-                    input_size
-                )
-            self.active_img_size = max(self.image_size)  # active resolution for test
-            valid_transforms = self._valid_transform_dict[self.active_img_size]
-            train_loader_class = MyDataLoader  # randomly sample image size for each batch of training image
+            # for input_size in self.ft_extr_size:
+            #    self._valid_transform_dict[input_size] = self.build_valid_transform(
+            #        input_size
+            #    )
+            # self.active_img_size = max(self.image_size)  # active resolution for test
+            self.active_ft_extr_size = self.ft_extr_size[0]  # active resolution for test
+            # valid_transforms = self._valid_transform_dict[self.active_img_size]
+            # train_loader_class = MyDataLoader  # randomly sample image size for each batch of training image
+            train_loader_class = torch.utils.data.DataLoader
         else:  # Only one feature extraction method used
             self.active_ft_extr_size = self.ft_extr_size
             # valid_transforms = self.build_valid_transform()
             train_loader_class = torch.utils.data.DataLoader
 
-        # Parameter generation
-        # training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
-
-        # audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
-        # train_dataset = AudioGenerator(mode='training', audio_processor=audio_processor, training_parameters=training_parameters)
-        # train_dataset = self.train_dataset(self.build_train_transform())
         train_dataset = self.train_dataset()
         print("image shape: ", train_dataset.__getitem__(0)[0].shape)
         print("valid_size : ", valid_size)
@@ -89,12 +97,14 @@ class KWSDataProvider:
                 pin_memory=True,
             )
         else:
+            print("train loader class after")
             self.train = train_loader_class(
                 train_dataset,
                 batch_size=train_batch_size,
                 shuffle=True,
                 num_workers=n_worker,
                 pin_memory=True,
+                collate_fn=self.collate_batch
             )
             self.valid = None
 
@@ -122,6 +132,51 @@ class KWSDataProvider:
 
         print("Train length: ", len(self.train))
 
+    def collate_batch(self, batch):
+        data_placeholder = []
+        labels_placeholder = []
+
+        transformation_name = random.choice(self.ft_extr_types)
+
+        if transformation_name == 'mfcc':
+            transformation = self.audio_processor.get_mfcc
+        elif transformation_name == 'mel_spectrogram':
+            transformation = self.audio_processor.get_mel_spectrogram
+        elif transformation_name == 'linear_stft':
+            transformation = self.audio_processor.get_linear_stft
+        elif transformation_name == 'melscale_stft':
+            transformation = self.audio_processor.get_melscale_stft
+        elif transformation_name == 'mel_spectrogram':
+            transformation = self.audio_processor.get_mel_spectrogram
+        elif transformation_name == 'lpc':
+            order = 30
+            transformation = librosa.lpc
+        elif transformation_name == 'lpcc':
+            order = 30
+            transformation = librosa.lpc
+        elif transformation_name == 'dwt':
+            dwt_type = 'haar'
+            transformation = pywt.dwt
+
+        for (data, label) in batch:
+            # Apply transformation
+            if transformation_name == 'lpc':
+                data = transformation(data, order=order)[None, None, :]
+            elif transformation_name == 'dwt':
+                (cA, cD) = transformation(data, dwt_type)  # Approximation and detail coefficients
+                data = np.concatenate((cA, cD), axis=-1)
+                data = data.reshape((128, 125))[None, :, :]
+            else:
+                data = transformation(data)[None, :, :]
+
+            # Create feature extraction batch
+            data_placeholder.append(data)
+            labels_placeholder.append(label)
+
+        print("sample shape : ", data_placeholder[0].shape)
+        print("transformation : ", transformation_name)
+
+        return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
 
     @staticmethod
     def name():
@@ -148,24 +203,19 @@ class KWSDataProvider:
         raise ValueError("unable to download %s" % self.name())
 
     def train_dataset(self):
-        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
-        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
-        train_dataset = AudioGenerator(mode='training', audio_processor=audio_processor,
-                                       training_parameters=training_parameters)
+        train_dataset = AudioGenerator(mode='training', audio_processor=self.audio_processor,
+                                       training_parameters=self.training_parameters, ft_extr_types=self.ft_extr_size)
+
         return train_dataset
 
     def test_dataset(self):
-        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
-        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
-        test_dataset = AudioGenerator(mode='testing', audio_processor=audio_processor,
-                                      training_parameters=training_parameters)
+        test_dataset = AudioGenerator(mode='testing', audio_processor=self.audio_processor,
+                                      training_parameters=self.training_parameters, ft_extr_types=self.ft_extr_size)
         return test_dataset
 
     def valid_dataset(self):
-        training_parameters, data_processing_parameters, model_parameters = parameter_generation("dscnn", "mfcc")
-        audio_processor = AudioProcessor(training_parameters, data_processing_parameters)
-        valid_dataset = AudioGenerator(mode='validation', audio_processor=audio_processor,
-                                      training_parameters=training_parameters)
+        valid_dataset = AudioGenerator(mode='validation', audio_processor=self.audio_processor,
+                                      training_parameters=self.training_parameters, ft_extr_types=self.ft_extr_size)
         return valid_dataset
 
     @property

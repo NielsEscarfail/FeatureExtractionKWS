@@ -40,14 +40,13 @@ class OFAKWSNet(KWSNet):
         self.expand_ratio_list.sort()
         self.depth_list.sort()
 
-        width_list = [16, 24, 40, 80, 112, 160, 960, 1280]
 
         # Set stride, activation function, and SE dim reduction
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
-        width_list = []
+        width_list = [16, 24, 40, 80, 112, 160, 960, 1280]
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
@@ -57,6 +56,8 @@ class OFAKWSNet(KWSNet):
         input_stem_act_stages = ["relu"]
         input_stem_se_stages = [False]
         input_stem_n_block_list = [1]
+
+        feature_dim = first_block_dim
 
         input_stem = []
         for width, n_block, s, act_func, use_se in zip(

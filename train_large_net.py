@@ -155,6 +155,8 @@ args.bn_eps = 1e-5
 args.dropout = 0.1
 args.kd_ratio = 0
 
+args.ft_extr_size = [(49, 10), (60, 2)]
+
 args.model_init = "he_fout"
 args.validation_frequency = 1
 args.print_frequency = 1

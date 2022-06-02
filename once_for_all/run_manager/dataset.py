@@ -666,8 +666,8 @@ class AudioProcessor(object):
 
         elif self.feature_extraction_method == 'mfcc':  # for now, always uses augmented data
             data, label = self.get_one_augmented_data(mode, training_parameters)
-            data = self.get_mfcc(data)
-            return data[None, :, :], label
+            # data = self.get_mfcc(data)
+            return data, label #[None, :, :], label
             # data, labels = self.get_augmented_data(mode, training_parameters)
             #data = np.apply_along_axis(self.get_mfcc, 1, data)
             # data = self.get_mfcc(data)
@@ -676,9 +676,13 @@ class AudioProcessor(object):
             #return data, labels
 
         elif self.feature_extraction_method == 'mel_spectrogram':
-            data, labels = self.get_augmented_data(mode, training_parameters)
-            data = np.apply_along_axis(self.get_mel_spectrogram, 1, data)
-            return data, labels
+            data, label = self.get_one_augmented_data(mode, training_parameters)
+            data = self.get_mel_spectrogram(data)
+            return data[None, :, :], label
+
+            # data, labels = self.get_augmented_data(mode, training_parameters)
+            # data = np.apply_along_axis(self.get_mel_spectrogram, 1, data)
+            # return data, labels
 
         elif self.feature_extraction_method == 'linear_stft':
             data, labels = self.get_augmented_data(mode, training_parameters)
@@ -750,7 +754,7 @@ class AudioProcessor(object):
 class AudioGenerator(torch.utils.data.Dataset):
     """Returns batches of preprocessed data and labels"""
 
-    def __init__(self, mode, audio_processor, training_parameters):
+    def __init__(self, mode, audio_processor, training_parameters, ft_extr_types):
         self.mode = mode
         self.audio_processor = audio_processor
         if self.mode != 'training':
@@ -758,6 +762,7 @@ class AudioGenerator(torch.utils.data.Dataset):
             training_parameters['background_volume'] = 0
             training_parameters['time_shift_samples'] = 0
         self.training_parameters = training_parameters
+        self.ft_extr_types = ft_extr_types
 
     def __len__(self):
         """Returns data set length"""
@@ -768,5 +773,7 @@ class AudioGenerator(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         """Returns a random batch of data, unless training_parameters['batch_size'] == -1."""
+        # batch_type = random.choice(self.ft_extr_types)
         data, labels = self.audio_processor.get_data(self.mode, self.training_parameters)
+        # print(data.shape)
         return data, labels

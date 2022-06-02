@@ -9,6 +9,8 @@ from once_for_all.networks.kws_net import KWSNetLarge
 from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
 
+from once_for_all.elastic_nn.training.progressive_shrinking import load_models
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
@@ -22,6 +24,7 @@ parser.add_argument(
     ],
 )
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
+parser.add_argument("--resume", action="store_true")
 
 
 args = parser.parse_args()
@@ -121,9 +124,11 @@ if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
 
     # Initialize Horovod
-    hvd.init()
+    # hvd.init()
 
-    num_gpus = hvd.size()
+    # num_gpus = torch.cuda.device_count()
+    num_gpus = 1
+    print("Using %f gpus" % num_gpus)
 
     # Set random seed
     torch.manual_seed(args.manual_seed)
@@ -134,8 +139,8 @@ if __name__ == "__main__":
     # Cuda Setup
     if torch.cuda.is_available():
         # Pin GPU to be used to process local rank (one GPU per process)
-        torch.cuda.set_device(hvd.local_rank())
-
+        # torch.cuda.set_device(hvd.local_rank())
+        device = torch.device('cuda')
         torch.backends.cudnn.enabled = True
         torch.backends.cudnn.benchmark = True
         torch.cuda.manual_seed(args.manual_seed)
@@ -168,10 +173,9 @@ if __name__ == "__main__":
     )
 
     # Print run config information
-    if hvd.rank() == 0:
-        print("Run config:")
-        for k, v in run_config.config.items():
-            print("\t%s: %s" % (k, v))
+    print("Run config:")
+    for k, v in run_config.config.items():
+        print("\t%s: %s" % (k, v))
 
     # Build net from args
     args.width_mult_list = [
@@ -218,8 +222,6 @@ if __name__ == "__main__":
         run_config
     )
     run_manager.save_config()
-    # hvd broadcast
-    run_manager.broadcast()
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (
@@ -262,36 +264,14 @@ if __name__ == "__main__":
             ),
         )
     elif args.task == "depth":
-        from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
+        from once_for_all.elastic_nn.training.progressive_shrinking import (
             train_elastic_depth,
         )
-
-        if args.phase == 1:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        else:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D34_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
         train_elastic_depth(train, run_manager, args, validate_func_dict)
     elif args.task == "expand":
-        from ofa.imagenet_classification.elastic_nn.training.progressive_shrinking import (
+        from once_for_all.elastic_nn.training.progressive_shrinking import (
             train_elastic_expand,
         )
-
-        if args.phase == 1:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D234_E6_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-        else:
-            args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D234_E46_K357",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError

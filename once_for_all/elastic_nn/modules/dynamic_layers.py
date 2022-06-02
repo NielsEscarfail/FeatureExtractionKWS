@@ -7,14 +7,14 @@ import torch
 import torch.nn as nn
 from collections import OrderedDict
 
-from ofa.utils.layers import (
+from utils.layers import (
     MBConvLayer,
     ConvLayer,
     IdentityLayer,
     set_layer_from_config,
 )
-from ofa.utils.layers import ResNetBottleneckBlock, LinearLayer
-from ofa.utils import (
+from utils.layers import ResNetBottleneckBlock, LinearLayer
+from utils import (
     MyModule,
     val2list,
     get_net_device,

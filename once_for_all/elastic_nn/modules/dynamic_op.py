@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch
 from torch.nn.parameter import Parameter
 
-from ofa.utils import (
+from utils import (
     get_same_padding,
     sub_filter_start_end,
     make_divisible,

@@ -18,3 +18,4 @@ Valid [17/20]	loss 0.528	top1 93.943 (93.943)	top5 99.229	Train top1 89.990	loss
 Valid [18/20]	loss 0.627	top1 93.013 (93.943)	top5 99.183	Train top1 90.195	loss 1.799	
 Valid [19/20]	loss 0.559	top1 93.966 (93.966)	top5 99.478	Train top1 90.358	loss 1.797	
 Valid [20/20]	loss 0.610	top1 93.716 (93.966)	top5 99.002	Train top1 90.484	loss 1.796	
+Valid [1/120]	loss 9.436	top1 13.178 (13.178)	top5 52.313	Train top1 45.360	loss 2.197	
