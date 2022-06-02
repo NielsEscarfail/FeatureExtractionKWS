@@ -110,7 +110,7 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
     dynamic_net.train()
     if distributed:
         run_manager.run_config.train_loader.sampler.set_epoch(epoch)
-    MyRandomResizedCrop.EPOCH = epoch
+    # MyRandomResizedCrop.EPOCH = epoch
 
     nBatch = len(run_manager.run_config.train_loader)
 
@@ -125,7 +125,7 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
     ) as t:
         end = time.time()
         for i, (images, labels) in enumerate(run_manager.run_config.train_loader):
-            MyRandomResizedCrop.BATCH = i
+            # MyRandomResizedCrop.BATCH = i
             data_time.update(time.time() - end)
             if epoch < warmup_epochs:
                 new_lr = run_manager.run_config.warmup_adjust_learning_rate(
