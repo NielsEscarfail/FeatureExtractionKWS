@@ -268,6 +268,7 @@ class DynamicBatchNorm2d(nn.Module):
 
     def forward(self, x):
         feature_dim = x.size(1)
+        # print("feature dim bn ", feature_dim)
         y = self.bn_forward(x, self.bn, feature_dim)
         return y
 

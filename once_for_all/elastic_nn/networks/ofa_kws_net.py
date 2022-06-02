@@ -51,13 +51,13 @@ class OFAKWSNet(KWSNet):
         input_channel, first_block_dim = width_list[0], width_list[1]
 
         # build input stem
-        input_stem_width_list = [1]
+        input_stem_width_list = [16]
         input_stem_stride_stages = [1]
         input_stem_act_stages = ["relu"]
         input_stem_se_stages = [False]
         input_stem_n_block_list = [1]
 
-        feature_dim = first_block_dim
+        feature_dim = 1
 
         input_stem = []
         for width, n_block, s, act_func, use_se in zip(
@@ -161,21 +161,27 @@ class OFAKWSNet(KWSNet):
         return "OFAKWSNet"
 
     def forward(self, x):
+        print("0 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-
+            # print("1 ", x.shape)
         # first block
         x = self.blocks[0](x)
+        # print("2 ", x.shape)
         # blocks
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             for idx in active_idx:
                 x = self.blocks[idx](x)
+                # print("3 ", x.shape)
 
         x = x.mean(3, keepdim=True).mean(2, keepdim=True)  # global average pooling
+        # print("4 ", x.shape)
         x = x.view(x.size(0), -1)
+        # print("5 ", x.shape)
         x = self.classifier(x)
+        # print("6 ", x.shape)
         return x
 
     @property

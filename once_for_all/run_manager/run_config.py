@@ -129,6 +129,7 @@ class KWSRunConfig(RunConfig):
         validation_frequency=1,
         print_frequency=10,
         ft_extr_size=(32, 10),
+        ft_extr_type=["mfcc"],
         **kwargs
     ):
         super(KWSRunConfig, self).__init__(
@@ -152,6 +153,7 @@ class KWSRunConfig(RunConfig):
         )
 
         self.ft_extr_size = ft_extr_size
+        self.ft_extr_type = ft_extr_type
 
     @property
     def data_provider(self):
@@ -165,6 +167,7 @@ class KWSRunConfig(RunConfig):
                 test_batch_size=self.test_batch_size,
                 valid_size=self.valid_size,
                 ft_extr_size=self.ft_extr_size,
+                ft_extr_type=self.ft_extr_type
             )
         return self.__dict__["_data_provider"]
 

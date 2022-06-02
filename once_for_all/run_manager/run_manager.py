@@ -449,7 +449,7 @@ class RunManager:
     def reset_running_statistics(
             self, net=None, subset_size=2000, subset_batch_size=200, data_loader=None
     ):
-        from ofa.imagenet_classification.elastic_nn.utils import set_running_statistics
+        from once_for_all.elastic_nn.utils import set_running_statistics
 
         if net is None:
             net = self.network

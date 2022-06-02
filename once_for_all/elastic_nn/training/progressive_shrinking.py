@@ -16,13 +16,14 @@ __all__ = [
 ]
 
 from once_for_all.run_manager.distributed_run_manager import DistributedRunManager
+from utils import val2list, AverageMeter, DistributedMetric, list_mean, cross_entropy_loss_with_soft_target
 
 
 def validate(
         run_manager,
         epoch=0,
         is_test=False,
-        image_size_list=None,
+        ft_extr_type_list=None,
         ks_list=None,
         expand_ratio_list=None,
         depth_list=None,
@@ -35,8 +36,8 @@ def validate(
 
     dynamic_net.eval()
 
-    if image_size_list is None:
-        image_size_list = val2list(run_manager.run_config.data_provider.image_size, 1)
+    if ft_extr_type_list is None:
+        ft_extr_type_list = run_manager.run_config.data_provider.ft_extr_type
     if ks_list is None:
         ks_list = dynamic_net.ks_list
     if expand_ratio_list is None:
@@ -54,17 +55,17 @@ def validate(
         for e in expand_ratio_list:
             for k in ks_list:
                 for w in width_mult_list:
-                    for img_size in image_size_list:
+                    for ft_extr_type in ft_extr_type_list:
                         subnet_settings.append(
                             [
                                 {
-                                    "image_size": img_size,
+                                    "ft_extr_type": ft_extr_type,
                                     "d": d,
                                     "e": e,
                                     "ks": k,
                                     "w": w,
                                 },
-                                "R%s-D%s-E%s-K%s-W%s" % (img_size, d, e, k, w),
+                                "R%s-D%s-E%s-K%s-W%s" % (ft_extr_type, d, e, k, w),
                             ]
                         )
     if additional_setting is not None:
@@ -77,8 +78,9 @@ def validate(
         run_manager.write_log(
             "-" * 30 + " Validate %s " % name + "-" * 30, "train", should_print=False
         )
-        run_manager.run_config.data_provider.assign_active_img_size(
-            setting.pop("image_size")
+        print("Feature extraction type for validation: ", setting['ft_extr_type'])
+        run_manager.run_config.data_provider.assign_active_ft_extr_type(
+            setting.pop("ft_extr_type")
         )
         dynamic_net.set_active_subnet(**setting)
         run_manager.write_log(dynamic_net.module_str, "train", should_print=False)

@@ -226,8 +226,12 @@ class DynamicMBConvLayer(MyModule):
 
         if self.inverted_bottleneck is not None:
             x = self.inverted_bottleneck(x)
+
+        # print("Shape before depth_conv layer in DynMBC: ", x.shape)
         x = self.depth_conv(x)
+        # print("Shape after depth_conv layer in DynMBC: ", x.shape)
         x = self.point_linear(x)
+        # print("Shape after point_linear layer in DynMBC: ", x.shape)
         return x
 
     @property

@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
     type=str,
-    default="depth",
+    default="kernel",
     choices=[
         "kernel",
         "depth",
@@ -120,6 +120,11 @@ args.independent_distributed_sampling = False
 args.kd_ratio = 1.0
 args.kd_type = "ce"
 
+# args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
+args.ft_extr_type = ["dwt", "mfcc", "mel_spectrogram"]
+
+print("ARGS : ", args)
+
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
 
@@ -152,6 +157,8 @@ if __name__ == "__main__":
 
     # Input size
     args.image_size = [int(img_size) for img_size in args.image_size.split(",")]
+    args.ft_extr_size = [(49, 10), (60, 2)]
+
     if len(args.image_size) == 1:
         args.image_size = args.image_size[0]
 
@@ -230,17 +237,18 @@ if __name__ == "__main__":
     )
 
     validate_func_dict = {
-        "image_size_list": {224}
-        if isinstance(args.image_size, int)
-        else sorted({160, 224}),
+        "ft_extr_type_list": args.ft_extr_type
+        if len(args.ft_extr_type) == 0
+        else {"mfcc", "mel_spectrogram", "dwt"},
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
     }
+    print("validate ft_extr_type: ", validate_func_dict['ft_extr_type_list'])
     if args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
-            args.ofa_checkpoint_path = download_url(
+            """args.ofa_checkpoint_path = download_url(
                 "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K7",
                 model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
             )
@@ -248,7 +256,7 @@ if __name__ == "__main__":
                 run_manager,
                 run_manager.net,
                 args.ofa_checkpoint_path,
-            )
+            )"""
             run_manager.write_log(
                 "%.3f\t%.3f\t%.3f\t%s"
                 % validate(run_manager, is_test=True, **validate_func_dict),
