@@ -161,7 +161,7 @@ class OFAKWSNet(KWSNet):
         return "OFAKWSNet"
 
     def forward(self, x):
-        print("0 ", x.shape)
+        # print("0 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
             # print("1 ", x.shape)

@@ -145,8 +145,8 @@ class KWSDataProvider:
         labels_placeholder = []
 
         transformation_name = random.choice(self.ft_extr_type)
-        print("collate batch ft_extr_type : ", self.ft_extr_type)
-        print("collate batch transformation name : ", transformation_name)
+        # print("collate batch ft_extr_type : ", self.ft_extr_type)
+        # print("collate batch transformation name : ", transformation_name)
 
         if transformation_name == 'mfcc':
             transformation = self.audio_processor.get_mfcc
@@ -416,7 +416,7 @@ class KWSDataProvider:
             labels_placeholder.append(label)
 
         # print("In sub_train sample shape : ", data_placeholder[0].shape)
-        print("In sub_train transformation : ", transformation_name)
+        # print("In sub_train transformation : ", transformation_name)
 
         return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
 
