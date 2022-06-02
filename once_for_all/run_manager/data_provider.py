@@ -184,7 +184,7 @@ class KWSDataProvider:
             labels_placeholder.append(label)
 
         # print("In collate_batch sample shape : ", data_placeholder[0].shape)
-        print("In collate_batch transformation : ", transformation_name)
+        # print("In collate_batch transformation : ", transformation_name)
 
         return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
 
