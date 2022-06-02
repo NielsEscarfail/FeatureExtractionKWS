@@ -131,8 +131,8 @@ if __name__ == "__main__":
     # Initialize Horovod
     # hvd.init()
 
-    # num_gpus = torch.cuda.device_count()
-    num_gpus = 1
+    num_gpus = torch.cuda.device_count()
+    # num_gpus = 1
     print("Using %f gpus" % num_gpus)
 
     # Set random seed
