@@ -121,7 +121,9 @@ args.kd_ratio = 1.0
 args.kd_type = "ce"
 
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
-args.ft_extr_type = ["dwt", "mfcc", "mel_spectrogram"]
+args.ft_extr_type = "mfcc"
+# feature_bin_count, spectrogram_length
+args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
 
 print("ARGS : ", args)
 
@@ -155,12 +157,15 @@ if __name__ == "__main__":
         device = torch.device('cpu')
         print('Using CPU.')
 
+    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7"
+
     # Input size
+    """
     args.image_size = [int(img_size) for img_size in args.image_size.split(",")]
     args.ft_extr_size = [(49, 10), (60, 2)]
 
     if len(args.image_size) == 1:
-        args.image_size = args.image_size[0]
+        args.image_size = args.image_size[0]"""
 
     # build run config from args
     args.lr_schedule_param = None
@@ -208,6 +213,7 @@ if __name__ == "__main__":
         expand_ratio_list=args.expand_list,
         depth_list=args.depth_list,
     )
+
     # Instantiate largest KWS model possible
     if args.kd_ratio > 0:
         args.teacher_model = KWSNetLarge(
@@ -230,6 +236,14 @@ if __name__ == "__main__":
     )
     run_manager.save_config()
 
+    """
+    # load teacher net weights
+    if args.kd_ratio > 0:
+        load_models(
+            run_manager, args.teacher_model, model_path=args.teacher_path
+        )
+    """
+
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (
         validate,
@@ -237,14 +251,15 @@ if __name__ == "__main__":
     )
 
     validate_func_dict = {
-        "ft_extr_type_list": args.ft_extr_type
-        if len(args.ft_extr_type) == 0
-        else {"mfcc", "mel_spectrogram", "dwt"},
+        "ft_extr_type": args.ft_extr_type,
+        "ft_extr_params_list": args.ft_extr_params_list,
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
     }
-    print("validate ft_extr_type: ", validate_func_dict['ft_extr_type_list'])
+    print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
+    print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
+
     if args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
@@ -257,6 +272,7 @@ if __name__ == "__main__":
                 run_manager.net,
                 args.ofa_checkpoint_path,
             )"""
+            args.ofa_checkpoint_path = ".torch/ofa_checkpoints/0"
             run_manager.write_log(
                 "%.3f\t%.3f\t%.3f\t%s"
                 % validate(run_manager, is_test=True, **validate_func_dict),

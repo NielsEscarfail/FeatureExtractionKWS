@@ -111,6 +111,7 @@ class RunConfig:
 class KWSRunConfig(RunConfig):
     def __init__(
         self,
+        # Run parameters
         n_epochs=150,
         init_lr=0.05,
         lr_schedule_type="cosine",
@@ -128,8 +129,10 @@ class KWSRunConfig(RunConfig):
         model_init="he_fout",
         validation_frequency=1,
         print_frequency=10,
-        ft_extr_size=(32, 10),
-        ft_extr_type=["mfcc"],
+
+        # Feature extraction parameters
+        ft_extr_params_list=[(10, 49)],
+        ft_extr_type="mfcc",
         **kwargs
     ):
         super(KWSRunConfig, self).__init__(
@@ -152,8 +155,8 @@ class KWSRunConfig(RunConfig):
             print_frequency,
         )
 
-        self.ft_extr_size = ft_extr_size
         self.ft_extr_type = ft_extr_type
+        self.ft_extr_params_list = ft_extr_params_list
 
     @property
     def data_provider(self):
@@ -166,8 +169,8 @@ class KWSRunConfig(RunConfig):
                 train_batch_size=self.train_batch_size,
                 test_batch_size=self.test_batch_size,
                 valid_size=self.valid_size,
-                ft_extr_size=self.ft_extr_size,
-                ft_extr_type=self.ft_extr_type
+                ft_extr_type=self.ft_extr_type,
+                ft_extr_params_list=self.ft_extr_params_list
             )
         return self.__dict__["_data_provider"]
 
