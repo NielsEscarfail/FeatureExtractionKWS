@@ -88,7 +88,7 @@ args.manual_seed = 0
 args.lr_schedule_type = "cosine"
 
 args.base_batch_size = 64
-args.valid_size = 10000
+args.valid_size = 1000
 
 args.momentum = 0.9
 args.no_nesterov = False
@@ -98,7 +98,7 @@ args.no_decay_keys = "bn#bias"
 args.fp16_allreduce = False
 
 args.model_init = "he_fout"
-args.validation_frequency = 1
+args.validation_frequency = 5
 args.print_frequency = 10
 
 args.n_worker = 8
