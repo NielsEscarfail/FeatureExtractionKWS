@@ -104,7 +104,7 @@ args.print_frequency = 10
 args.n_worker = 8
 args.resize_scale = 0.08
 args.distort_color = "tf"
-args.image_size = "128,160,192,224"
+# args.image_size = "128,160,192,224"
 args.continuous_size = True
 args.not_sync_distributed_image_size = False
 

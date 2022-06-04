@@ -203,13 +203,13 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
                 loss.backward()
             run_manager.optimizer.step()
 
-            losses.update(list_mean(loss_of_subnets), images.size(0))
+            losses.update(list_mean(loss_of_subnets), images.size(0))  # TODO
 
             t.set_postfix(
                 {
                     "loss": losses.avg.item(),
                     **run_manager.get_metric_vals(metric_dict, return_dict=True),
-                    "R": images.size(2),  # TODO change to images.shape or images.size(1), images.size(2)
+                    "R": images.shape[2:],  # TODO change to images.shape or images.size(1), images.size(2)
                     "lr": new_lr,
                     "loss_type": loss_type,
                     "seed": str(subnet_seed),
