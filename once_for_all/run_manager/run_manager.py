@@ -56,11 +56,11 @@ class RunManager:
             cudnn.benchmark = True
         else:
             self.device = torch.device("cpu")
-        # initialize model (default)
+        # initialize model (default) # TODO
         # if init:
         #    init_models(run_config.model_init)
         """
-        # net info
+        # net info # TODO
         net_info = get_net_info(
             self.net, self.run_config.data_provider.data_shape, measure_latency, True
         )
@@ -280,30 +280,32 @@ class RunManager:
                         {
                             "loss": losses.avg,
                             **self.get_metric_vals(metric_dict, return_dict=True),
-                            "img_size": images.size(2),
+                            "ft_extr_type": self.run_config.data_provider.active_ft_extr_type,
+                            "ft_extr_params": self.run_config.data_provider.active_ft_extr_params,
                         }
                     )
                     t.update(1)
         return losses.avg, self.get_metric_vals(metric_dict)
 
     def validate_all_resolution(self, epoch=0, is_test=False, net=None):
+
         if net is None:
             net = self.network
-        if isinstance(self.run_config.data_provider.image_size, list):
-            img_size_list, loss_list, top1_list, top5_list = [], [], [], []
-            for img_size in self.run_config.data_provider.image_size:
-                img_size_list.append(img_size)
-                self.run_config.data_provider.assign_active_img_size(img_size)
+        if isinstance(self.run_config.data_provider.ft_extr_params_list, list):
+            ft_extr_params_list, loss_list, top1_list, top5_list = [], [], [], []
+            for ft_extr_params in self.run_config.data_provider.ft_extr_params_list:
+                ft_extr_params_list.append(ft_extr_params)
+                self.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
                 self.reset_running_statistics(net=net)
                 loss, (top1, top5) = self.validate(epoch, is_test, net=net)
                 loss_list.append(loss)
                 top1_list.append(top1)
                 top5_list.append(top5)
-            return img_size_list, loss_list, top1_list, top5_list
+            return ft_extr_params_list, loss_list, top1_list, top5_list
         else:
             loss, (top1, top5) = self.validate(epoch, is_test, net=net)
             return (
-                [self.run_config.data_provider.active_img_size],
+                [self.run_config.data_provider.ft_extr_params_list],
                 [loss],
                 [top1],
                 [top5],

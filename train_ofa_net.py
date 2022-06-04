@@ -117,7 +117,8 @@ args.width_mult_list = "1.0"
 args.dy_conv_scaling_mode = 1
 args.independent_distributed_sampling = False
 
-args.kd_ratio = 1.0
+# args.kd_ratio = 1.0
+args.kd_ratio = 0
 args.kd_type = "ce"
 
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
@@ -146,26 +147,16 @@ if __name__ == "__main__":
     # Cuda Setup
     if torch.cuda.is_available():
         # Pin GPU to be used to process local rank (one GPU per process)
-        # torch.cuda.set_device(hvd.local_rank())
         device = torch.device('cuda')
         torch.backends.cudnn.enabled = True
         torch.backends.cudnn.benchmark = True
         torch.cuda.manual_seed(args.manual_seed)
-        device = torch.device('cuda')
         print('Using GPU.')
     else:
         device = torch.device('cpu')
         print('Using CPU.')
 
-    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7"
-
-    # Input size
-    """
-    args.image_size = [int(img_size) for img_size in args.image_size.split(",")]
-    args.ft_extr_size = [(49, 10), (60, 2)]
-
-    if len(args.image_size) == 1:
-        args.image_size = args.image_size[0]"""
+    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7" # TODO
 
     # build run config from args
     args.lr_schedule_param = None

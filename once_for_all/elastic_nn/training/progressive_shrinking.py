@@ -63,7 +63,7 @@ def validate(
                             [
                                 {
                                     "ft_extr_type": ft_extr_type,
-                                    "ft_extr_param": ftp,
+                                    "ft_extr_params": ftp,
                                     "d": d,
                                     "e": e,
                                     "ks": k,
@@ -82,12 +82,7 @@ def validate(
         run_manager.write_log(
             "-" * 30 + " Validate %s " % name + "-" * 30, "train", should_print=False
         )
-        print("Feature extraction type for validation: ", setting['ft_extr_type'])
-        print("Feature extraction param for validation: ", setting['ft_extr_param'])
-        run_manager.run_config.data_provider.assign_active_ft_extr_type(
-            setting.pop("ft_extr_type"),
-            setting.pop("ft_extr_param")
-        )
+        run_manager.run_config.data_provider.assign_active_ft_extr_params(setting.pop("ft_extr_params"))
         dynamic_net.set_active_subnet(**setting)
         run_manager.write_log(dynamic_net.module_str, "train", should_print=False)
 

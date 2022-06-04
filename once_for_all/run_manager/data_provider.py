@@ -204,9 +204,9 @@ class KWSDataProvider:
     def valid_path(self):
         return os.path.join(self.save_path, "val")
 
-    def assign_active_ft_extr_type(self, new_ft_extr_type, new_ft_extr_params):
-        self.active_ft_extr_type = new_ft_extr_type
+    def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
+        # self.active_ft_extr_type = new_ft_type
 
     def collate_batch_subtrain(self, batch):
         data_placeholder = []
