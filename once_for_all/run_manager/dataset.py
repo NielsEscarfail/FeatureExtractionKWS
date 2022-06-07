@@ -319,7 +319,7 @@ class AudioProcessor(object):
         # Load data
         try:
             sf_loader, _ = sf.read(wav_filename)
-            wav_file = torch.Tensor(np.array([sf_loader]))
+            wav_file = torch.Tensor(np.array([sf_loader])).to(self.device) # added device
         except:
             pass
 
@@ -343,7 +343,7 @@ class AudioProcessor(object):
 
         label_index = self.word_to_index[sample['label']]
 
-        return data.to(self.device), label_index
+        return data, label_index# data.to(self.device), label_index
 
     def get_mfcc(self, sample, feature_bin_count, spectrogram_length):
         """ Apply MFCC feature extraction to sample.
