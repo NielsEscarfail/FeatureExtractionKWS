@@ -319,7 +319,7 @@ class AudioProcessor(object):
         # Load data
         try:
             sf_loader, _ = sf.read(wav_filename)
-            wav_file = torch.Tensor(np.array([sf_loader]), device=self.device)
+            wav_file = torch.Tensor(np.array([sf_loader])).to(self.device)
         except:
             pass
 
