@@ -371,7 +371,7 @@ class AudioProcessor(object):
         # Shift data in [0, 255] interval to match Dory request for uint8 inputs
         # data = np.clip(data + 128, 0, 255)
         # print(data.shape)
-        return data
+        return data.to(self.device)
 
     def get_linear_stft(self, sample):
         """ Apply Linear STFT feature extraction to sample.
