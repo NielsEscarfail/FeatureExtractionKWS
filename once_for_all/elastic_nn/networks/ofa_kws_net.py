@@ -14,7 +14,6 @@ from utils.layers import (
 from once_for_all.networks.kws_net import KWSNet
 from utils.common_tools import val2list
 
-
 __all__ = ["OFAKWSNet"]
 
 
@@ -40,13 +39,13 @@ class OFAKWSNet(KWSNet):
         self.expand_ratio_list.sort()
         self.depth_list.sort()
 
-
         # Set stride, activation function, and SE dim reduction
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
-        width_list = [16, 24, 40, 80, 112, 160, 960, 1280]
+        # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # 2 3 5 10 14 20 120 160
+        width_list = [16, 24, 40, 64, 104, 168, 272, 440]  # 2 3 5 8 13 21 34 55
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
@@ -61,11 +60,11 @@ class OFAKWSNet(KWSNet):
 
         input_stem = []
         for width, n_block, s, act_func, use_se in zip(
-            input_stem_width_list,
-            input_stem_n_block_list,
-            input_stem_stride_stages,
-            input_stem_act_stages,
-            input_stem_se_stages
+                input_stem_width_list,
+                input_stem_n_block_list,
+                input_stem_stride_stages,
+                input_stem_act_stages,
+                input_stem_se_stages
         ):
             output_channel = width
 
@@ -86,7 +85,6 @@ class OFAKWSNet(KWSNet):
                 )
                 input_stem.append(input_block_conv)
                 feature_dim = output_channel
-
 
         # First block
         first_block_conv = MBConvLayer(
@@ -112,11 +110,11 @@ class OFAKWSNet(KWSNet):
         feature_dim = first_block_dim
 
         for width, n_block, s, act_func, use_se in zip(
-            width_list[2:],
-            n_block_list[1:],
-            stride_stages[1:],
-            act_stages[1:],
-            se_stages[1:],
+                width_list[2:],
+                n_block_list[1:],
+                stride_stages[1:],
+                act_stages[1:],
+                se_stages[1:],
         ):
             self.block_group_info.append([_block_index + i for i in range(n_block)])
             _block_index += n_block
@@ -154,7 +152,6 @@ class OFAKWSNet(KWSNet):
 
         # runtime_depth
         self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
-
 
     @staticmethod
     def name():

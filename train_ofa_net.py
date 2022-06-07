@@ -26,16 +26,15 @@ parser.add_argument(
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
 parser.add_argument("--resume", action="store_true")
 
-
 args = parser.parse_args()
 
 # Set up model parameters depending on the task TODO
 if args.task == "kernel":
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 120
+    args.n_epochs = 20
     args.base_lr = 3e-2
-    args.warmup_epochs = 5
+    args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
     args.expand_list = "6"
@@ -147,13 +146,11 @@ if __name__ == "__main__":
     # Cuda Setup
     if torch.cuda.is_available():
         # Pin GPU to be used to process local rank (one GPU per process)
-        device = torch.device('cuda')
         torch.backends.cudnn.enabled = True
         torch.backends.cudnn.benchmark = True
         torch.cuda.manual_seed(args.manual_seed)
         print('Using GPU.')
     else:
-        device = torch.device('cpu')
         print('Using CPU.')
 
     # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7" # TODO
@@ -227,13 +224,11 @@ if __name__ == "__main__":
     )
     run_manager.save_config()
 
-    """
     # load teacher net weights
     if args.kd_ratio > 0:
         load_models(
             run_manager, args.teacher_model, model_path=args.teacher_path
         )
-    """
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (
@@ -254,21 +249,20 @@ if __name__ == "__main__":
     if args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
-            """args.ofa_checkpoint_path = download_url(
-                "https://hanlab.mit.edu/files/OnceForAll/ofa_checkpoints/ofa_D4_E6_K7",
-                model_dir=".torch/ofa_checkpoints/%d" % hvd.rank(),
-            )
-            load_models(
+
+            args.ofa_checkpoint_path = "testlarge/checkpoint/checkpoint.pth"
+            """load_models(
                 run_manager,
                 run_manager.net,
                 args.ofa_checkpoint_path,
             )"""
-            args.ofa_checkpoint_path = ".torch/ofa_checkpoints/0"
+            """
             run_manager.write_log(
                 "%.3f\t%.3f\t%.3f\t%s"
                 % validate(run_manager, is_test=True, **validate_func_dict),
                 "valid",
-            )
+            )"""
+            print("Start train")
         else:
             assert args.resume
         train(
@@ -278,15 +272,27 @@ if __name__ == "__main__":
                 _run_manager, epoch, is_test, **validate_func_dict
             ),
         )
+
     elif args.task == "depth":
         from once_for_all.elastic_nn.training.progressive_shrinking import (
             train_elastic_depth,
         )
+
+        if args.phase == 1:
+            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
+        else:
+            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
         train_elastic_depth(train, run_manager, args, validate_func_dict)
+
     elif args.task == "expand":
         from once_for_all.elastic_nn.training.progressive_shrinking import (
             train_elastic_expand,
         )
+
+        if args.phase == 1:
+            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D234_E6_K357"
+        else:
+            args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError

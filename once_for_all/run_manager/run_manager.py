@@ -16,7 +16,8 @@ from tqdm import tqdm
 
 from utils import init_models
 from utils.common_tools import AverageMeter, accuracy, write_log
-from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target
+from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target, \
+    mix_images, mix_labels
 
 """from ofa.utils import (
     get_net_info,
@@ -52,15 +53,15 @@ class RunManager:
         # move network to GPU if available
         if torch.cuda.is_available() and (not no_gpu):
             self.device = torch.device("cuda:0")
-            self.net = self.net.to(self.device)
             cudnn.benchmark = True
         else:
             self.device = torch.device("cpu")
         # initialize model (default) # TODO
-        # if init:
-        #    init_models(run_config.model_init)
-        """
-        # net info # TODO
+        self.net = self.net.to(self.device)
+        if init:
+            init_models(self.net, run_config.model_init)
+
+        # net info
         net_info = get_net_info(
             self.net, self.run_config.data_provider.data_shape, measure_latency, True
         )
@@ -71,10 +72,8 @@ class RunManager:
                 fout.write(self.network.module_str + "\n")
             except Exception:
                 pass
-            fout.write("%s\n" % self.run_config.data_provider.train.dataset.transform)
-            fout.write("%s\n" % self.run_config.data_provider.test.dataset.transform)
             fout.write("%s\n" % self.network)
-        """
+
         # criterion
         if isinstance(self.run_config.mixup_alpha, float):
             self.train_criterion = cross_entropy_loss_with_soft_target
@@ -169,7 +168,7 @@ class RunManager:
         # noinspection PyBroadException
         try:
             if model_fname is None or not os.path.exists(model_fname):
-                model_fname = "%s/checkpoint.pth.tar" % self.save_path
+                model_fname = "%s/checkpoint.pth" % self.save_path  # changed, used to be "%s/checkpoint.pth.tar"
                 with open(latest_fname, "w") as fout:
                     fout.write(model_fname + "\n")
             print("=> loading checkpoint '{}'".format(model_fname))
@@ -311,7 +310,7 @@ class RunManager:
                 [top5],
             )
 
-    def train_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
+    """def train_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
         # switch to train mode
         self.net.train()
         MyRandomResizedCrop.EPOCH = epoch  # required by elastic resolution
@@ -395,7 +394,7 @@ class RunManager:
                     {
                         "loss": losses.avg,
                         **self.get_metric_vals(metric_dict, return_dict=True),
-                        "img_size": images.size(2),
+                        "img_size": images.size(2), # TODO
                         "lr": new_lr,
                         "loss_type": loss_type,
                         "data_time": data_time.avg,
@@ -403,9 +402,9 @@ class RunManager:
                 )
                 t.update(1)
                 end = time.time()
-        return losses.avg, self.get_metric_vals(metric_dict)
+        return losses.avg, self.get_metric_vals(metric_dict)"""
 
-    def train(self, args, warmup_epoch=0, warmup_lr=0):
+    """def train(self, args, warmup_epoch=0, warmup_lr=0):
         for epoch in range(self.start_epoch, self.run_config.n_epochs + warmup_epoch):
             train_loss, (train_top1, train_top5) = self.train_one_epoch(
                 args, epoch, warmup_epoch, warmup_lr
@@ -446,7 +445,7 @@ class RunManager:
                     "state_dict": self.network.state_dict(),
                 },
                 is_best=is_best,
-            )
+            )"""
 
     def reset_running_statistics(
             self, net=None, subset_size=2000, subset_batch_size=200, data_loader=None
@@ -461,7 +460,8 @@ class RunManager:
             )
         set_running_statistics(net, data_loader)
 
-    def train_large_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
+# NOT USED ANYMORE
+"""     def train_large_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
         # switch to train mode
         self.net.train()
 
@@ -538,7 +538,7 @@ class RunManager:
                     {
                         "loss": losses.avg,
                         **self.get_metric_vals(metric_dict, return_dict=True),
-                        "img_size": images.size(2),
+                        "img_size": images.size(2), # TODO
                         "lr": new_lr,
                         "loss_type": loss_type,
                         "data_time": data_time.avg,
@@ -578,9 +578,9 @@ class RunManager:
                     top1=train_top1,
                     train_loss=train_loss
                 )
-                """
+                
                 for i_s, v_a in zip(img_size, val_acc):
-                    val_log += "(%d, %.3f), " % (i_s, v_a)"""
+                    val_log += "(%d, %.3f), " % (i_s, v_a)
                 self.write_log(val_log, prefix="valid", should_print=False)
 
             else:
@@ -596,3 +596,4 @@ class RunManager:
                 is_best=is_best,
             )
 
+"""
