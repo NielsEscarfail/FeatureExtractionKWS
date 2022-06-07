@@ -148,6 +148,7 @@ class KWSDataProvider:
         """Collates batches and applies self.ft_extr_type.
          Randomly picking parameters from self.ft_extr_params_list for each batch."""
 
+        start = time.time()
         data_placeholder = []
         labels_placeholder = []
 
@@ -169,6 +170,9 @@ class KWSDataProvider:
 
             data_placeholder.append(data)
             labels_placeholder.append(label)
+
+        end = time.time()
+        print("FT batch : ", end - start)
 
         return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 

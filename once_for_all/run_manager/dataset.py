@@ -319,7 +319,7 @@ class AudioProcessor(object):
         # Load data
         try:
             sf_loader, _ = sf.read(wav_filename)
-            wav_file = torch.Tensor(np.array([sf_loader])).to(self.device)
+            wav_file = torch.Tensor(np.array([sf_loader]))
         except:
             pass
 
@@ -337,7 +337,7 @@ class AudioProcessor(object):
         sliced_foreground = padded_foreground[time_shift_offset[0]:time_shift_offset[0] + self.desired_samples]
 
         # Mix in background noise
-        background_mul = torch.mul(torch.tensor(background_noise[:, 0], device=self.device), background_volume)
+        background_mul = torch.mul(torch.Tensor(background_noise[:, 0]), background_volume)
 
         data = torch.add(background_mul, sliced_foreground)  # Size([16000])
 
