@@ -32,7 +32,7 @@ args = parser.parse_args()
 if args.task == "kernel":
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 20
+    args.n_epochs = 140
     args.base_lr = 3e-2
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
@@ -86,7 +86,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 512  # 64
+args.base_batch_size = 512  # 128 and 256 work well, 64 is significantly slower
 args.valid_size = 10000
 
 args.momentum = 0.9
