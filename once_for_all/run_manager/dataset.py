@@ -319,7 +319,7 @@ class AudioProcessor(object):
         # Load data
         try:
             sf_loader, _ = sf.read(wav_filename)
-            wav_file = torch.Tensor(np.array([sf_loader])).to(self.device) # added device
+            wav_file = torch.Tensor(np.array([sf_loader])).to(self.device)  # added device
         except:
             pass
 
@@ -334,7 +334,7 @@ class AudioProcessor(object):
         # Padding wrt the time shift offset
         pad_tuple = tuple(time_shift_padding[0])
         padded_foreground = torch.nn.ConstantPad1d(pad_tuple, 0)(scaled_foreground)
-        sliced_foreground = padded_foreground[time_shift_offset[0]:time_shift_offset[0] + self.desired_samples].to(self.device)
+        sliced_foreground = padded_foreground[time_shift_offset[0]:time_shift_offset[0] + self.desired_samples]
 
         # Mix in background noise
         background_mul = torch.mul(torch.Tensor(background_noise[:, 0]), background_volume).to(self.device)
@@ -343,7 +343,7 @@ class AudioProcessor(object):
 
         label_index = self.word_to_index[sample['label']]
 
-        return data, label_index# data.to(self.device), label_index
+        return data.to(self.device), label_index# data.to(self.device), label_index
 
     def get_mfcc(self, sample, feature_bin_count, spectrogram_length):
         """ Apply MFCC feature extraction to sample.
