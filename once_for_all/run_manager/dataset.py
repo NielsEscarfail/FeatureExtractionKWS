@@ -337,7 +337,7 @@ class AudioProcessor(object):
         sliced_foreground = padded_foreground[time_shift_offset[0]:time_shift_offset[0] + self.desired_samples].to(self.device)
 
         # Mix in background noise
-        background_mul = torch.mul(torch.Tensor(background_noise[:, 0]), background_volume)
+        background_mul = torch.mul(torch.Tensor(background_noise[:, 0]), background_volume).to(self.device)
 
         data = torch.add(background_mul, sliced_foreground)  # Size([16000])
 
