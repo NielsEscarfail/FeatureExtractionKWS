@@ -276,7 +276,7 @@ class KWSDataProvider:
                 batch_size=batch_size,
                 sampler=sub_sampler,
                 num_workers=num_worker,
-                pin_memory=True,
+                pin_memory=False,
                 collate_fn=self.collate_batch_subtrain
             )
             self.__dict__["sub_train_%s" % self.active_ft_extr_type] = []
