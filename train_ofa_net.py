@@ -15,8 +15,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
     type=str,
-    default="kernel",
+    default="normal",  # kernel
     choices=[
+        "normal",
         "kernel",
         "depth",
         "expand",
@@ -29,7 +30,17 @@ parser.add_argument("--resume", action="store_true")
 args = parser.parse_args()
 
 # Set up model parameters depending on the task TODO
-if args.task == "kernel":
+if args.task == "normal":
+    args.path = "exp/normal"
+    args.dynamic_batch_size = 1
+    args.n_epochs = 140
+    args.base_lr = 3  # 3e-2
+    args.warmup_epochs = 5  # 5
+    args.warmup_lr = -1
+    args.ks_list = "7"
+    args.expand_list = "6"
+    args.depth_list = "4"
+elif args.task == "kernel":
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 140
@@ -246,7 +257,14 @@ if __name__ == "__main__":
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
 
-    if args.task == "kernel":
+    if args.task == "normal":
+        train(
+            run_manager,
+            args,
+            lambda _run_manager, epoch, is_test: validate(
+                _run_manager, epoch, is_test, **validate_func_dict
+            ))
+    elif args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
 
