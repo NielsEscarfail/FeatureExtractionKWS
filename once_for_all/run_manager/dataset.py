@@ -339,23 +339,20 @@ class AudioProcessor(object):
 
         data = torch.add(background_mul, sliced_foreground)  # Size([16000])
 
-        data_placeholder = data.numpy().transpose()
-
         label_index = self.word_to_index[sample['label']]
-        labels_placeholder = label_index
 
-        return data_placeholder, labels_placeholder
+        return data, label_index
 
     def get_mfcc(self, sample, feature_bin_count, spectrogram_length):
         """ Apply MFCC feature extraction to sample.
         Args:
-            sample: Sample on which to apply the MFCC transformation.
+            sample (Tensor): Sample on which to apply the MFCC transformation.
         Returns:
-            MFCC computation from the sample, using melkwargs parameters.
+            data (Tensor) : MFCC computation from the sample, using melkwargs parameters.
         """
 
         # Create a data placeholder
-        sample = torch.Tensor(sample)
+        # sample = torch.Tensor(sample)
         # Compute MFCCs - PyTorch
         melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
                      'hop_length': self.window_stride_samples,
@@ -367,10 +364,11 @@ class AudioProcessor(object):
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
-        data = data[:, :spectrogram_length].numpy().transpose()
+        data = data[:, :spectrogram_length].transpose(0, 1)
 
         # Shift data in [0, 255] interval to match Dory request for uint8 inputs
         # data = np.clip(data + 128, 0, 255)
+        # print(data.shape)
         return data
 
     def get_linear_stft(self, sample):

@@ -18,7 +18,7 @@ class KWSDataProvider:
             train_batch_size=256,
             test_batch_size=512,
             valid_size=None,
-            ft_extr_type=["mfcc"], # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
+            ft_extr_type=["mfcc"],  # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
             ft_extr_params_list=None,
             rank=None,
             n_worker=0
@@ -151,14 +151,17 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                # data2 = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                # print(data2.shape)
+                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
+                                       dim=0)
             else:
                 raise NotImplementedError
 
             data_placeholder.append(data)
             labels_placeholder.append(label)
 
-        return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
+        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 
     @staticmethod
     def name():
@@ -231,7 +234,7 @@ class KWSDataProvider:
         return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
 
     def build_sub_train_loader(
-        self, n_images, batch_size, num_worker=None, num_replicas=None, rank=None
+            self, n_images, batch_size, num_worker=None, num_replicas=None, rank=None
     ):
         # used for resetting BN running statistics
         if self.__dict__.get("sub_train_%s" % self.active_ft_extr_type, None) is None:
@@ -271,7 +274,6 @@ class KWSDataProvider:
                     (images, labels)
                 )
         return self.__dict__["sub_train_%s" % self.active_ft_extr_type]
-
 
     @staticmethod
     def random_sample_valid_set(train_size, valid_size):

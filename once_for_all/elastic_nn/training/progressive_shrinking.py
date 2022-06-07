@@ -142,8 +142,8 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
                     run_manager.optimizer, epoch - warmup_epochs, i, nBatch
                 )
 
-            images, labels = images.cuda(), labels.cuda()
-            # images, labels = images, labels
+            # images, labels = images.cuda(), labels.cuda()
+            images, labels = images, labels
             target = labels
 
             # soft target
