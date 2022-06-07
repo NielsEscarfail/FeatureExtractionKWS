@@ -31,6 +31,7 @@ import numpy as np
 import soundfile as sf
 import torch
 import torchaudio
+from torchaudio.transforms import MFCC
 import librosa
 import time
 import pywt
@@ -357,18 +358,15 @@ class AudioProcessor(object):
         melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
                      'hop_length': self.window_stride_samples,
                      'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-        print(sample.device)
 
-        mfcc_transformation = torchaudio.transforms.MFCC(
+        mfcc_transformation = MFCC(
             n_mfcc=feature_bin_count,
             sample_rate=self.desired_samples, melkwargs=melkwargs, log_mels=True,
             norm='ortho').to(self.device)
-        # print(mfcc_transformation.device)
         print("2 ", time.time() - diff)
         diff = time.time()
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
 
-        print(data.device)
         print("3 ", time.time() - diff)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
