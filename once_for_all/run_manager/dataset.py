@@ -354,7 +354,7 @@ class AudioProcessor(object):
         """
 
         # Create a data placeholder
-        sample = sample.to(self.device)
+        # sample = sample.to(self.device)
         # Compute MFCCs - PyTorch
         melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
                      'hop_length': self.window_stride_samples,
@@ -362,7 +362,7 @@ class AudioProcessor(object):
         mfcc_transformation = torchaudio.transforms.MFCC(
             n_mfcc=feature_bin_count,
             sample_rate=self.desired_samples, melkwargs=melkwargs, log_mels=True,
-            norm='ortho')
+            norm='ortho').to(self.device)
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
