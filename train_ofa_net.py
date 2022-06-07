@@ -86,7 +86,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 256  # 64
+args.base_batch_size = 512  # 64
 args.valid_size = 10000
 
 args.momentum = 0.9
