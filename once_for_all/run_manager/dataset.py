@@ -354,7 +354,7 @@ class AudioProcessor(object):
         """
 
         # Create a data placeholder
-        # sample = sample.to(self.device)
+        sample = sample.to(self.device)
         # Compute MFCCs - PyTorch
         melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
                      'hop_length': self.window_stride_samples,
