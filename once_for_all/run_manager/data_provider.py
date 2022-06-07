@@ -1,4 +1,5 @@
 import random
+import time
 import warnings
 import os
 import numpy as np
@@ -139,6 +140,7 @@ class KWSDataProvider:
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
          Randomly picking parameters from self.ft_extr_params_list for each batch."""
+
         data_placeholder = []
         labels_placeholder = []
 
@@ -223,7 +225,9 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
+                                       dim=0)
+                # data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
             else:
                 raise NotImplementedError
 
@@ -231,7 +235,7 @@ class KWSDataProvider:
             data_placeholder.append(data)
             labels_placeholder.append(label)
 
-        return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
+        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 
     def build_sub_train_loader(
             self, n_images, batch_size, num_worker=None, num_replicas=None, rank=None

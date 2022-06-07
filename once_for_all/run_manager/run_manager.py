@@ -56,7 +56,7 @@ class RunManager:
             cudnn.benchmark = True
         else:
             self.device = torch.device("cpu")
-        # initialize model (default) # TODO
+        # initialize model (default)
         self.net = self.net.to(self.device)
         if init:
             init_models(self.net, run_config.model_init)
