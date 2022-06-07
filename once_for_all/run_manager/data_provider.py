@@ -161,10 +161,9 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                # data2 = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
-                # print(data2.shape)
-                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
-                                       dim=0)
+                print("in batch ", data.device)
+                data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)
+                data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
 
