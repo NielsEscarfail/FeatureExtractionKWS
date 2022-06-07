@@ -126,7 +126,6 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
     ) as t:
         end = time.time()
         for i, (images, labels) in enumerate(run_manager.run_config.train_loader):
-            # MyRandomResizedCrop.BATCH = i
             data_time.update(time.time() - end)
             if epoch < warmup_epochs:
                 new_lr = run_manager.run_config.warmup_adjust_learning_rate(
@@ -142,7 +141,6 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
                     run_manager.optimizer, epoch - warmup_epochs, i, nBatch
                 )
 
-            # images, labels = images.cuda(), labels.cuda()
             images, labels = images.to(run_manager.device), labels.to(run_manager.device)
             target = labels
 

@@ -52,7 +52,7 @@ class RunManager:
 
         # move network to GPU if available
         if torch.cuda.is_available() and (not no_gpu):
-            self.device = torch.device("cuda:0")
+            self.device = torch.device("cuda")
             cudnn.benchmark = True
         else:
             self.device = torch.device("cpu")

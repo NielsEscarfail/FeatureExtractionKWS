@@ -102,6 +102,7 @@ class AudioProcessor(object):
                  # In testing
                  batch_size=-1,
                  ):
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.feature_extraction_method = feature_extraction_method
 
         self.silence_percentage = silence_percentage
@@ -353,7 +354,7 @@ class AudioProcessor(object):
         """
 
         # Create a data placeholder
-        # sample = torch.Tensor(sample)
+        sample = sample.to(self.device)
         # Compute MFCCs - PyTorch
         melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
                      'hop_length': self.window_stride_samples,

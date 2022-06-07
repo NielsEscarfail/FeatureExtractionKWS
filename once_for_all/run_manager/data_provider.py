@@ -26,6 +26,11 @@ class KWSDataProvider:
     ):
         warnings.filterwarnings("ignore")
         self._save_path = save_path
+        # move network to GPU if available
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
 
         self.audio_processor = AudioProcessor(feature_extraction_method=ft_extr_type)
 
@@ -128,14 +133,16 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                # data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
+                                       dim=0)
             else:
                 raise NotImplementedError
 
             data_placeholder.append(data)
             labels_placeholder.append(label)
 
-        return torch.tensor(data_placeholder), torch.tensor(labels_placeholder)
+        return torch.stack(data_placeholder, dim=0).to(self.device), torch.tensor(labels_placeholder).to(self.device)
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
