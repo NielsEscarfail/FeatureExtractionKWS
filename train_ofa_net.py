@@ -34,7 +34,7 @@ if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 140
-    args.base_lr = 3  # 3e-2
+    args.base_lr = 3e-2  # 3e-2
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
