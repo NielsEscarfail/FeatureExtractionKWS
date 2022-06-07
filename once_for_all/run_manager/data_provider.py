@@ -71,7 +71,7 @@ class KWSDataProvider:
                 batch_size=train_batch_size,
                 sampler=train_sampler,
                 num_workers=n_worker,
-                pin_memory=True,
+                pin_memory=False,
                 collate_fn=self.collate_batch
             )
             self.valid = torch.utils.data.DataLoader(
@@ -79,7 +79,7 @@ class KWSDataProvider:
                 batch_size=test_batch_size,
                 sampler=valid_sampler,
                 num_workers=n_worker,
-                pin_memory=True,
+                pin_memory=False,
                 collate_fn=self.collate_batch
             )
         else:
@@ -89,7 +89,7 @@ class KWSDataProvider:
                 batch_size=train_batch_size,
                 shuffle=True,
                 num_workers=n_worker,
-                pin_memory=True,
+                pin_memory=False,
                 collate_fn=self.collate_batch
             )
             self.valid = None
@@ -101,7 +101,7 @@ class KWSDataProvider:
             batch_size=test_batch_size,
             shuffle=True,
             num_workers=n_worker,
-            pin_memory=True,
+            pin_memory=False,
             collate_fn=self.collate_batch
         )
 
@@ -111,7 +111,7 @@ class KWSDataProvider:
             batch_size=test_batch_size,
             shuffle=True,
             num_workers=n_worker,
-            pin_memory=True,
+            pin_memory=False,
             collate_fn=self.collate_batch
         )
 
