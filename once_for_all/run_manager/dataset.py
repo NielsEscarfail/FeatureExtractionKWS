@@ -333,7 +333,7 @@ class AudioProcessor(object):
 
         # Padding wrt the time shift offset
         pad_tuple = tuple(time_shift_padding[0])
-        padded_foreground = torch.nn.ConstantPad1d(pad_tuple, 0)(scaled_foreground)
+        padded_foreground = torch.nn.ConstantPad1d(pad_tuple, 0)(scaled_foreground).to(self.device)
         sliced_foreground = padded_foreground[time_shift_offset[0]:time_shift_offset[0] + self.desired_samples]
 
         # Mix in background noise
