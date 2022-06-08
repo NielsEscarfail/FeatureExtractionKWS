@@ -7,6 +7,7 @@ import torch.utils.data
 from torchaudio.transforms import MFCC
 
 from .dataset import AudioGenerator, AudioProcessor
+torch.multiprocessing.set_start_method('spawn')# good solution !!!!
 
 
 class KWSDataProvider:

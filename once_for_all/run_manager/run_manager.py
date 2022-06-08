@@ -16,23 +16,8 @@ from tqdm import tqdm
 
 from utils import init_models
 from utils.common_tools import AverageMeter, accuracy, write_log
-from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target, \
-    mix_images, mix_labels
+from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target
 
-"""from ofa.utils import (
-    get_net_info,
-    cross_entropy_loss_with_soft_target,
-    cross_entropy_with_label_smoothing,
-)"""
-"""from ofa.utils import (
-    AverageMeter,
-    accuracy,
-    write_log,
-    mix_images,
-    mix_labels,
-    init_models,
-)"""
-# from ofa.utils import MyRandomResizedCrop
 
 __all__ = ["RunManager"]
 
