@@ -163,7 +163,7 @@ class KWSDataProvider:
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
         transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
-        self.active_transformation = self.transformations[transformation_idx]
+        self.active_transformation = self.transformations[transformation_idx].to(self.device)
 
     def init_transformations(self):
         self.transformations = []
