@@ -215,14 +215,20 @@ class OFAKWSNet(KWSNet):
         return self.block_group_info
 
     def load_state_dict(self, state_dict, **kwargs):
+        print("hereino")
         model_dict = self.state_dict()
         for key in state_dict:
+            print("key : ", key)
             if ".mobile_inverted_conv." in key:
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
-            elif "module." in key: # Added
+            elif "module." in key:  # Added
+                print("TEST HERE in module")
                 new_key = key.replace("module.", "")
             else:
                 new_key = key
+            new_key = "module." + new_key
+
+            print("newkey after : ", new_key)
             if new_key in model_dict:
                 pass
             elif ".bn.bn." in new_key:
