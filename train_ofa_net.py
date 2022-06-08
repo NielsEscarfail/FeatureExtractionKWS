@@ -312,16 +312,6 @@ if __name__ == "__main__":
             args.ofa_checkpoint_path = "exp/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
 
-        load_models(
-            run_manager,
-            run_manager.net,
-            args.ofa_checkpoint_path,
-        )
-        run_manager.write_log(
-            "%.3f\t%.3f\t%.3f\t%s"
-            % validate(run_manager, is_test=True, **validate_func_dict),
-            "valid",
-        )
         print("Start elastic depth training")
 
         train_elastic_depth(train, run_manager, args, validate_func_dict)
@@ -337,17 +327,6 @@ if __name__ == "__main__":
         else:
             args.ofa_checkpoint_path = "exp/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
-
-        load_models(
-            run_manager,
-            run_manager.net,
-            args.ofa_checkpoint_path,
-        )
-        run_manager.write_log(
-            "%.3f\t%.3f\t%.3f\t%s"
-            % validate(run_manager, is_test=True, **validate_func_dict),
-            "valid",
-        )
 
         print("Start elastic expand training")
 
