@@ -221,7 +221,7 @@ class OFAKWSNet(KWSNet):
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
             else:
                 new_key = key
-            new_key = new_key.replace(".module", "")
+            # new_key = new_key.replace(".module", "")
 
             if new_key in model_dict:
                 pass
