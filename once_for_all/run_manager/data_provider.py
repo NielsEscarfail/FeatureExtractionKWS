@@ -173,7 +173,7 @@ class KWSDataProvider:
                 mfcc_transformation = MFCC(
                     n_mfcc=feature_bin_count,
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                    norm='ortho').to(self.device)
+                    norm='ortho')  # .to(self.device)
 
                 self.transformations.append(mfcc_transformation)
 
@@ -214,7 +214,7 @@ class KWSDataProvider:
         transformation_type = self.active_ft_extr_type
         ft_extr_params = self.active_ft_extr_params
 
-        active_transformation = self.active_transformation.to(self.device)
+        active_transformation = self.active_transformation  # .to(self.device)
 
         # transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
         # active_transformation = self.transformations[transformation_idx]
