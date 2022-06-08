@@ -134,7 +134,8 @@ args.kd_type = "ce"
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
 args.ft_extr_type = "mfcc"
 # feature_bin_count, spectrogram_length
-args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
+# args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
+args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
 
 print("ARGS : ", args)
 
