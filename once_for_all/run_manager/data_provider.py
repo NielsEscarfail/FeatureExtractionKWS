@@ -24,7 +24,7 @@ class KWSDataProvider:
             ft_extr_type=["mfcc"],  # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
             ft_extr_params_list=None,
             rank=None,
-            n_worker=0
+            n_worker=4
     ):
         warnings.filterwarnings("ignore")
         self._save_path = save_path

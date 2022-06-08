@@ -129,6 +129,7 @@ class KWSRunConfig(RunConfig):
         model_init="he_fout",
         validation_frequency=1,
         print_frequency=10,
+        n_worker=4,
 
         # Feature extraction parameters
         ft_extr_params_list=[(10, 49)],
@@ -155,6 +156,7 @@ class KWSRunConfig(RunConfig):
             print_frequency,
         )
 
+        self.n_worker = n_worker
         self.ft_extr_type = ft_extr_type
         self.ft_extr_params_list = ft_extr_params_list
 
@@ -169,6 +171,7 @@ class KWSRunConfig(RunConfig):
                 train_batch_size=self.train_batch_size,
                 test_batch_size=self.test_batch_size,
                 valid_size=self.valid_size,
+                n_worker=self.n_worker,
                 ft_extr_type=self.ft_extr_type,
                 ft_extr_params_list=self.ft_extr_params_list
             )
