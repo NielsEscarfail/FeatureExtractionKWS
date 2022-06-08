@@ -98,7 +98,7 @@ args.manual_seed = 0
 args.lr_schedule_type = "cosine"
 
 args.base_batch_size = 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
-args.valid_size = 10000
+args.valid_size = .1
 
 args.momentum = 0.9
 args.no_nesterov = False
@@ -109,7 +109,7 @@ args.fp16_allreduce = False
 
 args.model_init = "he_fout"
 args.validation_frequency = 5
-args.print_frequency = 10
+args.print_frequency = 5
 
 args.n_worker = 8
 args.resize_scale = 0.08

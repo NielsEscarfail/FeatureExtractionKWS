@@ -143,7 +143,7 @@ class RunManager:
             checkpoint = {"state_dict": self.network.state_dict()}
 
         if model_name is None:
-            model_name = "checkpoint.pth.tar"
+            model_name = "checkpoint.pth"
 
         checkpoint[
             "dataset"

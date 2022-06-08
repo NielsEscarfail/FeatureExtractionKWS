@@ -42,16 +42,13 @@ class KWSDataProvider:
         self.active_ft_extr_type = self.ft_extr_type
         self.active_ft_extr_params = self.ft_extr_params_list[0]
 
-        self.init_transformations()  # TODO testing
+        self.init_transformations()
 
         train_loader_class = torch.utils.data.DataLoader
         train_dataset = self.train_dataset()
 
         print("Feature extraction type : ", ft_extr_type)
         print("Parameters used : ", ft_extr_params_list)
-        print("augmented audio shape: ", train_dataset.__getitem__(0)[0].shape)
-        print("Valid_size : ", valid_size)
-        print("Train batch size : ", train_batch_size)
 
         if valid_size is not None:
             if not isinstance(valid_size, int):
