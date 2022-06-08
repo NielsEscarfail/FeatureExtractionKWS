@@ -344,7 +344,7 @@ class AudioProcessor(object):
 
         label_index = self.word_to_index[sample['label']]
 
-        return data.to(self.device), label_index
+        return data, label_index  # data.to(self.device), label_index
 
     def get_mfcc(self, sample, mfcc_transformation, spectrogram_length):
         """ Apply MFCC feature extraction to sample.
