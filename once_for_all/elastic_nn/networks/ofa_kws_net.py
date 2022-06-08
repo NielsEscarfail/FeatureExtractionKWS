@@ -219,6 +219,8 @@ class OFAKWSNet(KWSNet):
         for key in state_dict:
             if ".mobile_inverted_conv." in key:
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
+            elif "module." in key: # Added
+                new_key = key.replace("module.", "")
             else:
                 new_key = key
             if new_key in model_dict:
