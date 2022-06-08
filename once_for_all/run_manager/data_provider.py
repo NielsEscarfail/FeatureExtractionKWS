@@ -122,73 +122,6 @@ class KWSDataProvider:
 
         print("Train length: ", len(self.train))
 
-    def collate_batch_subtrain(self, batch):
-        """Collates batches deterministically based on self.ft_extr_type and self.active_ft_extr_params."""
-        data_placeholder = []
-        labels_placeholder = []
-
-        transformation = self.active_ft_extr_type
-        if transformation == 'mfcc':
-            feature_bin_count = self.active_ft_extr_params[0]
-            spectrogram_length = self.active_ft_extr_params[1]
-
-            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
-                         'hop_length': self.audio_processor.window_stride_samples,
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-
-            mfcc_transformation = MFCC(
-                n_mfcc=feature_bin_count,
-                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                norm='ortho').to(self.device)
-
-        for (data, label) in batch:
-            # Apply transformation
-            if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
-                data = torch.unsqueeze(data, dim=0)
-            else:
-                raise NotImplementedError
-
-            data_placeholder.append(data)
-            labels_placeholder.append(label)
-
-        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
-
-    def collate_batch(self, batch):
-        """Collates batches and applies self.ft_extr_type.
-         Randomly picking parameters from self.ft_extr_params_list for each batch."""
-
-        data_placeholder = []
-        labels_placeholder = []
-
-        transformation = self.ft_extr_type
-        ft_extr_params = random.choice(self.ft_extr_params_list)
-        if transformation == 'mfcc':
-            feature_bin_count = ft_extr_params[0]
-            spectrogram_length = ft_extr_params[1]
-
-            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
-                         'hop_length': self.audio_processor.window_stride_samples,
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-
-            mfcc_transformation = MFCC(
-                n_mfcc=feature_bin_count,
-                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                norm='ortho').to(self.device)
-
-        for (data, label) in batch:
-            # Apply transformation
-            if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
-                data = torch.unsqueeze(data, dim=0)
-            else:
-                raise NotImplementedError
-
-            data_placeholder.append(data)
-            labels_placeholder.append(label)
-
-        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
-
     @staticmethod
     def name():
         return "speech-commands"
@@ -237,7 +170,43 @@ class KWSDataProvider:
         self.active_ft_extr_params = new_ft_extr_params
         # self.active_ft_extr_type = new_ft_type
 
+    def collate_batch(self, batch):
+        """Collates batches and applies self.ft_extr_type.
+         Randomly picking parameters from self.ft_extr_params_list for each batch."""
+
+        data_placeholder = []
+        labels_placeholder = []
+
+        transformation = self.ft_extr_type
+        ft_extr_params = random.choice(self.ft_extr_params_list)
+        if transformation == 'mfcc':
+            feature_bin_count = ft_extr_params[0]
+            spectrogram_length = ft_extr_params[1]
+
+            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
+                         'hop_length': self.audio_processor.window_stride_samples,
+                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+
+            mfcc_transformation = MFCC(
+                n_mfcc=feature_bin_count,
+                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
+                norm='ortho').to(self.device)
+
+        for (data, label) in batch:
+            # Apply transformation
+            if transformation == 'mfcc':
+                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
+                data = torch.unsqueeze(data, dim=0)
+            else:
+                raise NotImplementedError
+
+            data_placeholder.append(data)
+            labels_placeholder.append(label)
+
+        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
+
     def collate_batch_subtrain(self, batch):
+        """Collates batches deterministically based on self.ft_extr_type and self.active_ft_extr_params."""
         data_placeholder = []
         labels_placeholder = []
 
@@ -246,16 +215,23 @@ class KWSDataProvider:
             feature_bin_count = self.active_ft_extr_params[0]
             spectrogram_length = self.active_ft_extr_params[1]
 
+            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
+                         'hop_length': self.audio_processor.window_stride_samples,
+                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+
+            mfcc_transformation = MFCC(
+                n_mfcc=feature_bin_count,
+                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
+                norm='ortho').to(self.device)
+
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
-                                       dim=0)
-                # data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
+                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
+                data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
 
-            # Create feature extraction batch
             data_placeholder.append(data)
             labels_placeholder.append(label)
 
