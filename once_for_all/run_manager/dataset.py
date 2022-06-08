@@ -346,7 +346,7 @@ class AudioProcessor(object):
 
         return data.to(self.device), label_index
 
-    def get_mfcc(self, sample, feature_bin_count, spectrogram_length):
+    def get_mfcc(self, sample, mfcc_transformation, spectrogram_length):
         """ Apply MFCC feature extraction to sample.
         Args:
             sample (Tensor): Sample on which to apply the MFCC transformation.
@@ -354,20 +354,11 @@ class AudioProcessor(object):
             data (Tensor) : MFCC computation from the sample, using melkwargs parameters.
         """
         # Compute MFCCs - PyTorch
-        diff = time.time()
-        melkwargs = {'n_fft': 1024, 'win_length': self.window_size_samples,
-                     'hop_length': self.window_stride_samples,
-                     'f_min': 20, 'f_max': 4000, 'n_mels': 40}
 
-        mfcc_transformation = MFCC(
-            n_mfcc=feature_bin_count,
-            sample_rate=self.desired_samples, melkwargs=melkwargs, log_mels=True,
-            norm='ortho').to(self.device)
-        print("2 ", time.time() - diff)
         diff = time.time()
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
 
-        print("3 ", time.time() - diff)
+        print("mfcctransf ", time.time() - diff)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
         data = data[:, :spectrogram_length].transpose(0, 1)

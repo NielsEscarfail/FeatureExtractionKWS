@@ -4,6 +4,8 @@ import warnings
 import os
 import numpy as np
 import torch.utils.data
+from torchaudio.transforms import MFCC
+
 from .dataset import AudioGenerator, AudioProcessor
 
 
@@ -158,11 +160,20 @@ class KWSDataProvider:
             feature_bin_count = ft_extr_params[0]
             spectrogram_length = ft_extr_params[1]
 
+            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
+                         'hop_length': self.audio_processor.window_stride_samples,
+                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+
+            mfcc_transformation = MFCC(
+                n_mfcc=feature_bin_count,
+                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
+                norm='ortho').to(self.device)
+
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
                 print("in batch ", data.device)
-                data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)
+                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
                 print("in batch 2", data.device)
 
                 data = torch.unsqueeze(data, dim=0)
