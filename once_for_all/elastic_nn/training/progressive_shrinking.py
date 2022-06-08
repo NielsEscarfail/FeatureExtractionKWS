@@ -271,6 +271,7 @@ def load_models(run_manager, dynamic_net, model_path=None):
     # specify init path
     init = torch.load(model_path, map_location="cpu")["state_dict"]
     # dynamic_net.load_state_dict(init)
+    print(dynamic_net)
     dynamic_net.load_state_dict(init)
     run_manager.write_log("Loaded init from %s" % model_path, "valid")
 
