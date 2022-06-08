@@ -125,7 +125,7 @@ class RunManager:
 
     def save_model(self, checkpoint=None, is_best=False, model_name=None):
         if checkpoint is None:
-            checkpoint = {"state_dict": self.network.state_dict()}
+            checkpoint = {"state_dict": self.network.module.state_dict()}
 
         if model_name is None:
             model_name = "checkpoint.pth.tar"
