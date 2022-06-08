@@ -276,7 +276,7 @@ if __name__ == "__main__":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
 
-            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/checkpoint.pth.tar"
+            args.ofa_checkpoint_path = "exp/normal/checkpoint/checkpoint.pth.tar"
 
             load_models(
                 run_manager,
