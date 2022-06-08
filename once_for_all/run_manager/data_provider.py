@@ -163,7 +163,7 @@ class KWSDataProvider:
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
         transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
-        self.active_transformation = self.transformations[transformation_idx].to(self.device)
+        self.active_transformation = self.transformations[transformation_idx]
 
     def init_transformations(self):
         self.transformations = []
@@ -190,7 +190,7 @@ class KWSDataProvider:
 
         ft_extr_params = random.choice(self.ft_extr_params_list)
         transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
-        transformation = self.transformations[transformation_idx]
+        transformation = self.transformations[transformation_idx].to(self.device)
 
         if transformation_type == 'mfcc':
             spectrogram_length = ft_extr_params[1]
@@ -216,7 +216,7 @@ class KWSDataProvider:
         transformation_type = self.active_ft_extr_type
         ft_extr_params = self.active_ft_extr_params
 
-        # active_transformation = self.active_transformation
+        active_transformation = self.active_transformation.to(self.device)
 
         # transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
         # active_transformation = self.transformations[transformation_idx]
@@ -227,7 +227,7 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation_type == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, self.active_transformation, spectrogram_length)
+                data = self.audio_processor.get_mfcc(data, active_transformation, spectrogram_length)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
