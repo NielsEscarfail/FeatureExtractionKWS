@@ -35,37 +35,37 @@ args = parser.parse_args()
 if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 80  # 180
-    args.base_lr = 3e-2  # 3e-2
+    args.n_epochs = 50  # 180 paper
+    args.base_lr = 3e-2  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
     args.expand_list = "6"
     args.depth_list = "4"
-elif args.task == "kernel":
+elif args.task == "kernel":  # params ok
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 40  # 140
+    args.n_epochs = 40  # 120
     args.base_lr = 3e-2
-    args.warmup_epochs = 5  # 5
+    args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
     args.expand_list = "6"
     args.depth_list = "4"
-elif args.task == "depth":
+elif args.task == "depth":  # all params below ok
     args.path = "exp/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
     if args.phase == 1:
         args.n_epochs = 25
-        args.base_lr = 2.5e-3
+        args.base_lr = 2.5e-3  # 2.5e-3 - 0.08 paper
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.expand_list = "6"
         args.depth_list = "3,4"
     else:
-        args.n_epochs = 120  # 120
-        args.base_lr = 7.5e-3
+        args.n_epochs = 120  # 125 (120 + 5)
+        args.base_lr = 7.5e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -276,7 +276,7 @@ if __name__ == "__main__":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
 
-            args.ofa_checkpoint_path = "exp/normal/checkpoint/checkpoint.pth.tar"
+            args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
 
             load_models(
                 run_manager,

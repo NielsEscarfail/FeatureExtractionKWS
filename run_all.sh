@@ -1,11 +1,8 @@
-conda activate /home/sem22f41/FeatureExtractionKWS/env
+conda activate kwsenv
 
-model_list = 'dscnn dscnn_maxpool dscnn_avgpool dscnn_subconv wav2vec'
-ft_extr_list = 'mfcc raw augmented'
-
-python main.py --model dscnn --ft_extr mfcc > dscnn_mfcc.txt
-python main.py --model dscnn --ft_extr augmented > dscnn_augmented.txt
-python main.py --model dscnn_maxpool --ft_extr augmented > dscnn_maxpool_augmented.txt
-python main.py --model dscnn_avgpool --ft_extr augmented > dscnn_avgpool_augmented.txt
-python main.py --model wav2vec --ft_extr raw > wav2vec_raw.txt
-python main.py --model wav2vec --ft_extr augmented > wav2vec_augmented.txt
+python train_ofa_net.py --task normal > mfcc_normal.txt
+python train_ofa_net.py --task kernel > mfcc_normal2kernel.txt
+python train_ofa_net.py --task depth --phase 1 > mfcc_kernel2depth1.txt
+python train_ofa_net.py --task depth --phase 2 > mfcc_kernel2depth2.txt
+python train_ofa_net.py --task expand --phase 1 > mfcc_depth2expand1.txt
+python train_ofa_net.py --task expand --phase 2 > mfcc_depth2expand2.txt
