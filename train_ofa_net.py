@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
     type=str,
-    default="kernel",  # kernel
+    default="normal",  # kernel
     choices=[
         "normal",
         "kernel",
@@ -276,8 +276,8 @@ if __name__ == "__main__":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
 
-            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/checkpoint.pth"
-            """
+            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/checkpoint.pth.tar"
+
             load_models(
                 run_manager,
                 run_manager.net,
@@ -287,7 +287,7 @@ if __name__ == "__main__":
                 "%.3f\t%.3f\t%.3f\t%s"
                 % validate(run_manager, is_test=True, **validate_func_dict),
                 "valid",
-            )"""
+            )
             print("Start kernel train")
         else:
             assert args.resume

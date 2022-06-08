@@ -128,7 +128,7 @@ class RunManager:
             checkpoint = {"state_dict": self.network.state_dict()}
 
         if model_name is None:
-            model_name = "checkpoint.pth"
+            model_name = "checkpoint.pth.tar"
 
         checkpoint[
             "dataset"
@@ -140,7 +140,7 @@ class RunManager:
         torch.save(checkpoint, model_path)
 
         if is_best:
-            best_path = os.path.join(self.save_path, "model_best.pth") # modif
+            best_path = os.path.join(self.save_path, "model_best.pth.tar") # modif
             torch.save({"state_dict": checkpoint["state_dict"]}, best_path)
 
     def load_model(self, model_fname=None):
@@ -153,7 +153,7 @@ class RunManager:
         # noinspection PyBroadException
         try:
             if model_fname is None or not os.path.exists(model_fname):
-                model_fname = "%s/checkpoint.pth" % self.save_path  # changed, used to be "%s/checkpoint.pth.tar"
+                model_fname = "%s/checkpoint.pth.tar" % self.save_path  # changed, used to be "%s/checkpoint.pth.tar"
                 with open(latest_fname, "w") as fout:
                     fout.write(model_fname + "\n")
             print("=> loading checkpoint '{}'".format(model_fname))
