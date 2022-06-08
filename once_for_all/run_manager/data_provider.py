@@ -73,7 +73,7 @@ class KWSDataProvider:
                 batch_size=train_batch_size,
                 sampler=train_sampler,
                 num_workers=n_worker,
-                pin_memory=False,
+                pin_memory=True,
                 collate_fn=self.collate_batch
             )
             self.valid = torch.utils.data.DataLoader(
@@ -81,7 +81,7 @@ class KWSDataProvider:
                 batch_size=test_batch_size,
                 sampler=valid_sampler,
                 num_workers=n_worker,
-                pin_memory=False,
+                pin_memory=True,
                 collate_fn=self.collate_batch
             )
         else:  # No validation set
@@ -90,7 +90,7 @@ class KWSDataProvider:
                 batch_size=train_batch_size,
                 shuffle=True,
                 num_workers=n_worker,
-                pin_memory=False,
+                pin_memory=True,
                 collate_fn=self.collate_batch
             )
             self.valid = None
@@ -103,7 +103,7 @@ class KWSDataProvider:
             batch_size=test_batch_size,
             shuffle=True,
             num_workers=n_worker,
-            pin_memory=False,
+            pin_memory=True,
             collate_fn=self.collate_batch
         )
 
@@ -267,7 +267,7 @@ class KWSDataProvider:
                 batch_size=batch_size,
                 sampler=sub_sampler,
                 num_workers=num_worker,
-                pin_memory=False,
+                pin_memory=True,
                 collate_fn=self.collate_batch_subtrain
             )
             self.__dict__["sub_train_%s" % self.active_ft_extr_type] = []
