@@ -37,7 +37,7 @@ if args.task == "normal":
     args.dynamic_batch_size = 1
     args.n_epochs = 5  # 180
     args.base_lr = 3e-2  # 3e-2
-    args.warmup_epochs = 5  # 5
+    args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
     args.expand_list = "6"

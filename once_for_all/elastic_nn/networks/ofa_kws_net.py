@@ -226,9 +226,8 @@ class OFAKWSNet(KWSNet):
                 new_key = key.replace("module.", "")
             else:
                 new_key = key
-            new_key = "module." + new_key
+            new_key = new_key.replace(".module", "")
 
-            print("newkey after : ", new_key)
             if new_key in model_dict:
                 pass
             elif ".bn.bn." in new_key:
