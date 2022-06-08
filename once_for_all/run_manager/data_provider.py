@@ -188,7 +188,7 @@ class KWSDataProvider:
 
         ft_extr_params = random.choice(self.ft_extr_params_list)
         transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
-        transformation = self.transformations[transformation_idx].to(self.device)
+        transformation = self.transformations[transformation_idx]
 
         if transformation_type == 'mfcc':
             spectrogram_length = ft_extr_params[1]

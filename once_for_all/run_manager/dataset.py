@@ -358,7 +358,7 @@ class AudioProcessor(object):
 
         # Cut shape to (feature_bin_count, spectrogram_length)
         data = data[:, :spectrogram_length].transpose(0, 1)
-        return data.to(self.device)
+        return data
 
     def get_linear_stft(self, sample):
         """ Apply Linear STFT feature extraction to sample.
