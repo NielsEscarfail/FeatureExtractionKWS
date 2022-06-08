@@ -215,9 +215,10 @@ class OFAKWSNet(KWSNet):
         return self.block_group_info
 
     def load_state_dict(self, state_dict, **kwargs):
-        print("EERSJKRSEK")
         model_dict = self.state_dict()
+        print("hello")
         for key in state_dict:
+            print("key")
             # key = key.replace("module.", "")
             if ".mobile_inverted_conv." in key:
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
