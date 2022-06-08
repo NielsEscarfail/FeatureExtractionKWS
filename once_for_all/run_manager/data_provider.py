@@ -84,8 +84,7 @@ class KWSDataProvider:
                 pin_memory=False,
                 collate_fn=self.collate_batch
             )
-        else:
-            print("train loader class after")
+        else:  # No validation set
             self.train = train_loader_class(
                 train_dataset,
                 batch_size=train_batch_size,
@@ -96,6 +95,7 @@ class KWSDataProvider:
             )
             self.valid = None
 
+        # Set up test dataset
         test_dataset = self.test_dataset()
 
         self.test = torch.utils.data.DataLoader(
@@ -107,20 +107,12 @@ class KWSDataProvider:
             collate_fn=self.collate_batch
         )
 
-        valid_dataset = self.valid_dataset()
-        self.valid = torch.utils.data.DataLoader(
-            valid_dataset,
-            batch_size=test_batch_size,
-            shuffle=True,
-            num_workers=n_worker,
-            pin_memory=False,
-            collate_fn=self.collate_batch
-        )
-
         if self.valid is None:
             self.valid = self.test
 
         print("Train length: ", len(self.train))
+        print("Valid length: ", len(self.valid))
+        print("Test length: ", len(self.test))
 
     @staticmethod
     def name():
