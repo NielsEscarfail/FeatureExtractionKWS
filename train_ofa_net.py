@@ -35,7 +35,7 @@ args = parser.parse_args()
 if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 50  # 180 paper
+    args.n_epochs = 120  # 180 paper
     args.base_lr = 3e-2  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
@@ -45,7 +45,7 @@ if args.task == "normal":
 elif args.task == "kernel":  # params ok
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 40  # 120
+    args.n_epochs = 120  # 120
     args.base_lr = 3e-2
     args.warmup_epochs = 5
     args.warmup_lr = -1
@@ -266,6 +266,7 @@ if __name__ == "__main__":
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
 
     if args.task == "normal":
+        print("Start large net training")
         train(
             run_manager,
             args,
@@ -288,7 +289,7 @@ if __name__ == "__main__":
                 % validate(run_manager, is_test=True, **validate_func_dict),
                 "valid",
             )
-            print("Start kernel train")
+            print("Start elastic kernel training")
         else:
             assert args.resume
         train(
@@ -305,9 +306,24 @@ if __name__ == "__main__":
         )
 
         if args.phase == 1:
-            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
+            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/model_best.pth.tar"
+            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
         else:
-            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
+            args.ofa_checkpoint_path = "exp/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
+            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
+
+        load_models(
+            run_manager,
+            run_manager.net,
+            args.ofa_checkpoint_path,
+        )
+        run_manager.write_log(
+            "%.3f\t%.3f\t%.3f\t%s"
+            % validate(run_manager, is_test=True, **validate_func_dict),
+            "valid",
+        )
+        print("Start elastic depth training")
+
         train_elastic_depth(train, run_manager, args, validate_func_dict)
 
     elif args.task == "expand":
@@ -316,12 +332,28 @@ if __name__ == "__main__":
         )
 
         if args.phase == 1:
-            args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D234_E6_K357"
+            args.ofa_checkpoint_path = "exp/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
+            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D234_E6_K357"
         else:
-            args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
+            args.ofa_checkpoint_path = "exp/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
+            # args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
+
+        load_models(
+            run_manager,
+            run_manager.net,
+            args.ofa_checkpoint_path,
+        )
+        run_manager.write_log(
+            "%.3f\t%.3f\t%.3f\t%s"
+            % validate(run_manager, is_test=True, **validate_func_dict),
+            "valid",
+        )
+
+        print("Start elastic expand training")
+
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
 
     end = time.time()
-    print("Total run time: ", end-start)
+    print("Total run time: ", end - start)
