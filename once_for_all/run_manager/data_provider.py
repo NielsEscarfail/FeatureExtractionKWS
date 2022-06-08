@@ -42,6 +42,8 @@ class KWSDataProvider:
         self.active_ft_extr_type = self.ft_extr_type
         self.active_ft_extr_params = self.ft_extr_params_list[0]
 
+        self.init_transformations()  # TODO testing
+
         train_loader_class = torch.utils.data.DataLoader
         train_dataset = self.train_dataset()
 
@@ -160,7 +162,22 @@ class KWSDataProvider:
 
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
-        # self.active_ft_extr_type = new_ft_type
+        transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
+        self.active_transformation = self.transformations[transformation_idx]
+
+    def init_transformations(self):
+        self.transformations = []
+        if self.ft_extr_type == 'mfcc':
+            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
+                         'hop_length': self.audio_processor.window_stride_samples,
+                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+            for (feature_bin_count, spectrogram_length) in self.ft_extr_params_list:
+                mfcc_transformation = MFCC(
+                    n_mfcc=feature_bin_count,
+                    sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
+                    norm='ortho').to(self.device)
+
+                self.transformations.append(mfcc_transformation)
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
@@ -169,25 +186,19 @@ class KWSDataProvider:
         data_placeholder = []
         labels_placeholder = []
 
-        transformation = self.ft_extr_type
+        transformation_type = self.ft_extr_type
+
         ft_extr_params = random.choice(self.ft_extr_params_list)
-        if transformation == 'mfcc':
-            feature_bin_count = ft_extr_params[0]
+        transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
+        transformation = self.transformations[transformation_idx]
+
+        if transformation_type == 'mfcc':
             spectrogram_length = ft_extr_params[1]
-
-            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
-                         'hop_length': self.audio_processor.window_stride_samples,
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-
-            mfcc_transformation = MFCC(
-                n_mfcc=feature_bin_count,
-                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                norm='ortho').to(self.device)
 
         for (data, label) in batch:
             # Apply transformation
-            if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
+            if transformation_type == 'mfcc':
+                data = self.audio_processor.get_mfcc(data, transformation, spectrogram_length)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
@@ -202,24 +213,21 @@ class KWSDataProvider:
         data_placeholder = []
         labels_placeholder = []
 
-        transformation = self.active_ft_extr_type
-        if transformation == 'mfcc':
-            feature_bin_count = self.active_ft_extr_params[0]
-            spectrogram_length = self.active_ft_extr_params[1]
+        transformation_type = self.active_ft_extr_type
+        ft_extr_params = self.active_ft_extr_params
 
-            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
-                         'hop_length': self.audio_processor.window_stride_samples,
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+        # active_transformation = self.active_transformation
 
-            mfcc_transformation = MFCC(
-                n_mfcc=feature_bin_count,
-                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                norm='ortho').to(self.device)
+        # transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
+        # active_transformation = self.transformations[transformation_idx]
+
+        if transformation_type == 'mfcc':
+            spectrogram_length = ft_extr_params[1]
 
         for (data, label) in batch:
             # Apply transformation
-            if transformation == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
+            if transformation_type == 'mfcc':
+                data = self.audio_processor.get_mfcc(data, self.active_transformation, spectrogram_length)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
