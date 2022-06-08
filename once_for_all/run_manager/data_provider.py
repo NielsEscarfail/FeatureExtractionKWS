@@ -132,25 +132,32 @@ class KWSDataProvider:
             feature_bin_count = self.active_ft_extr_params[0]
             spectrogram_length = self.active_ft_extr_params[1]
 
+            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
+                         'hop_length': self.audio_processor.window_stride_samples,
+                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
+
+            mfcc_transformation = MFCC(
+                n_mfcc=feature_bin_count,
+                sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
+                norm='ortho').to(self.device)
+
         for (data, label) in batch:
             # Apply transformation
             if transformation == 'mfcc':
-                # data = self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length)[None, :, :]
-                data = torch.unsqueeze(self.audio_processor.get_mfcc(data, feature_bin_count, spectrogram_length),
-                                       dim=0)
+                data = self.audio_processor.get_mfcc(data, mfcc_transformation, spectrogram_length)
+                data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
 
             data_placeholder.append(data)
             labels_placeholder.append(label)
 
-        return torch.stack(data_placeholder, dim=0).to(self.device), torch.tensor(labels_placeholder).to(self.device)
+        return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
          Randomly picking parameters from self.ft_extr_params_list for each batch."""
 
-        start = time.time()
         data_placeholder = []
         labels_placeholder = []
 
@@ -179,9 +186,6 @@ class KWSDataProvider:
 
             data_placeholder.append(data)
             labels_placeholder.append(label)
-
-        end = time.time()
-        print("FT batch : ", end - start)
 
         return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 
