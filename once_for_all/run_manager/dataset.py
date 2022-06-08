@@ -354,18 +354,10 @@ class AudioProcessor(object):
             data (Tensor) : MFCC computation from the sample, using melkwargs parameters.
         """
         # Compute MFCCs - PyTorch
-
-        diff = time.time()
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
-
-        print("mfcctransf ", time.time() - diff)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
         data = data[:, :spectrogram_length].transpose(0, 1)
-
-        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
-        # data = np.clip(data + 128, 0, 255)
-        # print(data.shape)
         return data.to(self.device)
 
     def get_linear_stft(self, sample):
