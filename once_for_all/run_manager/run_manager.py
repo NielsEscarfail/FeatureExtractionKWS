@@ -127,8 +127,6 @@ class RunManager:
         if checkpoint is None:
             checkpoint = {"state_dict": self.network.state_dict()}
 
-        print("Saving : ", checkpoint)
-
         if model_name is None:
             model_name = "checkpoint.pth.tar"
 
