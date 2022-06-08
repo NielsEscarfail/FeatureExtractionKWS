@@ -1,4 +1,6 @@
 import argparse
+import time
+
 import numpy as np
 import os
 import random
@@ -15,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
     type=str,
-    default="normal",  # kernel
+    default="kernel",  # kernel
     choices=[
         "normal",
         "kernel",
@@ -33,7 +35,7 @@ args = parser.parse_args()
 if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 140
+    args.n_epochs = 40  # 180
     args.base_lr = 3e-2  # 3e-2
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
@@ -43,7 +45,7 @@ if args.task == "normal":
 elif args.task == "kernel":
     args.path = "exp/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 140
+    args.n_epochs = 40  # 140
     args.base_lr = 3e-2
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
@@ -62,7 +64,7 @@ elif args.task == "depth":
         args.expand_list = "6"
         args.depth_list = "3,4"
     else:
-        args.n_epochs = 120
+        args.n_epochs = 120  # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -81,7 +83,7 @@ elif args.task == "expand":
         args.expand_list = "4,6"
         args.depth_list = "2,3,4"
     else:
-        args.n_epochs = 120
+        args.n_epochs = 120  # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -142,10 +144,9 @@ args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
 #                            (10, 34), (20, 34), (40, 34),
 #                            (10, 49), (20, 49), (40, 49)]
 
-print("ARGS : ", args)
-
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
+    start = time.time()
 
     # Initialize Horovod
     # hvd.init()
@@ -171,6 +172,7 @@ if __name__ == "__main__":
         print('Using CPU.')
 
     # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7" # TODO
+    args.teacher_path = "exp/normal/checkpoint/checkpoint.pth.tar"  # TODO
 
     # build run config from args
     args.lr_schedule_param = None
@@ -274,19 +276,19 @@ if __name__ == "__main__":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
 
-            args.ofa_checkpoint_path = "testlarge/checkpoint/checkpoint.pth"
-            """load_models(
+            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/checkpoint.pth"
+            """
+            load_models(
                 run_manager,
                 run_manager.net,
                 args.ofa_checkpoint_path,
-            )"""
-            """
+            )
             run_manager.write_log(
                 "%.3f\t%.3f\t%.3f\t%s"
                 % validate(run_manager, is_test=True, **validate_func_dict),
                 "valid",
             )"""
-            print("Start train")
+            print("Start kernel train")
         else:
             assert args.resume
         train(
@@ -320,3 +322,6 @@ if __name__ == "__main__":
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
+
+    end = time.time()
+    print("Total run time: ", end-start)

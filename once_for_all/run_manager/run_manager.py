@@ -48,7 +48,7 @@ class RunManager:
 
         # net info
         net_info = get_net_info(
-            self.net, self.run_config.data_provider.data_shape, measure_latency, False
+            self.net, self.run_config.data_provider.data_shape, measure_latency, True
         )
         with open("%s/net_info.txt" % self.path, "w") as fout:
             fout.write(json.dumps(net_info, indent=4) + "\n")
@@ -140,7 +140,7 @@ class RunManager:
         torch.save(checkpoint, model_path)
 
         if is_best:
-            best_path = os.path.join(self.save_path, "model_best.pth.tar")
+            best_path = os.path.join(self.save_path, "model_best.pth") # modif
             torch.save({"state_dict": checkpoint["state_dict"]}, best_path)
 
     def load_model(self, model_fname=None):
