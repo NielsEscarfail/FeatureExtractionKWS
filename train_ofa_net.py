@@ -137,7 +137,8 @@ args.kd_type = "ce"
 args.ft_extr_type = "mfcc"
 # feature_bin_count, spectrogram_length
 # args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
-args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
+args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
+# args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
 # args.ft_extr_params_list = [(5, 49), (10, 49), (20, 49), (40, 49)]
 # args.ft_extr_params_list = [(10, 10), (20, 10), (40, 10),
 #                            (10, 20), (20, 20), (40, 20),
