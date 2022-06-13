@@ -45,7 +45,7 @@ class OFAKWSNet(KWSNet):
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
         width_list = [16, 24, 40, 64, 64, 64, 104, 64]  # large net more than 88% acc mfcc
-        width_list = [16, 24, 40, 64, 64, 64, 168, 272]
+        width_list = [24, 40, 64, 64, 64, 168, 272]
 
         final_expand_width, last_channel = width_list[-2], width_list[-1]
         # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # original 2 3 5 10 14 20 120 160
