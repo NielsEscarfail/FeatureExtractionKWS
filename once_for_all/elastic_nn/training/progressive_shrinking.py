@@ -379,7 +379,7 @@ def train_elastic_expand(train_func, run_manager, args, validate_func_dict):
     )
 
 
-def train_elastic_width_mult(train_func, run_manager, args, validate_func_dict):
+def train_elastic_width_mult(train_func, run_manager, args, validate_func_dict):  # TODO Remove, Unused
     dynamic_net = run_manager.net
     if isinstance(dynamic_net, nn.DataParallel):
         dynamic_net = dynamic_net.module

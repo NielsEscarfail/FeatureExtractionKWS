@@ -62,7 +62,7 @@ class KWSNet(MyNetwork):
 
         blocks = []
         for block_config in config["blocks"]:
-            blocks.append(PadConvResBlock.build_from_config(block_config))  # TODO ADD OUR CUSTOM BLOCK
+            blocks.append(ResidualBlock.build_from_config(block_config))
 
         classifier = set_layer_from_config(config["classifier"])
 
