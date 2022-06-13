@@ -4,33 +4,33 @@ import torch
 import torch.nn as nn
 
 from utils import MyNetwork
-from utils.layers import set_layer_from_config, ResidualBlock, PadConvResBlock, MBConvLayer, IdentityLayer, LinearLayer
+from utils.layers import set_layer_from_config, ResidualBlock, PadConvResBlock, MBConvLayer, IdentityLayer, LinearLayer, \
+    ConvLayer
 from utils.pytorch_modules import MyGlobalAvgPool2d
 
 
 class KWSNet(MyNetwork):
 
-    def __init__(self, input_stem, blocks, classifier):
+    def __init__(self, input_stem, blocks, final_expand_layer, feature_mix_layer, classifier):
         super(KWSNet, self).__init__()
 
         self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
+        self.final_expand_layer = final_expand_layer
         self.global_avg_pool = MyGlobalAvgPool2d(keep_dim=True)
+        self.feature_mix_layer = feature_mix_layer
         self.classifier = classifier
 
     def forward(self, x):
-        # print("1 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            # print("2 ", x.shape)
         for block in self.blocks:
             x = block(x)
-            # print("3 ", x.shape)
+        x = self.final_expand_layer(x)
         x = self.global_avg_pool(x)  # global average pooling
-        # print("4 ", x.shape)
-        x = torch.flatten(x, 1)
+        x = self.feature_mix_layer(x)
+        x = x.view(x.size(0), -1)  # torch.flatten(x, 1)
         x = self.classifier(x)
-        # print("5 ", x.shape)
         return x
 
     @property
@@ -40,7 +40,9 @@ class KWSNet(MyNetwork):
             _str += layer.module_str + "\n"
         for block in self.blocks:
             _str += block.module_str + "\n"
+        _str += self.final_expand_layer.module_str + "\n"
         _str += self.global_avg_pool.__repr__() + "\n"
+        _str += self.feature_mix_layer.module_str + "\n"
         _str += self.classifier.module_str
         return _str
 
@@ -51,6 +53,8 @@ class KWSNet(MyNetwork):
             "bn": self.get_bn_param(),
             "input_stem": [layer.config for layer in self.input_stem],
             "blocks": [block.config for block in self.blocks],
+            "final_expand_layer": self.final_expand_layer.config,
+            "feature_mix_layer": self.feature_mix_layer.config,
             "classifier": self.classifier.config,
         }
 
@@ -64,9 +68,11 @@ class KWSNet(MyNetwork):
         for block_config in config["blocks"]:
             blocks.append(ResidualBlock.build_from_config(block_config))
 
+        final_expand_layer = set_layer_from_config(config["final_expand_layer"])
+        feature_mix_layer = set_layer_from_config(config["feature_mix_layer"])
         classifier = set_layer_from_config(config["classifier"])
 
-        net = KWSNet(input_stem, blocks, classifier)
+        net = KWSNet(input_stem, blocks, final_expand_layer, feature_mix_layer, classifier)
 
         if "bn" in config:
             net.set_bn_param(**config["bn"])
@@ -96,8 +102,8 @@ class KWSNet(MyNetwork):
         return info_list
 
     @staticmethod
-    def build_net_via_cfg(input_stem_cfg, blocks_cfg, input_channel, n_classes, dropout_rate):
-        """
+    def build_net_via_cfg(input_stem_cfg, blocks_cfg, input_channel, last_channel, n_classes, dropout_rate):
+        """ # Added last channel
         Possible future additions:
         Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
         """
@@ -156,10 +162,28 @@ class KWSNet(MyNetwork):
                 blocks.append(ResidualBlock(mb_conv, shortcut))
                 feature_dim = out_channel
 
+            # final expand layer
+            final_expand_layer = ConvLayer(
+                feature_dim,
+                feature_dim * 6,
+                kernel_size=1,
+                use_bn=True,
+                act_func="h_swish",
+                ops_order="weight_bn_act",
+            )
+            # feature mix layer
+            feature_mix_layer = ConvLayer(
+                feature_dim * 6,
+                last_channel,
+                kernel_size=1,
+                bias=False,
+                use_bn=False,
+                act_func="h_swish",
+            )
         # classifier
-        classifier = LinearLayer(feature_dim, n_classes, dropout_rate=dropout_rate)
+        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 
-        return input_stem, blocks, classifier
+        return input_stem, blocks, final_expand_layer, feature_mix_layer, classifier
 
     @staticmethod  # TODO CHECK
     def adjust_cfg(
@@ -189,7 +213,7 @@ class KWSNet(MyNetwork):
         super(KWSNet, self).load_state_dict(current_state_dict)
 
 
-class KWSNetLarge(KWSNet):
+class KWSNetLarge(KWSNet): # TODO add feature mix + redo settings (can create_largest_net func) Deprecated for now
     def __init__(
             self,
             n_classes=1000,

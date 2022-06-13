@@ -44,7 +44,9 @@ class OFAKWSNet(KWSNet):
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
-        width_list = [16, 24, 40, 64, 64, 64, 64, 64]
+        width_list = [16, 24, 40, 64, 64, 64, 104, 64]
+
+        final_expand_width, last_channel = width_list[-2], width_list[-1]
         # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # original 2 3 5 10 14 20 120 160
         # width_list = [16, 24, 40, 64, 104, 168, 272, 440]  # run1 2 3 5 8 13 21 34 55
         # width_list = [16, 24, 32, 40, 64, 64, 64, 64]  # run2 idk dscnn works
@@ -143,10 +145,22 @@ class OFAKWSNet(KWSNet):
                 blocks.append(ResidualBlock(mobile_inverted_conv, shortcut))
                 feature_dim = output_channel
 
-        classifier = LinearLayer(feature_dim, n_classes, dropout_rate=dropout_rate)
+        # final expand layer, feature mix layer & classifier
+        final_expand_layer = ConvLayer(
+            feature_dim, final_expand_width, kernel_size=1, act_func="h_swish"
+        )
+        feature_mix_layer = ConvLayer(
+            final_expand_width,
+            last_channel,
+            kernel_size=1,
+            bias=False,
+            use_bn=False,
+            act_func="h_swish",
+        )
+        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 
         super(OFAKWSNet, self).__init__(
-            input_stem, blocks, classifier
+            input_stem, blocks, final_expand_layer, feature_mix_layer, classifier
         )
 
         # set bn param
@@ -160,27 +174,20 @@ class OFAKWSNet(KWSNet):
         return "OFAKWSNet"
 
     def forward(self, x):
-        # print("0 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            # print("1 ", x.shape)
-        # first block
         x = self.blocks[0](x)
-        # print("2 ", x.shape)
-        # blocks
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             for idx in active_idx:
                 x = self.blocks[idx](x)
-                # print("3 ", x.shape)
 
+        x = self.final_expand_layer(x)
         x = x.mean(3, keepdim=True).mean(2, keepdim=True)  # global average pooling
-        # print("4 ", x.shape)
+        x = self.feature_mix_layer(x)
         x = x.view(x.size(0), -1)
-        # print("5 ", x.shape)
         x = self.classifier(x)
-        # print("6 ", x.shape)
         return x
 
     @property
@@ -188,12 +195,16 @@ class OFAKWSNet(KWSNet):
         _str = ""
         for layer in self.input_stem:
             _str += layer.module_str + "\n"
+
         _str += self.blocks[0].module_str + "\n"
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             for idx in active_idx:
                 _str += self.blocks[idx].module_str + "\n"
+
+        _str += self.final_expand_layer.module_str + "\n"
+        _str += self.feature_mix_layer.module_str + "\n"
         _str += self.classifier.module_str + "\n"
         return _str
 
@@ -204,6 +215,8 @@ class OFAKWSNet(KWSNet):
             "bn": self.get_bn_param(),
             "input_stem": [layer.config for layer in self.input_stem],
             "blocks": [block.config for block in self.blocks],
+            "final_expand_layer": self.final_expand_layer.config,
+            "feature_mix_layer": self.feature_mix_layer.config,
             "classifier": self.classifier.config,
         }
 
@@ -335,6 +348,8 @@ class OFAKWSNet(KWSNet):
         input_stem = copy.deepcopy(self.input_stem)
         blocks = [copy.deepcopy(self.blocks[0])]
 
+        final_expand_layer = copy.deepcopy(self.final_expand_layer)
+        feature_mix_layer = copy.deepcopy(self.feature_mix_layer)
         classifier = copy.deepcopy(self.classifier)
 
         input_channel = blocks[0].conv.out_channels
@@ -356,7 +371,7 @@ class OFAKWSNet(KWSNet):
             blocks += stage_blocks
 
         _subnet = KWSNet(
-            input_stem, blocks, classifier
+            input_stem, blocks, final_expand_layer, feature_mix_layer, classifier
         )
         _subnet.set_bn_param(**self.get_bn_param())
         return _subnet
