@@ -72,14 +72,23 @@ class OFAKWSNet(KWSNet):
 
         # width_list = [16, 16, 16, 16, 16, 16] + input 16
         # final_expand_width, last_channel = 64, 16
-        # Acc 87%
+        # Acc 90% 40e
         # Total training params: 0.17M
         # Total FLOPs: 0.21M
 
+        # width_list = [16, 24, 40, 64, 64, 64] + input 16
+        # final_expand_width, last_channel = 104, 168
+        # Acc 89.4% 40e
+        # Total training params: 1.49M
+        # Total FLOPs: 0.37M
 
+        width_list = [16, 16, 16, 16, 16, 16, 16, 16]
+        final_expand_width, last_channel = 64, 104
+        # width_list = [16, 16, 16, 16, 16, 16, 16, 16] + input 16
+        # final_expand_width, last_channel = 64, 104
+        # Acc
+        #
 
-        width_list = [16, 24, 40, 64, 64, 64]
-        final_expand_width, last_channel = 104, 168
 
         print("width list : ", width_list)
         print("final_expand_width : ", final_expand_width)
