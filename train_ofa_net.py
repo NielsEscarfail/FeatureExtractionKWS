@@ -36,7 +36,7 @@ if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 120  # 180 paper
-    args.base_lr = 3e-2  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
@@ -99,7 +99,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 64 # 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
+args.base_batch_size = 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
 args.valid_size = .1
 
 args.momentum = 0.9

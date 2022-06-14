@@ -224,7 +224,6 @@ class KWSDataProvider:
                 data = torch.unsqueeze(data, dim=0)
             elif transformation_type == 'mel_spectrogram':
                 data = transformation(data)
-                print(data.shape)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
@@ -240,8 +239,6 @@ class KWSDataProvider:
         labels_placeholder = []
 
         transformation_type = self.active_ft_extr_type
-        ft_extr_params = self.active_ft_extr_params
-
         active_transformation = self.active_transformation
 
         for (data, label) in batch:
@@ -251,7 +248,6 @@ class KWSDataProvider:
                 data = torch.unsqueeze(data, dim=0)
             elif transformation_type == 'mel_spectrogram':
                 data = active_transformation(data)
-                print("subnatch ", data.shape)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
