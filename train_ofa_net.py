@@ -110,7 +110,7 @@ args.no_decay_keys = "bn#bias"
 args.fp16_allreduce = False
 
 args.model_init = "he_fout"
-args.validation_frequency = 5
+args.validation_frequency = 3
 args.print_frequency = 5
 
 args.n_worker = 8

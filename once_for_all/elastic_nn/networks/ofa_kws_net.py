@@ -44,7 +44,12 @@ class OFAKWSNet(KWSNet):
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
-        width_list = [16, 24, 40, 64, 64, 64, 104, 64]  # large net more than 88% acc mfcc
+        # width_list = [16, 24, 40, 64, 64, 64, 104, 64]  # large net more than 88% acc mfcc
+
+        # width_list = [16, 24, 40, 64, 64, 64, 168, 272] # large net more than 90% acc mfcc
+        # Total training params: 4.46M
+        # Total FLOPs: 0.42M
+
         width_list = [24, 40, 64, 64, 64, 168, 272]
 
         final_expand_width, last_channel = width_list[-2], width_list[-1]
@@ -93,7 +98,7 @@ class OFAKWSNet(KWSNet):
 
         # First block
         first_block_conv = MBConvLayer(
-            in_channels=input_channel,
+            in_channels=feature_dim,
             out_channels=first_block_dim,
             kernel_size=3,
             stride=stride_stages[0],
