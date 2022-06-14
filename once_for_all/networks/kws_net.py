@@ -165,7 +165,7 @@ class KWSNet(MyNetwork):
             # final expand layer
             final_expand_layer = ConvLayer(
                 feature_dim,
-                feature_dim * 6,
+                feature_dim * 3,
                 kernel_size=1,
                 use_bn=True,
                 act_func="h_swish",
@@ -173,7 +173,7 @@ class KWSNet(MyNetwork):
             )
             # feature mix layer
             feature_mix_layer = ConvLayer(
-                feature_dim * 6,
+                feature_dim * 3,
                 last_channel,
                 kernel_size=1,
                 bias=False,
