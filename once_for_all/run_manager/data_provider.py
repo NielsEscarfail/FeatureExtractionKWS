@@ -4,6 +4,7 @@ import warnings
 import os
 import numpy as np
 import torch.utils.data
+import torchaudio
 from torchaudio.transforms import MFCC
 
 from .dataset import AudioGenerator, AudioProcessor
@@ -22,7 +23,7 @@ class KWSDataProvider:
             train_batch_size=256,
             test_batch_size=512,
             valid_size=None,
-            ft_extr_type=["mfcc"],  # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
+            ft_extr_type=["mel_spectrogram"],  # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
             ft_extr_params_list=None,
             rank=None,
             n_worker=4
@@ -164,6 +165,16 @@ class KWSDataProvider:
         self.active_transformation = self.transformations[transformation_idx]
 
     def init_transformations(self):
+        """ Transformations:
+        mfcc:
+            n_mels : number of mel bins
+
+
+        mel_spectrogram
+
+        :return:
+        """
+        # TODO check n_mels + window_size_samples + window_stride_samples
         self.transformations = []
         if self.ft_extr_type == 'mfcc':
             melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
@@ -173,9 +184,22 @@ class KWSDataProvider:
                 mfcc_transformation = MFCC(
                     n_mfcc=feature_bin_count,
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
-                    norm='ortho')  # .to(self.device)
-
+                    norm='ortho')
                 self.transformations.append(mfcc_transformation)
+
+        elif self.ft_extr_type == 'mel_spectrogram':
+            for (n_mels, win_size_ms) in self.ft_extr_params_list:
+                window_stride_ms = win_size_ms / 2
+                win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
+                hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
+
+                melspect_transformation = torchaudio.transforms.MelSpectrogram(
+                    sample_rate=self.audio_processor.desired_samples,
+                    n_fft=2048, win_length=win_length,
+                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels
+                )
+                self.transformations.append(melspect_transformation)
+
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
@@ -196,7 +220,11 @@ class KWSDataProvider:
         for (data, label) in batch:
             # Apply transformation
             if transformation_type == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, transformation, spectrogram_length)
+                data = transformation(data)
+                data = torch.unsqueeze(data, dim=0)
+            elif transformation_type == 'mel_spectrogram':
+                data = transformation(data)
+                print(data.shape)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError
@@ -214,18 +242,16 @@ class KWSDataProvider:
         transformation_type = self.active_ft_extr_type
         ft_extr_params = self.active_ft_extr_params
 
-        active_transformation = self.active_transformation  # .to(self.device)
-
-        # transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
-        # active_transformation = self.transformations[transformation_idx]
-
-        if transformation_type == 'mfcc':
-            spectrogram_length = ft_extr_params[1]
+        active_transformation = self.active_transformation
 
         for (data, label) in batch:
             # Apply transformation
             if transformation_type == 'mfcc':
-                data = self.audio_processor.get_mfcc(data, active_transformation, spectrogram_length)
+                data = active_transformation(data)
+                data = torch.unsqueeze(data, dim=0)
+            elif transformation_type == 'mel_spectrogram':
+                data = active_transformation(data)
+                print("subnatch ", data.shape)
                 data = torch.unsqueeze(data, dim=0)
             else:
                 raise NotImplementedError

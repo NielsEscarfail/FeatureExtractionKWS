@@ -99,7 +99,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
+args.base_batch_size = 64 # 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
 args.valid_size = .1
 
 args.momentum = 0.9
@@ -134,10 +134,18 @@ args.kd_ratio = 0
 args.kd_type = "ce"
 
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
-args.ft_extr_type = "mfcc"
+
+args.ft_extr_type = "mel_spectrogram"
+args.ft_extr_params_list = [(5, 5), (5, 10), (5, 20), (5, 30), (5, 40), (5, 60), (5, 80),
+                            (10, 5), (10, 10), (10, 20), (10, 30), (10, 40), (10, 60), (10, 80),
+                            (20, 5), (20, 10), (20, 20), (20, 30), (20, 40), (20, 60), (20, 80),
+                            (30, 5), (30, 10), (30, 20), (30, 30), (30, 40), (30, 60), (30, 80),
+                            (40, 5), (40, 10), (40, 20), (40, 30), (40, 40), (40, 60), (40, 80)]
+
+# args.ft_extr_type = "mfcc"
 # feature_bin_count, spectrogram_length
 # args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
-args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
+# args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
 # args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
 # args.ft_extr_params_list = [(5, 49), (10, 49), (20, 49), (40, 49)]
 # args.ft_extr_params_list = [(10, 10), (20, 10), (40, 10),

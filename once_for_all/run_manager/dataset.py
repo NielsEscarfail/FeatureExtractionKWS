@@ -88,7 +88,7 @@ class AudioProcessor(object):
                  time_shift_ms=200.0,
                  sample_rate=16000,
                  clip_duration_ms=1000,
-                 window_size_ms=40.0,
+                 window_size_ms=40.0,  # this has to move to Config
                  window_stride_ms=20.0,
                  silence_percentage=10.0,
                  unknown_percentage=10.0,
@@ -346,7 +346,7 @@ class AudioProcessor(object):
 
         return data, label_index  # data.to(self.device), label_index
 
-    def get_mfcc(self, sample, mfcc_transformation, spectrogram_length):
+    def get_mfcc(self, sample, mfcc_transformation): # TODO: remove unused
         """ Apply MFCC feature extraction to sample.
         Args:
             sample (Tensor): Sample on which to apply the MFCC transformation.
@@ -355,9 +355,33 @@ class AudioProcessor(object):
         """
         # Compute MFCCs - PyTorch
         data = mfcc_transformation(sample)  # shape (feature_bin_count, 51)
+        # Cut shape to (feature_bin_count, spectrogram_length)
+        # data = data[:, :spectrogram_length].transpose(0, 1)
+        return data
+
+    def get_mel_spectrogram(self, sample):
+        """ Get the MelSpectrogram from the sample.
+        Args:
+            sample (Tensor) : Sample on which to apply the transformation.
+        Returns:
+            data (Tensor) : MelSpectrogram from the sample, using parameters from data_processing_parameters.
+        """
+
+        # Create a data placeholder
+        sample = torch.Tensor(sample)
+        # Compute MelSpectrogram - PyTorch
+        melspect_transformation = torchaudio.transforms.MelSpectrogram(
+            sample_rate=self.data_processing_parameters['sample_rate'],
+            n_fft=1024, win_length=self.data_processing_parameters['window_size_samples'],
+            hop_length=self.data_processing_parameters['window_stride_samples'], f_min=20, f_max=4000, n_mels=10
+        )
+        data = melspect_transformation(sample)
 
         # Cut shape to (feature_bin_count, spectrogram_length)
-        data = data[:, :spectrogram_length].transpose(0, 1)
+        data = data[:, :self.data_processing_parameters['spectrogram_length']].numpy().transpose()
+
+        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
+        data = np.clip(data + 128, 0, 255)
         return data
 
     def get_linear_stft(self, sample):
@@ -404,31 +428,6 @@ class AudioProcessor(object):
 
         # Cut shape to (feature_bin_count, spectrogram_length) and transpose
         data = data[:, :self.data_processing_parameters['spectrogram_length']].transpose()
-        # Shift data in [0, 255] interval to match Dory request for uint8 inputs
-        data = np.clip(data + 128, 0, 255)
-        return data
-
-    def get_mel_spectrogram(self, sample):
-        """ Get the MelSpectrogram from the sample.
-        Args:
-            sample: Sample on which to apply the transformation.
-        Returns:
-            MelSpectrogram from the sample, using parameters from data_processing_parameters.
-        """
-
-        # Create a data placeholder
-        sample = torch.Tensor(sample)
-        # Compute MelSpectrogram - PyTorch
-        melspect_transformation = torchaudio.transforms.MelSpectrogram(
-            sample_rate=self.data_processing_parameters['sample_rate'],
-            n_fft=1024, win_length=self.data_processing_parameters['window_size_samples'],
-            hop_length=self.data_processing_parameters['window_stride_samples'], f_min=20, f_max=4000, n_mels=10
-        )
-        data = melspect_transformation(sample)
-
-        # Cut shape to (feature_bin_count, spectrogram_length)
-        data = data[:, :self.data_processing_parameters['spectrogram_length']].numpy().transpose()
-
         # Shift data in [0, 255] interval to match Dory request for uint8 inputs
         data = np.clip(data + 128, 0, 255)
         return data
