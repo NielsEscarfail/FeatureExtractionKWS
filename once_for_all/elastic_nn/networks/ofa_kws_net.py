@@ -50,7 +50,7 @@ class OFAKWSNet(KWSNet):
         # Total training params: 4.46M
         # Total FLOPs: 0.42M
 
-        width_list = [16, 16, 16, 16, 16, 16, 64, 12]
+        width_list = [8, 16, 24, 40, 64, 64, 104, 168]
         print("width list : ", width_list)
 
         final_expand_width, last_channel = width_list[-2], width_list[-1]
@@ -61,7 +61,7 @@ class OFAKWSNet(KWSNet):
         input_channel, first_block_dim = width_list[0], width_list[1]
 
         # build input stem
-        input_stem_width_list = [16]
+        input_stem_width_list = [8]
         input_stem_stride_stages = [1]
         input_stem_act_stages = ["relu"]
         input_stem_se_stages = [False]
