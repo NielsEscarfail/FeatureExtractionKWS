@@ -191,7 +191,7 @@ class KWSNet(MyNetwork):
         super(KWSNet, self).load_state_dict(current_state_dict)
 
 # Deprecated
-class KWSNetLarge(MobileNetV3):
+class KWSNetLarge(KWSNet):
     def __init__(
         self,
         n_classes=1000,
