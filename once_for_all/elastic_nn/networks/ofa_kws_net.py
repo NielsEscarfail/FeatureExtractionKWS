@@ -44,93 +44,14 @@ class OFAKWSNet(KWSNet):
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, True, False, True, True]
         n_block_list = [1] + [max(self.depth_list)] * 5
-        # width_list = [16, 24, 40, 64, 64, 64, 104, 64]  # large net more than 88% acc mfcc
 
-        # width_list = [16, 24, 40, 64, 64, 64, 168, 272] # large net more than 90.2% acc mfcc
-        # Total training params: 4.46M
-        # Total FLOPs: 0.42M
-
-        # width_list = [8, 16, 24, 40, 64, 64, 104, 168]  # large net 89% acc mfcc
-        # Total training params: 2.37M + input 8
-        # Total FLOPs: 0.16M
-
-        # width list :  [8, 16, 24, 40, 64, 64] + input 8 acc 88
-        # final_expand_width, last_channel = 104, 168
-        # Total training params: 1.11M
-        # Total FLOPs: 0.20M
-
-        # width_list = [24, 40, 64, 64, 64, 64] + input 16
-        # final_expand_width, last_channel = 104, 168
-        # Acc 90%
-        # Total training params: 1.70M
-        # Total FLOPs: 0.50M
-        # width_list = [24, 40, 64, 64, 64, 64] + input 16
-        # final_expand_width, last_channel = 104, 168
-        # Acc 90%
-        # Total training params: 1.70M
-        # Total FLOPs: 0.50M
-
-        # width_list = [16, 16, 16, 16, 16, 16] + input 16
-        # final_expand_width, last_channel = 64, 16
-        # Acc 90% 40e
-        # Total training params: 0.17M
-        # Total FLOPs: 0.21M
-
-        # width_list = [16, 24, 40, 64, 64, 64] + input 16
-        # final_expand_width, last_channel = 104, 168
-        # Acc 89.4% 40e
-        # Total training params: 1.49M
-        # Total FLOPs: 0.37M
-
-        # width_list = [16, 16, 16, 16, 16, 16, 16, 16] + input 16
-        # final_expand_width, last_channel = 64, 104
-        # Acc 89 40e
-        # Total training params: 0.23M
-        # Total FLOPs: 0.21M
-
-        # width_list = [16, 24, 40, 64, 64, 64]
-        # final_expand_width, last_channel = 192, 64
-        # Acc 90.3% 40e
-        # Total training params: 1.49M
-        # Total FLOPs: 0.44M
-
-        # width_list = [16, 24, 40, 64, 104, 168]
-        # final_expand_width, last_channel = 504, 668
-        # Acc 90% 40e
-        # Total training params: 4.75M
-        # Total FLOPs: 1.79M
-
-        # width_list = [16, 24, 40, 64, 64, 64, 64, 64, 64, 64]
-        # final_expand_width, last_channel = 192, 64
-        # Acc 90 40e
-        # Total training params: 2.07M
-        # Total FLOPs: 0.32M
-
-        # width_list = [64, 64, 64, 64, 64, 64] # input 64
-        # final_expand_width, last_channel = 192, 64
-        # Acc 90.4
-        # Total training params: 1.74M
-        # Total FLOPs: 2.47M
-
-        width_list = [16, 24, 40, 80, 112, 160]   # input 16
+        width_list = [16, 24, 40, 80, 112, 160]
         input_channel, first_block_dim = width_list[0], width_list[1]
 
         final_expand_width = 960
         last_channel = 1280
 
-        print("width list : ", width_list)
-        print("final_expand_width : ", final_expand_width)
-        print("last_channel : ", last_channel)
-
-
-        # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # original 2 3 5 10 14 20 120 160
-        # width_list = [16, 24, 40, 64, 104, 168, 272, 440]  # run1 2 3 5 8 13 21 34 55
-        # width_list = [16, 24, 32, 40, 64, 64, 64, 64]  # run2 idk dscnn works
-
-
         feature_dim = 1
-
-
         # first conv layer
         first_conv = ConvLayer(
             feature_dim, input_channel, kernel_size=3, stride=2, act_func="h_swish"

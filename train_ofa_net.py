@@ -265,7 +265,7 @@ if __name__ == "__main__":
 
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
-        "ft_extr_params_list": args.ft_extr_params_list,
+        "ft_extr_params_list": [(10, 40), (40, 80)],
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
@@ -281,6 +281,9 @@ if __name__ == "__main__":
             lambda _run_manager, epoch, is_test: validate(
                 _run_manager, epoch, is_test, **validate_func_dict
             ))
+        print("Validating all ft extr params:")
+        run_manager.validate(is_test=True)
+
     elif args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:

@@ -1,10 +1,7 @@
 import copy
-
-import torch
 import torch.nn as nn
-
 from utils import MyNetwork
-from utils.layers import set_layer_from_config, ResidualBlock, PadConvResBlock, MBConvLayer, IdentityLayer, LinearLayer, \
+from utils.layers import set_layer_from_config, ResidualBlock, MBConvLayer, IdentityLayer, LinearLayer, \
     ConvLayer
 from utils.pytorch_modules import MyGlobalAvgPool2d
 
@@ -97,11 +94,7 @@ class KWSNet(MyNetwork):
         return info_list
 
     @staticmethod
-    def build_net_via_cfg(input_stem_cfg, blocks_cfg, input_channel, last_channel, n_classes, dropout_rate):
-        """ # Added last channel
-        Possible future additions:
-        Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
-        """
+    def build_net_via_cfg(blocks_cfg, input_channel, last_channel, n_classes, dropout_rate):
         # first conv layer
         first_conv = ConvLayer(
             3,
@@ -165,7 +158,7 @@ class KWSNet(MyNetwork):
 
         return first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
 
-    @staticmethod  # TODO CHECK
+    @staticmethod
     def adjust_cfg(
             cfg, ks=None, expand_ratio=None, depth_param=None, stage_width_list=None
     ):
@@ -189,30 +182,40 @@ class KWSNet(MyNetwork):
     def load_state_dict(self, state_dict, **kwargs):
         current_state_dict = self.state_dict()
         for key in state_dict:
-            current_state_dict[key] = state_dict[key]
+            if key not in current_state_dict:
+                assert ".mobile_inverted_conv." in key
+                new_key = key.replace(".mobile_inverted_conv.", ".conv.")
+            else:
+                new_key = key
+            current_state_dict[new_key] = state_dict[key]
         super(KWSNet, self).load_state_dict(current_state_dict)
 
-
-class KWSNetLarge(KWSNet): # TODO add feature mix + redo settings (can create_largest_net func) Deprecated for now
+# Deprecated
+class KWSNetLarge(MobileNetV3):
     def __init__(
-            self,
-            n_classes=1000,
-            width_mult=1.0,
-            bn_param=(0.1, 1e-5),
-            dropout_rate=0.2,
-            ks=None,
-            expand_ratio=None,
-            depth_param=None,
-            stage_width_list=None,
+        self,
+        n_classes=1000,
+        width_mult=1.0,
+        bn_param=(0.1, 1e-5),
+        dropout_rate=0.2,
+        ks=None,
+        expand_ratio=None,
+        depth_param=None,
+        stage_width_list=None,
     ):
-        input_channel = 1
-        input_stem_cfg = {
-            "0": [
-                [1, 1, 16, False, "relu", 1, 1],
-            ]
-        }
-        blocks_cfg = {  # Here largest depth = 6
-            #   k, mid_channel, out_channel, use_se, act_func, stride, expand_ratio
+        input_channel = 16
+        last_channel = 1280
+
+        cfg = {
+            # for (
+            #                 k,
+            #                 mid_channel,
+            #                 out_channel,
+            #                 use_se,
+            #                 act_func,
+            #                 stride,
+            #                 expand_ratio,
+            #             )
             #    k,     exp,    c,      se,         nl,         s,      e,
             "0": [
                 [3, 16, 16, False, "relu", 1, 1],
@@ -243,27 +246,18 @@ class KWSNetLarge(KWSNet): # TODO add feature mix + redo settings (can create_la
             ],
         }
 
-        blocks_cfg = self.adjust_cfg(blocks_cfg, ks, expand_ratio, depth_param, stage_width_list)
-        """
-        # width multiplier on mobile setting, change `exp: 1` and `c: 2`
-        for stage_id, block_config_list in cfg.items():
-            for block_config in block_config_list:
-                if block_config[1] is not None:
-                    block_config[1] = make_divisible(
-                        block_config[1] * width_mult, MyNetwork.CHANNEL_DIVISIBLE
-                    )
-                block_config[2] = make_divisible(
-                    block_config[2] * width_mult, MyNetwork.CHANNEL_DIVISIBLE
-                )
-        """
+        cfg = self.adjust_cfg(cfg, ks, expand_ratio, depth_param, stage_width_list)
         (
-            input_stem,
+            first_conv,
             blocks,
+            final_expand_layer,
+            feature_mix_layer,
             classifier,
         ) = self.build_net_via_cfg(
-            input_stem_cfg, blocks_cfg, input_channel, n_classes, dropout_rate)
-
-        super(KWSNetLarge, self).__init__(input_stem, blocks, classifier)
-
+            cfg, input_channel, last_channel, n_classes, dropout_rate
+        )
+        super(KWSNet, self).__init__(
+            first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
+        )
         # set bn param
         self.set_bn_param(*bn_param)
