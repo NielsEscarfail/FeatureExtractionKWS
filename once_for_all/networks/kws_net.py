@@ -11,10 +11,10 @@ from utils.pytorch_modules import MyGlobalAvgPool2d
 
 class KWSNet(MyNetwork):
 
-    def __init__(self, input_stem, blocks, final_expand_layer, feature_mix_layer, classifier):
+    def __init__(self, first_conv, blocks, final_expand_layer, feature_mix_layer, classifier):
         super(KWSNet, self).__init__()
 
-        self.input_stem = nn.ModuleList(input_stem)
+        self.first_conv = first_conv
         self.blocks = nn.ModuleList(blocks)
         self.final_expand_layer = final_expand_layer
         self.global_avg_pool = MyGlobalAvgPool2d(keep_dim=True)
@@ -22,8 +22,7 @@ class KWSNet(MyNetwork):
         self.classifier = classifier
 
     def forward(self, x):
-        for layer in self.input_stem:
-            x = layer(x)
+        x = self.first_conv(x)
         for block in self.blocks:
             x = block(x)
         x = self.final_expand_layer(x)
@@ -35,9 +34,7 @@ class KWSNet(MyNetwork):
 
     @property
     def module_str(self):
-        _str = ""
-        for layer in self.input_stem:
-            _str += layer.module_str + "\n"
+        _str = self.first_conv.module_str + "\n"
         for block in self.blocks:
             _str += block.module_str + "\n"
         _str += self.final_expand_layer.module_str + "\n"
@@ -51,7 +48,7 @@ class KWSNet(MyNetwork):
         return {
             "name": KWSNet.__name__,
             "bn": self.get_bn_param(),
-            "input_stem": [layer.config for layer in self.input_stem],
+            "first_conv": self.first_conv.config,
             "blocks": [block.config for block in self.blocks],
             "final_expand_layer": self.final_expand_layer.config,
             "feature_mix_layer": self.feature_mix_layer.config,
@@ -60,9 +57,7 @@ class KWSNet(MyNetwork):
 
     @staticmethod
     def build_from_config(config):
-        input_stem = []
-        for layer_config in config["input_stem"]:
-            input_stem.append(set_layer_from_config(layer_config))
+        first_conv = set_layer_from_config(config["first_conv"])
 
         blocks = []
         for block_config in config["blocks"]:
@@ -72,7 +67,7 @@ class KWSNet(MyNetwork):
         feature_mix_layer = set_layer_from_config(config["feature_mix_layer"])
         classifier = set_layer_from_config(config["classifier"])
 
-        net = KWSNet(input_stem, blocks, final_expand_layer, feature_mix_layer, classifier)
+        net = KWSNet(first_conv, blocks, final_expand_layer, feature_mix_layer, classifier)
 
         if "bn" in config:
             net.set_bn_param(**config["bn"])
@@ -107,33 +102,18 @@ class KWSNet(MyNetwork):
         Possible future additions:
         Add a last_channel argument with a final_expand_layer + feature_mix_layer before classifier
         """
-        # build input stem
-        input_stem = []
-        for stage_id, input_stem_cfg_list in input_stem_cfg.items():
-            for (
-                k,
-                mid_channel,
-                out_channel,
-                use_se,
-                act_func,
-                stride,
-                expand_ratio,
-            ) in input_stem_cfg_list:
-                mb_conv = MBConvLayer(
-                    input_channel,
-                    out_channel,
-                    k,
-                    stride,
-                    expand_ratio,
-                    mid_channel,
-                    act_func,
-                    use_se,
-                )
-                input_stem.append(mb_conv)
-                feature_dim = out_channel
-
+        # first conv layer
+        first_conv = ConvLayer(
+            3,
+            input_channel,
+            kernel_size=3,
+            stride=2,
+            use_bn=True,
+            act_func="h_swish",
+            ops_order="weight_bn_act",
+        )
         # build mobile blocks
-        # feature_dim = out_channel
+        feature_dim = input_channel
         blocks = []
         for stage_id, block_config_list in blocks_cfg.items():
             for (
@@ -165,7 +145,7 @@ class KWSNet(MyNetwork):
             # final expand layer
             final_expand_layer = ConvLayer(
                 feature_dim,
-                feature_dim * 3,
+                feature_dim * 6,
                 kernel_size=1,
                 use_bn=True,
                 act_func="h_swish",
@@ -173,7 +153,7 @@ class KWSNet(MyNetwork):
             )
             # feature mix layer
             feature_mix_layer = ConvLayer(
-                feature_dim * 3,
+                feature_dim * 6,
                 last_channel,
                 kernel_size=1,
                 bias=False,
@@ -183,7 +163,7 @@ class KWSNet(MyNetwork):
         # classifier
         classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 
-        return input_stem, blocks, final_expand_layer, feature_mix_layer, classifier
+        return first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
 
     @staticmethod  # TODO CHECK
     def adjust_cfg(
