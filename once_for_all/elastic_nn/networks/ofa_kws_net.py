@@ -88,11 +88,14 @@ class OFAKWSNet(KWSNet):
         # Total training params: 0.23M
         # Total FLOPs: 0.21M
 
-
-        width_list = [16, 24, 40, 64, 64, 64]
-        final_expand_width, last_channel = 192, 64
         # width_list = [16, 24, 40, 64, 64, 64]
         # final_expand_width, last_channel = 192, 64
+        # Acc 90.3% 40e
+        # Total training params: 1.49M
+        # Total FLOPs: 0.44M
+
+        width_list = [16, 24, 40, 64, 104, 168]
+        final_expand_width, last_channel = 504, 668
         # Acc
         #
 
