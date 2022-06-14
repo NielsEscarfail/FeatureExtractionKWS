@@ -36,7 +36,7 @@ if args.task == "normal":
     args.path = "exp/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 120  # 180 paper
-    args.base_lr = 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
@@ -136,11 +136,10 @@ args.kd_type = "ce"
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
 
 args.ft_extr_type = "mel_spectrogram"
-args.ft_extr_params_list = [(5, 5), (5, 10), (5, 20), (5, 30), (5, 40), (5, 60), (5, 80),
-                            (10, 5), (10, 10), (10, 20), (10, 30), (10, 40), (10, 60), (10, 80),
-                            (20, 5), (20, 10), (20, 20), (20, 30), (20, 40), (20, 60), (20, 80),
-                            (30, 5), (30, 10), (30, 20), (30, 30), (30, 40), (30, 60), (30, 80),
-                            (40, 5), (40, 10), (40, 20), (40, 30), (40, 40), (40, 60), (40, 80)]
+args.ft_extr_params_list = [(10, 10), (10, 20), (10, 30), (10, 40), (10, 60), (10, 80),
+                            (20, 10), (20, 20), (20, 30), (20, 40), (20, 60), (20, 80),
+                            (30, 10), (30, 20), (30, 30), (30, 40), (30, 60), (30, 80),
+                            (40, 10), (40, 20), (40, 30), (40, 40), (40, 60), (40, 80)]
 
 # args.ft_extr_type = "mfcc"
 # feature_bin_count, spectrogram_length
