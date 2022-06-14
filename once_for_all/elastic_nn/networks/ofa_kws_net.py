@@ -100,7 +100,13 @@ class OFAKWSNet(KWSNet):
         # Total training params: 4.75M
         # Total FLOPs: 1.79M
 
-        width_list = [16, 24, 40, 64, 64, 64, 64, 64, 64, 64]
+        # width_list = [16, 24, 40, 64, 64, 64, 64, 64, 64, 64]
+        # final_expand_width, last_channel = 192, 64
+        # Acc
+        # Total training params: 2.07M
+        # Total FLOPs: 0.32M
+
+        width_list = [64, 64, 64, 64, 64, 64]
         final_expand_width, last_channel = 192, 64
         # Acc
         #
@@ -111,9 +117,6 @@ class OFAKWSNet(KWSNet):
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
-
-
-
         # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # original 2 3 5 10 14 20 120 160
         # width_list = [16, 24, 40, 64, 104, 168, 272, 440]  # run1 2 3 5 8 13 21 34 55
         # width_list = [16, 24, 32, 40, 64, 64, 64, 64]  # run2 idk dscnn works
@@ -121,7 +124,7 @@ class OFAKWSNet(KWSNet):
 
 
         # build input stem
-        input_stem_width_list = [16]
+        input_stem_width_list = [64]
         input_stem_stride_stages = [1]
         input_stem_act_stages = ["relu"]
         input_stem_se_stages = [False]
