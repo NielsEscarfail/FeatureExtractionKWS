@@ -46,19 +46,30 @@ class OFAKWSNet(KWSNet):
         n_block_list = [1] + [max(self.depth_list)] * 5
         # width_list = [16, 24, 40, 64, 64, 64, 104, 64]  # large net more than 88% acc mfcc
 
-        # width_list = [16, 24, 40, 64, 64, 64, 168, 272] # large net more than 90% acc mfcc
+        # width_list = [16, 24, 40, 64, 64, 64, 168, 272] # large net more than 90.2% acc mfcc
         # Total training params: 4.46M
         # Total FLOPs: 0.42M
 
-        width_list = [8, 16, 24, 40, 64, 64, 104, 168]
-        print("width list : ", width_list)
+        # width_list = [8, 16, 24, 40, 64, 64, 104, 168]  # large net 89% acc mfcc
+        # Total training params: 2.37M + input 8
+        # Total FLOPs: 0.16M
 
-        final_expand_width, last_channel = width_list[-2], width_list[-1]
+        width_list = [8, 16, 24, 40, 64, 64]
+        final_expand_width, last_channel = 104, 64
+        print("width list : ", width_list)
+        print("final_expand_width : ", final_expand_width)
+        print("last_channel : ", last_channel)
+
+        input_channel, first_block_dim = width_list[0], width_list[1]
+
+
+
+
         # width_list = [16, 24, 40, 80, 112, 160, 960, 1280]  # original 2 3 5 10 14 20 120 160
         # width_list = [16, 24, 40, 64, 104, 168, 272, 440]  # run1 2 3 5 8 13 21 34 55
         # width_list = [16, 24, 32, 40, 64, 64, 64, 64]  # run2 idk dscnn works
 
-        input_channel, first_block_dim = width_list[0], width_list[1]
+
 
         # build input stem
         input_stem_width_list = [8]
