@@ -28,6 +28,7 @@ class KWSDataProvider:
             rank=None,
             n_worker=4
     ):
+
         warnings.filterwarnings("ignore")
         self._save_path = save_path
         # move network to GPU if available
@@ -43,6 +44,7 @@ class KWSDataProvider:
 
         self.active_ft_extr_type = self.ft_extr_type
         self.active_ft_extr_params = self.ft_extr_params_list[0]
+        self.active_transformation = None
 
         self.init_transformations()
 
@@ -214,27 +216,32 @@ class KWSDataProvider:
         labels_placeholder = []
 
         transformation_type = self.ft_extr_type
-
         ft_extr_params = random.choice(self.ft_extr_params_list)
-        transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
-        transformation = self.transformations[transformation_idx]
 
-        if transformation_type == 'mfcc':
-            spectrogram_length = ft_extr_params[1]
-
-        for (data, label) in batch:
-            # Apply transformation
-            if transformation_type == 'mfcc':
+        # Preloaded transformations
+        if transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+            transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
+            transformation = self.transformations[transformation_idx]
+            for (data, label) in batch:
                 data = transformation(data)
                 data = torch.unsqueeze(data, dim=0)
-            elif transformation_type == 'mel_spectrogram':
-                data = transformation(data)
-                data = torch.unsqueeze(data, dim=0)
-            else:
-                raise NotImplementedError
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
 
-            data_placeholder.append(data)
-            labels_placeholder.append(label)
+        # Transformation functions
+        elif transformation_type == 'linear_stft':
+            n_fft, win_size_ms = ft_extr_params
+            window_stride_ms = win_size_ms / 2
+            win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
+            hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
+
+            for (data, label) in batch:
+                data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+        else:
+            raise NotImplementedError
 
         return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 
@@ -245,20 +252,31 @@ class KWSDataProvider:
 
         transformation_type = self.active_ft_extr_type
         active_transformation = self.active_transformation
+        active_ft_extr_params = self.active_ft_extr_params
 
-        for (data, label) in batch:
-            # Apply transformation
-            if transformation_type == 'mfcc':
+        # Preloaded transformations
+        if transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+            for (data, label) in batch:
                 data = active_transformation(data)
                 data = torch.unsqueeze(data, dim=0)
-            elif transformation_type == 'mel_spectrogram':
-                data = active_transformation(data)
-                data = torch.unsqueeze(data, dim=0)
-            else:
-                raise NotImplementedError
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
 
-            data_placeholder.append(data)
-            labels_placeholder.append(label)
+        # Transformation functions
+        elif transformation_type == 'linear_stft':
+            n_fft, win_size_ms = active_ft_extr_params
+            window_stride_ms = win_size_ms / 2
+            win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
+            hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
+
+            for (data, label) in batch:
+                data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
+        else:
+            raise NotImplementedError
 
         return torch.stack(data_placeholder, dim=0), torch.tensor(labels_placeholder)
 

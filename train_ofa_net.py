@@ -34,7 +34,7 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
-                        "stft"
+                        "linear_stft"
                     ]
 )
 
@@ -155,6 +155,11 @@ elif args.ft_extr_type == "mfcc":  # n_mfcc, win_len
                                 (20, 40), (20, 60), (20, 80),
                                 (30, 40), (30, 60), (30, 80),
                                 (40, 40), (40, 60), (40, 80)]
+
+elif args.ft_extr_type == "linear_stft":
+    args.ft_extr_params_list = [
+        (1024, 40), (1024, 60), (1024, 80),
+        (2048, 40), (2048, 60), (2048, 80)]
 
 
 if __name__ == "__main__":

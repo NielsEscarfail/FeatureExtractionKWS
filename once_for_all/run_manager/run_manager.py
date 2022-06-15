@@ -253,6 +253,7 @@ class RunManager:
             ) as t:
                 for i, (images, labels) in enumerate(data_loader):
                     images, labels = images.to(self.device), labels.to(self.device)
+                    print("In validate images.shape : ", images.shape)
                     # compute output
                     output = net(images)
                     loss = self.test_criterion(output, labels)
