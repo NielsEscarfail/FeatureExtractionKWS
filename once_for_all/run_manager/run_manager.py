@@ -236,7 +236,7 @@ class RunManager:
             data_loader = (
                 self.run_config.test_loader if is_test else self.run_config.valid_loader
             )
-        print("is_test ", is_test)
+
         if train_mode:
             net.train()
         else:
@@ -253,7 +253,6 @@ class RunManager:
             ) as t:
                 for i, (images, labels) in enumerate(data_loader):
                     images, labels = images.to(self.device), labels.to(self.device)
-                    print("In validate images.shape : ", images.shape)
                     # compute output
                     output = net(images)
                     loss = self.test_criterion(output, labels)
