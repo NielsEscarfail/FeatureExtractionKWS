@@ -299,7 +299,7 @@ if __name__ == "__main__":
         print("Resuming training ")"""
         run_manager.write_log(
             "%.3f\t%.3f\t%.3f\t%s"
-            % validate(run_manager, is_test=Fal, **validate_func_dict),
+            % validate(run_manager, is_test=True, **validate_func_dict),
             "valid",
         )
         print("Start large net training")
