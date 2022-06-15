@@ -6,8 +6,12 @@ import numpy as np
 import torch.utils.data
 import torchaudio
 from torchaudio.transforms import MFCC
+import librosa
+from spafe.features.rplp import plp
 
 from .dataset import AudioGenerator, AudioProcessor
+
+
 # torch.multiprocessing.set_start_method('spawn')  # good solution !!!!
 
 
@@ -23,7 +27,8 @@ class KWSDataProvider:
             train_batch_size=256,
             test_batch_size=512,
             valid_size=None,
-            ft_extr_type=["mel_spectrogram"],  # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
+            ft_extr_type=["mel_spectrogram"],
+            # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
             ft_extr_params_list=None,
             rank=None,
             n_worker=4
@@ -123,7 +128,10 @@ class KWSDataProvider:
 
     @property
     def data_shape(self):
-        return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]
+        if self.ft_extr_type == "lpcc" or self.ft_extr_type == "plp":
+            return 1, 1, self.active_ft_extr_params + 1
+        else:
+            return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]
 
     @property
     def n_classes(self):
@@ -210,10 +218,6 @@ class KWSDataProvider:
                 )
                 self.transformations.append(melspect_transformation)
 
-        elif self.ft_extr_type == 'linear_stft' or self.ft_extr_type == 'raw':
-            pass
-
-
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
          Randomly picking parameters from self.ft_extr_params_list for each batch."""
@@ -251,6 +255,29 @@ class KWSDataProvider:
 
             for (data, label) in batch:
                 data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
+        elif transformation_type == 'lpcc':
+            order = ft_extr_params
+            for i, (data, label) in enumerate(batch):
+                # compute lpcs
+                data = librosa.lpc(np.array(data), order=order)
+                # compute lpccs
+                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order)
+                data = torch.tensor(data).float()
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
+        elif transformation_type == 'plp':
+            order = ft_extr_params
+            for i, (data, label) in enumerate(batch):
+                # compute lpcs
+                data = plp(sig=data,
+                           fs=self.audio_processor.desired_samples,
+                           modelorder=order)
+                data = torch.tensor(data).float()
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
@@ -294,6 +321,32 @@ class KWSDataProvider:
 
             for (data, label) in batch:
                 data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
+        elif transformation_type == 'lpcc':
+            order = active_ft_extr_params
+
+            for i, (data, label) in enumerate(batch):
+                # compute lpcs
+                data = librosa.lpc(np.array(data), order=order)
+
+                # compute lpccs
+                data = self.audioprocessor.get_lpcc(sample=data[:, None], order=order)
+                data = torch.tensor(data).float()
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
+        elif transformation_type == 'plp':
+            order = active_ft_extr_params
+            for i, (data, label) in enumerate(batch):
+                # compute lpcs
+                data = plp(sig=data,
+                           fs=self.audio_processor.desired_samples,
+                           modelorder=order)
+                data = torch.tensor(data).float()
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)

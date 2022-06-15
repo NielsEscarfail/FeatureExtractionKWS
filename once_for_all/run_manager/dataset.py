@@ -458,6 +458,7 @@ class AudioProcessor(object):
             cep[n, :] = -np.add(norm_a[n, :], np.divide(sum_var, n))
         return cep
 
+
     def get_lsf(self, sample):  # TODO implement
         """ Get the Line Spectral Frequencies (also Line Spectrum Pairs) from an LPC input.
         Args:
