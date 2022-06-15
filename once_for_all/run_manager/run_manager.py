@@ -266,6 +266,7 @@ class RunManager:
                             **self.get_metric_vals(metric_dict, return_dict=True),
                             "ft_extr_type": self.run_config.data_provider.active_ft_extr_type,
                             "ft_extr_params": self.run_config.data_provider.active_ft_extr_params,
+                            "R": tuple(images.shape[2:]),
                         }
                     )
                     t.update(1)
