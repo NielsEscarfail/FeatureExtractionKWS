@@ -85,7 +85,7 @@ class KWSDataProvider:
                 sampler=valid_sampler,
                 num_workers=n_worker,
                 pin_memory=True,
-                collate_fn=self.collate_batch
+                collate_fn=self.collate_batch_subtrain
             )
         else:  # No validation set
             self.train = train_loader_class(
@@ -107,7 +107,7 @@ class KWSDataProvider:
             shuffle=True,
             num_workers=n_worker,
             pin_memory=True,
-            collate_fn=self.collate_batch
+            collate_fn=self.collate_batch_subtrain
         )
 
         if self.valid is None:
