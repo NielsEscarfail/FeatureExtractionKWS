@@ -236,7 +236,7 @@ class RunManager:
             data_loader = (
                 self.run_config.test_loader if is_test else self.run_config.valid_loader
             )
-
+        print("is_test ", is_test)
         if train_mode:
             net.train()
         else:
