@@ -204,8 +204,7 @@ class KWSDataProvider:
                 self.transformations.append(melspect_transformation)
 
         elif self.ft_extr_type == 'linear_stft':
-
-
+            pass
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
