@@ -247,6 +247,7 @@ class KWSDataProvider:
 
     def collate_batch_subtrain(self, batch):
         """Collates batches deterministically based on self.ft_extr_type and self.active_ft_extr_params."""
+        print("in collate batch subtrain")
         data_placeholder = []
         labels_placeholder = []
 
