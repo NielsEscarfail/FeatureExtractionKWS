@@ -155,10 +155,10 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
                                 (20, 30), (20, 40), (20, 50), (20, 60)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    args.ft_extr_params_list = [(16, 20), (16, 40), (16, 60),
-                                (20, 20), (20, 40), (20, 60),
-                                (30, 20), (30, 40), (30, 60),
-                                (40, 20), (40, 40), (40, 60)]
+    args.ft_extr_params_list = [(10, 20), (10, 40),
+                                (20, 20), (20, 40),
+                                (30, 20), (30, 40),
+                                (40, 20), (40, 40),]
 
 elif args.ft_extr_type == "linear_stft":
     args.ft_extr_params_list = [
