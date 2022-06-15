@@ -278,7 +278,7 @@ def measure_net_latency(
     return total_time / n_sample, measured_latency
 
 
-def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, print_info=True):
+def get_net_info(net, input_shape=(1, 224, 224), measure_latency=None, print_info=True):
     net_info = {}
     if isinstance(net, nn.DataParallel):
         net = net.module

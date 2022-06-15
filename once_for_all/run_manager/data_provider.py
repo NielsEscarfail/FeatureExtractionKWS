@@ -122,8 +122,8 @@ class KWSDataProvider:
         return "speech-commands"
 
     @property
-    def data_shape(self):  # TODO n_channels
-        return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]  # C, H, W
+    def data_shape(self):
+        return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]
 
     @property
     def n_classes(self):
@@ -205,8 +205,9 @@ class KWSDataProvider:
                 )
                 self.transformations.append(melspect_transformation)
 
-        elif self.ft_extr_type == 'linear_stft':
+        elif self.ft_extr_type == 'linear_stft' or self.ft_extr_type == 'raw':
             pass
+
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
@@ -218,8 +219,16 @@ class KWSDataProvider:
         transformation_type = self.ft_extr_type
         ft_extr_params = random.choice(self.ft_extr_params_list)
 
+        # No transformations
+        if transformation_type == 'raw':
+            for (data, label) in batch:
+                data = data.reshape((125, 128))
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
         # Preloaded transformations
-        if transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
             transformation = self.transformations[transformation_idx]
             for (data, label) in batch:
@@ -240,6 +249,7 @@ class KWSDataProvider:
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
+
         else:
             raise NotImplementedError
 
@@ -254,8 +264,16 @@ class KWSDataProvider:
         active_transformation = self.active_transformation
         active_ft_extr_params = self.active_ft_extr_params
 
+        # No transformations
+        if transformation_type == 'raw':
+            for (data, label) in batch:
+                data = data.reshape((125, 128))
+                data = torch.unsqueeze(data, dim=0)
+                data_placeholder.append(data)
+                labels_placeholder.append(label)
+
         # Preloaded transformations
-        if transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
             for (data, label) in batch:
                 data = active_transformation(data)
                 data = torch.unsqueeze(data, dim=0)

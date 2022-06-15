@@ -34,7 +34,8 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
-                        "linear_stft"
+                        "linear_stft",
+                        "raw"
                     ]
 )
 
@@ -161,6 +162,8 @@ elif args.ft_extr_type == "linear_stft":
         (1024, 40), (1024, 60), (1024, 80),
         (2048, 40), (2048, 60), (2048, 80)]
 
+elif args.ft_extr_type == "raw":
+    args.ft_extr_params_list = [(125, 128)]
 
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
