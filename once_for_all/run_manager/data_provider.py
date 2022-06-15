@@ -218,6 +218,9 @@ class KWSDataProvider:
         transformation_type = self.ft_extr_type
         ft_extr_params = random.choice(self.ft_extr_params_list)
 
+        ft_extr_params = self.active_ft_extr_params
+        print("active params collate batch: ", ft_extr_params)
+
         # Preloaded transformations
         if transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
