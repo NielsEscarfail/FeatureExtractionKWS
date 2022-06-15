@@ -163,18 +163,23 @@ class KWSDataProvider:
 
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
-        transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
-        self.active_transformation = self.transformations[transformation_idx]
+        if self.ft_extr_type == 'mfcc' or self.ft_extr_type == 'mel_spectrogram':
+            transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
+            self.active_transformation = self.transformations[transformation_idx]
 
     def init_transformations(self):
         """ Transformations:
         mfcc:
-            n_mels : number of mel bins
-
+            n_mfcc : number of mel bins
+            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
 
         mel_spectrogram
+            n_mels : number of mel bins
+            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
 
-        :return:
+        linear_stft
+            n_fft : number of ffts
+            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
         """
         # TODO check n_mels + window_size_samples + window_stride_samples
         self.transformations = []
