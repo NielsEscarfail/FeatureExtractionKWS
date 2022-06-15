@@ -45,8 +45,9 @@ parser.add_argument("--ft_extr_type",
 args = parser.parse_args()
 
 # Set up model parameters depending on the task TODO
+args.path = "exp/" + args.ft_extr_type
 if args.task == "normal":
-    args.path = "exp/normal"
+    args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 120  # 180 paper
     args.base_lr = 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
@@ -56,7 +57,7 @@ if args.task == "normal":
     args.expand_list = "6"
     args.depth_list = "4"
 elif args.task == "kernel":  # params ok
-    args.path = "exp/normal2kernel"
+    args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 120  # 120
     args.base_lr = 3e-2
@@ -66,7 +67,7 @@ elif args.task == "kernel":  # params ok
     args.expand_list = "6"
     args.depth_list = "4"
 elif args.task == "depth":  # all params below ok
-    args.path = "exp/kernel2kernel_depth/phase%d" % args.phase
+    args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
     if args.phase == 1:
         args.n_epochs = 25
@@ -85,7 +86,7 @@ elif args.task == "depth":  # all params below ok
         args.expand_list = "6"
         args.depth_list = "2,3,4"
 elif args.task == "expand":
-    args.path = "exp/kernel_depth2kernel_depth_width/phase%d" % args.phase
+    args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
         args.n_epochs = 25
