@@ -177,12 +177,15 @@ class KWSDataProvider:
         # TODO check n_mels + window_size_samples + window_stride_samples
         self.transformations = []
         if self.ft_extr_type == 'mfcc':
-            melkwargs = {'n_fft': 1024, 'win_length': self.audio_processor.window_size_samples,
-                         'hop_length': self.audio_processor.window_stride_samples,
-                         'f_min': 20, 'f_max': 4000, 'n_mels': 40}
-            for (feature_bin_count, spectrogram_length) in self.ft_extr_params_list:
+            for (n_mfcc, win_size_ms) in self.ft_extr_params_list:
+                window_stride_ms = win_size_ms / 2
+                win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
+                hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
+                melkwargs = {'n_fft': 2048, 'win_length': win_length,
+                             'hop_length': hop_length,
+                             'f_min': 20, 'f_max': 4000, 'n_mels': 40}
                 mfcc_transformation = MFCC(
-                    n_mfcc=feature_bin_count,
+                    n_mfcc=n_mfcc,
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
                     norm='ortho')
                 self.transformations.append(mfcc_transformation)

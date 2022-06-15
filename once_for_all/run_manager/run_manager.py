@@ -271,7 +271,7 @@ class RunManager:
                     t.update(1)
         return losses.avg, self.get_metric_vals(metric_dict)
 
-    """def validate_all_resolution(self, epoch=0, is_test=False, net=None):  # Unused
+    def validate_all_resolution(self, epoch=0, is_test=False, net=None):  # Unused
 
         if net is None:
             net = self.network
@@ -295,7 +295,7 @@ class RunManager:
                 [top5],
             )
 
-    def train_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
+    """def train_one_epoch(self, args, epoch, warmup_epochs=0, warmup_lr=0):
         # switch to train mode
         self.net.train()
         MyRandomResizedCrop.EPOCH = epoch  # required by elastic resolution

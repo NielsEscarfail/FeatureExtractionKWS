@@ -123,7 +123,7 @@ args.not_sync_distributed_image_size = False
 args.bn_momentum = 0.1
 args.bn_eps = 1e-5
 args.dropout = 0.1
-args.base_stage_width = "proxyless"
+# args.base_stage_width = "proxyless"
 
 args.width_mult_list = "1.0"
 args.dy_conv_scaling_mode = 1
@@ -135,14 +135,18 @@ args.kd_type = "ce"
 
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
 
-args.ft_extr_type = "mel_spectrogram"
+"""args.ft_extr_type = "mel_spectrogram"
+args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
+                            (20, 40), (20, 60), (20, 80),
+                            (30, 40), (30, 60), (30, 80),
+                            (40, 40), (40, 60), (40, 80)]"""
+
+args.ft_extr_type = "mfcc"  # n_mfcc, win_len
 args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
                             (20, 40), (20, 60), (20, 80),
                             (30, 40), (30, 60), (30, 80),
                             (40, 40), (40, 60), (40, 80)]
 
-# args.ft_extr_type = "mfcc"
-# feature_bin_count, spectrogram_length
 # args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
 # args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
 # args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
@@ -222,7 +226,7 @@ if __name__ == "__main__":
         n_classes=12,
         bn_param=(args.bn_momentum, args.bn_eps),
         dropout_rate=args.dropout,
-        base_stage_width=args.base_stage_width,
+        # base_stage_width=args.base_stage_width,
         width_mult=args.width_mult_list,
         ks_list=args.ks_list,
         expand_ratio_list=args.expand_list,
@@ -265,7 +269,7 @@ if __name__ == "__main__":
 
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
-        "ft_extr_params_list": [(10, 40), (40, 80)],
+        "ft_extr_params_list": [(10, 40), (20, 60), (40, 80)],
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
@@ -274,6 +278,19 @@ if __name__ == "__main__":
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
 
     if args.task == "normal":
+        """args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
+
+        load_models(
+            run_manager,
+            run_manager.net,
+            args.ofa_checkpoint_path,
+        )
+        run_manager.write_log(
+            "%.3f\t%.3f\t%.3f\t%s"
+            % validate(run_manager, is_test=True, **validate_func_dict),
+            "valid",
+        )
+        print("Resuming training ")"""
         print("Start large net training")
         train(
             run_manager,
@@ -281,8 +298,6 @@ if __name__ == "__main__":
             lambda _run_manager, epoch, is_test: validate(
                 _run_manager, epoch, is_test, **validate_func_dict
             ))
-        print("Validating all ft extr params:")
-        run_manager.validate(is_test=True)
 
     elif args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
@@ -344,6 +359,9 @@ if __name__ == "__main__":
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
+
+    print("Validating all resolutions:")
+    run_manager.validate_all_resolution(is_test=True)
 
     end = time.time()
     print("Total run time: ", end - start)

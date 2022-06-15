@@ -23,7 +23,6 @@ class OFAKWSNet(KWSNet):
             n_classes=12,
             bn_param=(0.1, 1e-5),
             dropout_rate=0.1,
-            base_stage_width=None,
             width_mult=1.0,
             ks_list=3,
             expand_ratio_list=6,
