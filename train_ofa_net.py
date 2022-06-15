@@ -99,7 +99,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 512  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
+args.base_batch_size = 64  # 2048 (1.8) 1024 (), 512 (0.5-0.6), 128 and 256 work well, 64 is significantly slower
 args.valid_size = .1
 
 args.momentum = 0.9
