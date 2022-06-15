@@ -37,10 +37,10 @@ parser.add_argument("--ft_extr_type",
                         "linear_stft",
                         "lpcc",
                         "plp",
+                        "ngcc",
                         "raw"
                     ]
-)
-
+                    )
 
 args = parser.parse_args()
 
@@ -154,10 +154,10 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
                                 (40, 40), (40, 60), (40, 80)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc, win_len
-    args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
-                                (20, 40), (20, 60), (20, 80),
+    args.ft_extr_params_list = [(20, 40), (20, 60), (20, 80),
                                 (30, 40), (30, 60), (30, 80),
-                                (40, 40), (40, 60), (40, 80)]
+                                (40, 40), (40, 60), (40, 80),
+                                (80, 40), (80, 60), (80, 80)]
 
 elif args.ft_extr_type == "linear_stft":
     args.ft_extr_params_list = [
@@ -167,8 +167,14 @@ elif args.ft_extr_type == "linear_stft":
 elif args.ft_extr_type == "lpcc":
     args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
 
-elif args.ft_extr_type == "plp":
+elif args.ft_extr_type == "plp":  # Mega slow?
     args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
+
+elif args.ft_extr_type == "ngcc":  # n_ceps/order, nfilts TODO in progress, might be dropped
+    args.ft_extr_params_list = [(10, 24), (10, 48), (10, 64),
+                                (20, 24), (20, 48), (20, 64),
+                                (30, 24), (30, 48), (30, 64),
+                                (40, 24), (40, 48), (40, 64)]
 
 elif args.ft_extr_type == "raw":
     args.ft_extr_params_list = [(125, 128)]
