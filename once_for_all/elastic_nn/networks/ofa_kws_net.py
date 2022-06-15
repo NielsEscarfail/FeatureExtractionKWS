@@ -45,7 +45,8 @@ class OFAKWSNet(KWSNet):
         n_block_list = [1] + [max(self.depth_list)] * 5
 
         # width_list = [16, 24, 40, 80, 112, 160] # 2, 3, 5, 10, 13, 20, 120, 140
-        width_list = [16, 24, 40, 64, 64, 64]  # 2, 3, 5, 8, 8, 8, 24, 32
+        # width_list = [16, 24, 40, 64, 64, 64]  # 2, 3, 5, 8, 8, 8, 24, 32 WIDTHLIST2
+        width_list = [64, 64, 64, 64, 64, 64] # widthlist3
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 

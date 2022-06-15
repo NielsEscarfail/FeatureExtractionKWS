@@ -28,6 +28,16 @@ parser.add_argument(
 )
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
 parser.add_argument("--resume", action="store_true")
+parser.add_argument("--ft_extr_type",
+                    type=str,
+                    default="mfcc",
+                    choices=[
+                        "mfcc",
+                        "mel_spectrogram",
+                        "stft"
+                    ]
+)
+
 
 args = parser.parse_args()
 
@@ -133,28 +143,19 @@ args.independent_distributed_sampling = False
 args.kd_ratio = 0
 args.kd_type = "ce"
 
-# args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
+# Set ft_extr_params_list depending on the ft_extr_type
+if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
+    args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
+                                (20, 40), (20, 60), (20, 80),
+                                (30, 40), (30, 60), (30, 80),
+                                (40, 40), (40, 60), (40, 80)]
 
-"""args.ft_extr_type = "mel_spectrogram"
-args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
-                            (20, 40), (20, 60), (20, 80),
-                            (30, 40), (30, 60), (30, 80),
-                            (40, 40), (40, 60), (40, 80)]"""
+elif args.ft_extr_type == "mfcc":  # n_mfcc, win_len
+    args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
+                                (20, 40), (20, 60), (20, 80),
+                                (30, 40), (30, 60), (30, 80),
+                                (40, 40), (40, 60), (40, 80)]
 
-args.ft_extr_type = "mfcc"  # n_mfcc, win_len
-args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
-                            (20, 40), (20, 60), (20, 80),
-                            (30, 40), (30, 60), (30, 80),
-                            (40, 40), (40, 60), (40, 80)]
-
-# args.ft_extr_params_list = [(10, 20), (10, 30), (10, 49)]
-# args.ft_extr_params_list = [(10, 49), (15, 49), (20, 49)]
-# args.ft_extr_params_list = [(6, 49), (8, 49), (10, 49)]
-# args.ft_extr_params_list = [(5, 49), (10, 49), (20, 49), (40, 49)]
-# args.ft_extr_params_list = [(10, 10), (20, 10), (40, 10),
-#                            (10, 20), (20, 20), (40, 20),
-#                            (10, 34), (20, 34), (40, 34),
-#                            (10, 49), (20, 49), (40, 49)]
 
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
