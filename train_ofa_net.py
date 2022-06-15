@@ -136,10 +136,10 @@ args.kd_type = "ce"
 # args.ft_extr_type = ["mfcc", "mel_spectrogram", "dwt"]
 
 args.ft_extr_type = "mel_spectrogram"
-args.ft_extr_params_list = [(10, 10), (10, 20), (10, 30), (10, 40), (10, 60), (10, 80),
-                            (20, 10), (20, 20), (20, 30), (20, 40), (20, 60), (20, 80),
-                            (30, 10), (30, 20), (30, 30), (30, 40), (30, 60), (30, 80),
-                            (40, 10), (40, 20), (40, 30), (40, 40), (40, 60), (40, 80)]
+args.ft_extr_params_list = [(10, 40), (10, 60), (10, 80),
+                            (20, 40), (20, 60), (20, 80),
+                            (30, 40), (30, 60), (30, 80),
+                            (40, 40), (40, 60), (40, 80)]
 
 # args.ft_extr_type = "mfcc"
 # feature_bin_count, spectrogram_length

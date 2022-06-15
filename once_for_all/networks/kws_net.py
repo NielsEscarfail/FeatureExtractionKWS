@@ -76,7 +76,7 @@ class KWSNet(MyNetwork):
         for m in self.modules():
             if isinstance(m, ResidualBlock):
                 if isinstance(m.conv, MBConvLayer) and isinstance(
-                    m.shortcut, IdentityLayer
+                        m.shortcut, IdentityLayer
                 ):
                     m.conv.point_linear.bn.weight.data.zero_()
 
@@ -110,13 +110,13 @@ class KWSNet(MyNetwork):
         blocks = []
         for stage_id, block_config_list in blocks_cfg.items():
             for (
-                k,
-                mid_channel,
-                out_channel,
-                use_se,
-                act_func,
-                stride,
-                expand_ratio,
+                    k,
+                    mid_channel,
+                    out_channel,
+                    use_se,
+                    act_func,
+                    stride,
+                    expand_ratio,
             ) in block_config_list:
                 mb_conv = MBConvLayer(
                     feature_dim,
@@ -190,18 +190,17 @@ class KWSNet(MyNetwork):
             current_state_dict[new_key] = state_dict[key]
         super(KWSNet, self).load_state_dict(current_state_dict)
 
-# Deprecated
+
 class KWSNetLarge(KWSNet):
     def __init__(
-        self,
-        n_classes=1000,
-        width_mult=1.0,
-        bn_param=(0.1, 1e-5),
-        dropout_rate=0.2,
-        ks=None,
-        expand_ratio=None,
-        depth_param=None,
-        stage_width_list=None,
+            self,
+            n_classes=1000,
+            bn_param=(0.1, 1e-5),
+            dropout_rate=0.2,
+            ks=None,
+            expand_ratio=None,
+            depth_param=None,
+            stage_width_list=None,
     ):
         input_channel = 16
         last_channel = 1280
