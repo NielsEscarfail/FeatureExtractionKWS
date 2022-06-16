@@ -201,7 +201,7 @@ class KWSDataProvider:
                              'hop_length': hop_length,
                              'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # this is resolution
                 mfcc_transformation = MFCC(
-                    n_mfcc=20,  # this is crop
+                    n_mfcc=10,  # this is crop
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
                     norm='ortho')
                 self.transformations.append(mfcc_transformation)
