@@ -182,8 +182,9 @@ class ConvLayer(My2DLayer):
         if isinstance(padding, int):
             padding *= self.dilation
         else:
-            padding[0] *= self.dilation
-            padding[1] *= self.dilation
+            padding = (padding[0]*self.dilation, padding[1] * self.dilation)
+            """padding[0] *= self.dilation
+            padding[1] *= self.dilation"""
 
         weight_dict = OrderedDict(
             {

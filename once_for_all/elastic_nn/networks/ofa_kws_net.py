@@ -60,7 +60,7 @@ class OFAKWSNet(KWSNet):
         feature_dim = 1
         # first conv layer
         first_conv = ConvLayer(
-            feature_dim, input_channel, kernel_size=(5, 1), stride=(2,2), act_func="h_swish"
+            feature_dim, input_channel, kernel_size=(10, 4), stride=(2, 2), act_func="h_swish"
         )
 
         # First block
