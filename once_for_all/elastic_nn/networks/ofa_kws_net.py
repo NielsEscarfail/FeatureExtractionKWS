@@ -60,14 +60,14 @@ class OFAKWSNet(KWSNet):
         feature_dim = 1
         # first conv layer
         first_conv = ConvLayer(
-            feature_dim, input_channel, kernel_size=3, stride=2, act_func="h_swish"
+            feature_dim, input_channel, kernel_size=(5, 1), stride=2, act_func="h_swish"
         )
 
         # First block
         first_block_conv = MBConvLayer(
             in_channels=input_channel,
             out_channels=first_block_dim,
-            kernel_size=(7, 3),  # 3
+            kernel_size=3,  # 3
             stride=stride_stages[0],
             expand_ratio=1,
             act_func=act_stages[0],

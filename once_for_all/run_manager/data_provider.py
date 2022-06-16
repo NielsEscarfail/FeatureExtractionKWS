@@ -197,7 +197,7 @@ class KWSDataProvider:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
                 hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
-                melkwargs = {'n_fft': 2048, 'win_length': win_length,
+                melkwargs = {'n_fft': 1024, 'win_length': win_length,
                              'hop_length': hop_length,
                              'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # this is resolution
                 mfcc_transformation = MFCC(
@@ -242,7 +242,7 @@ class KWSDataProvider:
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
             transformation = self.transformations[transformation_idx]
             for (data, label) in batch:
-                data = transformation(data)
+                data = transformation(data).transpose(0, -1)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
@@ -307,7 +307,7 @@ class KWSDataProvider:
         # Preloaded transformations
         elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
             for (data, label) in batch:
-                data = active_transformation(data)
+                data = active_transformation(data).transpose(0, -1)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)

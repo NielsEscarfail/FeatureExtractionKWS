@@ -153,7 +153,9 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
                                 (10, 20), (10, 30)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    args.ft_extr_params_list = [(40, 20), (40, 40), (80, 20), (80, 40)]
+    args.ft_extr_params_list = [(40, 20), (40, 30), (40, 40),
+                                (80, 20), (80, 30), (80, 40), ]
+    """args.ft_extr_params_list = [(40, 20), (40, 40), (80, 20), (80, 40)]"""
 
     """ args.ft_extr_params_list = [(10, 20), (10, 40),
                                 (20, 20), (20, 40),
