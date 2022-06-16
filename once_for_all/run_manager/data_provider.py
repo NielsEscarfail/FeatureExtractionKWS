@@ -197,7 +197,7 @@ class KWSDataProvider:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
                 hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
-                melkwargs = {'n_fft': 1024, 'win_length': win_length, # This is resolution
+                melkwargs = {'n_fft': 1024, 'win_length': win_length,  # This is resolution
                              'hop_length': hop_length,
                              'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # might set it fixed
                 mfcc_transformation = MFCC(
@@ -251,11 +251,20 @@ class KWSDataProvider:
         elif transformation_type == 'linear_stft':
             n_fft, win_size_ms = ft_extr_params
             window_stride_ms = win_size_ms / 2
+
             win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
             hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
 
+            n_fft = win_length  # n_fft not used
+
             for (data, label) in batch:
-                data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                stft_sample = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                out_real = stft_sample[:, :, 0]
+                out_imag = stft_sample[:, :, 1]
+
+                data = np.abs(out_real ** 2 + out_imag ** 2).transpose(0, -1)
+                data = torch.unsqueeze(data, 0)
+
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
 
@@ -320,8 +329,13 @@ class KWSDataProvider:
             hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
 
             for (data, label) in batch:
-                data = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                stft_sample = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+                out_real = stft_sample[:, :, 0]
+                out_imag = stft_sample[:, :, 1]
+                data = np.abs(out_real ** 2 + out_imag ** 2).transpose(0, -1)
+
                 data = torch.unsqueeze(data, dim=0)
+
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
 
