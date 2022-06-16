@@ -67,7 +67,7 @@ class OFAKWSNet(KWSNet):
         first_block_conv = MBConvLayer(
             in_channels=input_channel,
             out_channels=first_block_dim,
-            kernel_size=3,
+            kernel_size=5, # 3
             stride=stride_stages[0],
             expand_ratio=1,
             act_func=act_stages[0],
