@@ -48,14 +48,14 @@ class OFAKWSNet(KWSNet):
         # width_list = [16, 24, 40, 64, 64, 64]  # 2, 3, 5, 8, 8, 8, 24, 32 WIDTHLIST2
         # width_list = [64, 64, 64, 64, 64, 64]  # widthlist3
 
-        width_list = [16, 24, 40, 64, 80, 112, 160]
+        width_list = [16, 24, 40, 64, 104, 168]
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
         # final_expand_width = 64
         # last_channel = 16
-        final_expand_width = 960  # 172 # 960
-        last_channel = 1280  # 236 # 1280
+        final_expand_width = 272  # 172 # 960
+        last_channel = 440  # 236 # 1280
 
         feature_dim = 1
         # first conv layer
