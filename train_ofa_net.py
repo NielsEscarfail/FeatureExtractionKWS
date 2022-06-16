@@ -54,7 +54,7 @@ if args.task == "normal":
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
-    args.expand_list = "1" # "6"
+    args.expand_list = "6"  # "6"
     args.depth_list = "4"
 elif args.task == "kernel":  # params ok
     args.path += "/normal2kernel"
