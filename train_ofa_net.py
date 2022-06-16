@@ -149,15 +149,8 @@ args.kd_type = "ce"
 
 # Set ft_extr_params_list depending on the ft_extr_type
 if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
-    """args.ft_extr_params_list = [(4, 20), (4, 30), (4, 40),
-                                (6, 20), (6, 30), (6, 40),
-                                (8, 20), (8, 30), (8, 40),
-                                (10, 20), (10, 30), (10, 40)]"""
-    args.ft_extr_params_list = [(10, 20), (10, 30), (10, 40),
-                                (20, 20), (20, 30), (20, 40),
-                                (40, 20), (40, 30), (40, 40),
-                                (60, 20), (60, 30), (60, 40),
-                                (80, 20), (80, 30), (80, 40), ]
+    args.ft_extr_params_list = [(8, 20), (8, 30),
+                                (10, 20), (10, 30)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     args.ft_extr_params_list = [(40, 20), (40, 40), (80, 20), (80, 40)]
