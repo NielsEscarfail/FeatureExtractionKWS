@@ -48,7 +48,7 @@ class OFAKWSNet(KWSNet):
         # width_list = [16, 24, 40, 64, 64, 64]  # 2, 3, 5, 8, 8, 8, 24, 32 WIDTHLIST2
         # width_list = [64, 64, 64, 64, 64, 64]  # widthlist3 full 64
 
-        width_list = [16, 24, 40, 64, 64, 64]
+        width_list = [16, 24, 40, 64]
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
