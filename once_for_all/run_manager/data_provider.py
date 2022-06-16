@@ -197,9 +197,9 @@ class KWSDataProvider:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
                 hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
-                melkwargs = {'n_fft': 1024, 'win_length': win_length,
+                melkwargs = {'n_fft': 1024, 'win_length': win_length, # This is resolution
                              'hop_length': hop_length,
-                             'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # this is resolution
+                             'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # might set it fixed
                 mfcc_transformation = MFCC(
                     n_mfcc=10,  # this is crop
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,

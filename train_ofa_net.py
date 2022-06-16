@@ -50,7 +50,7 @@ if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 120  # 180 paper
-    args.base_lr = 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
@@ -153,6 +153,7 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     args.ft_extr_params_list = [(40, 40)]
+    args.ft_extr_params_list = [(40, 10), (40, 15), (40, 20), (40, 30), (40, 40)]
 
 
     """args.ft_extr_params_list = [(10, 10), (10, 20), (10, 40),
