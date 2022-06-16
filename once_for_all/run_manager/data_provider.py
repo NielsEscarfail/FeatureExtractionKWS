@@ -274,7 +274,7 @@ class KWSDataProvider:
                 # compute lpcs
                 data = librosa.lpc(np.array(data), order=order)
                 # compute lpccs
-                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order)
+                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order).transpose(0, -1)
                 data = torch.tensor(data).float()
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
@@ -347,7 +347,7 @@ class KWSDataProvider:
                 data = librosa.lpc(np.array(data), order=order)
 
                 # compute lpccs
-                data = self.audioprocessor.get_lpcc(sample=data[:, None], order=order)
+                data = self.audioprocessor.get_lpcc(sample=data[:, None], order=order).transpose()
                 data = torch.tensor(data).float()
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)

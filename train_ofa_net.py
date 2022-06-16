@@ -171,7 +171,7 @@ elif args.ft_extr_type == "linear_stft":  # n_mels unused
         (2048, 40), (2048, 60), (2048, 80)]"""
 
 elif args.ft_extr_type == "lpcc":
-    args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
+    args.ft_extr_params_list = [6, 8, 10, 12, 14]
 
 elif args.ft_extr_type == "plp":  # Mega slow?
     args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
