@@ -212,8 +212,9 @@ if __name__ == "__main__":
     else:
         print('Using CPU.')
 
-    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7" # TODO
-    args.teacher_path = "exp/normal/checkpoint/checkpoint.pth.tar"  # TODO
+    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7"
+    args.teacher_path = "exp/" + args.ft_extr_type
+    args.teacher_path += "/normal/checkpoint/checkpoint.pth.tar"
 
     # build run config from args
     args.lr_schedule_param = None
@@ -306,6 +307,7 @@ if __name__ == "__main__":
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
 
+    args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
     if args.task == "normal":
         """args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
 
@@ -331,8 +333,7 @@ if __name__ == "__main__":
     elif args.task == "kernel":
         validate_func_dict["ks_list"] = sorted(args.ks_list)
         if run_manager.start_epoch == 0:
-
-            args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/normal/checkpoint/model_best.pth.tar"
 
             load_models(
                 run_manager,
@@ -361,10 +362,10 @@ if __name__ == "__main__":
         )
 
         if args.phase == 1:
-            args.ofa_checkpoint_path = "exp/normal2kernel/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/normal2kernel/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
         else:
-            args.ofa_checkpoint_path = "exp/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
 
         print("Start elastic depth training")
@@ -377,10 +378,10 @@ if __name__ == "__main__":
         )
 
         if args.phase == 1:
-            args.ofa_checkpoint_path = "exp/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D234_E6_K357"
         else:
-            args.ofa_checkpoint_path = "exp/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
 
         print("Start elastic expand training")
