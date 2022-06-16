@@ -263,6 +263,8 @@ class KWSDataProvider:
                 out_imag = stft_sample[:, :, 1]
 
                 data = np.abs(out_real ** 2 + out_imag ** 2).transpose(0, -1)
+
+                print("stft", data.shape)
                 data = torch.unsqueeze(data, 0)
 
                 data_placeholder.append(data)
@@ -273,8 +275,10 @@ class KWSDataProvider:
             for i, (data, label) in enumerate(batch):
                 # compute lpcs
                 data = librosa.lpc(np.array(data), order=order)
+                print("lpc ", data.shape)
                 # compute lpccs
-                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order).transpose(0, -1)
+                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order).reshape()
+                print("lpcc ", data.shape)
                 data = torch.tensor(data).float()
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
@@ -328,11 +332,13 @@ class KWSDataProvider:
             win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
             hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
 
+            n_fft = win_length
+
             for (data, label) in batch:
                 stft_sample = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
                 out_real = stft_sample[:, :, 0]
                 out_imag = stft_sample[:, :, 1]
-                data = np.abs(out_real ** 2 + out_imag ** 2).transpose(0, -1)
+                data = np.abs(out_real ** 2 + out_imag ** 2)
 
                 data = torch.unsqueeze(data, dim=0)
 
@@ -345,7 +351,6 @@ class KWSDataProvider:
             for i, (data, label) in enumerate(batch):
                 # compute lpcs
                 data = librosa.lpc(np.array(data), order=order)
-
                 # compute lpccs
                 data = self.audioprocessor.get_lpcc(sample=data[:, None], order=order).transpose()
                 data = torch.tensor(data).float()
