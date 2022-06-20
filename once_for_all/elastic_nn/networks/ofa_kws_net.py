@@ -48,21 +48,33 @@ class OFAKWSNet(KWSNet):
         # width_list = [16, 24, 40, 64, 64, 64]  # 2, 3, 5, 8, 8, 8, 24, 32 WIDTHLIST2
         # width_list = [64, 64, 64, 64, 64, 64]  # widthlist3 full 64
 
-        width_list = [16, 24, 40, 80, 112, 144]
+        width_list = [64, 64, 64, 64, 64, 64]
 
         input_channel, first_block_dim = width_list[0], width_list[1]
 
         # final_expand_width = 64
         # last_channel = 16
-        final_expand_width = 160  # 172 # 960
-        last_channel = 104  # 236 # 1280
+        final_expand_width = 64  # 172 # 960
+        last_channel = 64  # 236 # 1280
 
-        feature_dim = 1
+
         # first conv layer
+        feature_dim = 1
+        first_conv = DynamicMBConvLayer(
+            in_channel_list=val2list(feature_dim),
+            out_channel_list=val2list(64),
+            kernel_size_list=ks_list,
+            expand_ratio_list=expand_ratio_list,
+            stride=1,
+            act_func="relu",
+            use_se=False,
+        )
+        # first_conv = ResidualBlock(first_dyn_conv, None)
+
+        """feature_dim = 1
         first_conv = ConvLayer(
             feature_dim, input_channel, kernel_size=3, stride=2, act_func="h_swish"
-        )
-
+        )"""
         # First block
         first_block_conv = MBConvLayer(
             in_channels=input_channel,
@@ -73,6 +85,7 @@ class OFAKWSNet(KWSNet):
             act_func=act_stages[0],
             use_se=se_stages[0],
         )
+
         first_block = ResidualBlock(
             first_block_conv,
             IdentityLayer(first_block_dim, first_block_dim)
