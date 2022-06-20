@@ -1,3 +1,4 @@
+source ~/usr/local/anaconda3-2019.10/etc/profile.d/conda.sh
 conda activate kwsenv
 
 python train_ofa_net.py --task normal --ft_extr_type mfcc 2>&1 | tee mfcc_normal.txt
