@@ -62,7 +62,7 @@ class OFAKWSNet(KWSNet):
         feature_dim = 1
         first_conv = DynamicMBConvLayer(
             in_channel_list=val2list(feature_dim),
-            out_channel_list=val2list(64),
+            out_channel_list=val2list(16),
             kernel_size_list=ks_list,
             expand_ratio_list=expand_ratio_list,
             stride=1,
