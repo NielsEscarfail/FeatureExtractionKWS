@@ -1,6 +1,3 @@
-conda init
-conda activate kwsenv
-
 python train_ofa_net.py --task normal --ft_extr_type mfcc 2>&1 | tee mfcc_normal.txt
 python train_ofa_net.py --task kernel --ft_extr_type mfcc 2>&1 | tee mfcc_normal2kernel.txt
 python train_ofa_net.py --task depth --phase 1 --ft_extr_type mfcc 2>&1 | tee mfcc_kernel2depth1.txt
