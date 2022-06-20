@@ -26,7 +26,7 @@ parser.add_argument(
         "classifier_dim",
     ],
 )
-parser.add_argument("--phase", type=int, default=1, choices=[1, 2])
+parser.add_argument("--phase", type=int, default=1, choices=[1, 2, 3])
 parser.add_argument("--resume", action="store_true")
 parser.add_argument("--ft_extr_type",
                     type=str,
