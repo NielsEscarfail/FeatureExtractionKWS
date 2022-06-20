@@ -44,22 +44,21 @@ parser.add_argument("--ft_extr_type",
 
 args = parser.parse_args()
 
-# Set up model parameters depending on the task TODO
 args.path = "exp/" + args.ft_extr_type
 if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 120  # 180 paper
+    args.n_epochs = 5  # 120  # 180 paper
     args.base_lr = 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
-    args.expand_list = "6"  # "6"
+    args.expand_list = "6"
     args.depth_list = "4"
-elif args.task == "kernel":  # params ok
+elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 120  # 120
+    args.n_epochs = 5  # 120
     args.base_lr = 3e-2
     args.warmup_epochs = 5
     args.warmup_lr = -1
@@ -70,7 +69,7 @@ elif args.task == "depth":  # all params below ok
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
     if args.phase == 1:
-        args.n_epochs = 25
+        args.n_epochs = 5  # 25
         args.base_lr = 2.5e-3  # 2.5e-3 - 0.08 paper
         args.warmup_epochs = 0
         args.warmup_lr = -1
@@ -78,7 +77,7 @@ elif args.task == "depth":  # all params below ok
         args.expand_list = "6"
         args.depth_list = "3,4"
     else:
-        args.n_epochs = 120  # 125 (120 + 5)
+        args.n_epochs = 5  # 120  # 125 (120 + 5)
         args.base_lr = 7.5e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -89,7 +88,7 @@ elif args.task == "expand":
     args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
-        args.n_epochs = 25
+        args.n_epochs = 5  # 25
         args.base_lr = 2.5e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
@@ -97,7 +96,7 @@ elif args.task == "expand":
         args.expand_list = "4,6"
         args.depth_list = "2,3,4"
     else:
-        args.n_epochs = 120  # 120
+        args.n_epochs = 5  # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -106,8 +105,6 @@ elif args.task == "expand":
         args.depth_list = "2,3,4"
 else:
     raise NotImplementedError
-
-# Other fixed parameters TODO
 
 args.manual_seed = 0
 
