@@ -204,9 +204,10 @@ class OFAKWSNet(KWSNet):
 
         # set input stem
 
-        print("out list", self.input_stem[0].out_channel_list)
+        print("out list ", self.input_stem[0].out_channel_list)
         print("in active,", self.input_stem[0].conv.active_out_channel)
         print("2 ", self.input_stem[0].active_out_channel)
+        print("width mul ", width_mult )
 
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[
