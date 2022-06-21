@@ -201,15 +201,6 @@ class OFAKWSNet(KWSNet):
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
         # set input stem
-
-        #print("out list ", self.input_stem[0].out_channel_list)
-        #print("in active,", self.input_stem[0].conv.active_out_channel)
-        #print("inputstem0 activeoutchannel ", self.input_stem[0].active_out_channel)
-        #print("width mul ", width_mult)
-        #print("d ", d)
-        #print("w ", w)
-        #print("ks ", ks)
-
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
                 int(self.input_stem[0].out_channel_list[0] * width_mult[0])
@@ -226,10 +217,6 @@ class OFAKWSNet(KWSNet):
                 self.runtime_depth[stage_id] = max(self.depth_list) - d
             if w is not None:
                 for idx in block_idx:
-                    # print("self.blocks[idx].active_out_channel : ", self.blocks[idx].conv.active_out_channel)
-                    # print("self.blocks[idx].conv.out_channel_list : ", self.blocks[idx].conv.out_channel_list)
-                    # print("w : ", w)
-
                     self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
                     # TODO check [0]
 
@@ -286,29 +273,13 @@ class OFAKWSNet(KWSNet):
 
         # sample width
         width_setting = []
-        # print("width_candidates", width_candidates)
         if not isinstance(width_candidates[0], list):
             width_candidates = [width_candidates for _ in range(len(self.block_group_info))]
         for w_set in width_candidates:
-            # print("w_set : ", w_set)
             w = random.choice(w_set)
-            # print("w : ", w)
             width_setting.append(w)
 
-        """# sample width_mult
-        width_mult_setting = [
-            random.choice(list(range(len(self.input_stem[0].out_channel_list))))
-        ]
-        print()
-        for stage_id, block_idx in enumerate(self.grouped_block_index):
-            stage_first_block = self.blocks[block_idx[0]]
-            print("stage first block: ", stage_first_block)
-            width_mult_setting.append(
-                random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
-            )"""
-
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
-        print("ARCH CONFIG : ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
