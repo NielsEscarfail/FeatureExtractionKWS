@@ -46,7 +46,7 @@ class OFAKWSNet(KWSNet):
         for i, width in enumerate(width_list):
             width_list[i] = [int(width * width_mult) for width_mult in self.width_mult_list]
 
-        input_channel = width_list[0]
+        input_channel = [int(width_list[0] * width_mult) for width_mult in self.width_mult_list]
         # build input stem
         input_stem = [
             DynamicConvLayer(
