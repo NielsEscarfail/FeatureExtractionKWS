@@ -202,16 +202,24 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
-        for block, k in zip(self.blocks[1:], ks):
-            if k is not None:
-                block.conv.active_kernel_size = k
+        # set input stem
+
+        print("out list", self.input_stem[0].out_channel_list)
+        print("in active,", self.input_stem[0].conv.active_out_channel)
+        print("2 ", self.input_stem[0].active_out_channel)
 
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[
                 0
             ].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
 
-        for stage_id, (block_idx, d, w) in enumerate(
+
+        # set blocks
+        for block, k in zip(self.blocks[1:], ks):
+            if k is not None:
+                block.conv.active_kernel_size = k
+
+        for stage_id, (block_idx, d, w[1:]) in enumerate(
                 zip(self.grouped_block_index, depth[1:], width_mult[2:])
         ):
             if d is not None:
