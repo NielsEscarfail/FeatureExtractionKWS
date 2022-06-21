@@ -26,7 +26,6 @@ def validate(
         ft_extr_type=None,
         ft_extr_params_list=None,
         ks_list=None,
-        expand_ratio_list=None,
         depth_list=None,
         width_mult_list=None,
         additional_setting=None,
@@ -43,8 +42,6 @@ def validate(
         ft_extr_params_list = run_manager.run_config.data_provider.ft_extr_params_list
     if ks_list is None:
         ks_list = dynamic_net.ks_list
-    if expand_ratio_list is None:
-        expand_ratio_list = dynamic_net.expand_ratio_list
     if depth_list is None:
         depth_list = dynamic_net.depth_list
     if width_mult_list is None:
@@ -55,23 +52,21 @@ def validate(
 
     subnet_settings = []
     for d in depth_list:
-        for e in expand_ratio_list:
-            for k in ks_list:
-                for w in width_mult_list:
-                    for ftp in ft_extr_params_list:
-                        subnet_settings.append(
-                            [
-                                {
-                                    "ft_extr_type": ft_extr_type,
-                                    "ft_extr_params": ftp,
-                                    "d": d,
-                                    "e": e,
-                                    "ks": k,
-                                    "w": w,
-                                },
-                                "%s%s-D%s-E%s-K%s-W%s" % (ft_extr_type, ftp, d, e, k, w),
-                            ]
-                        )
+        for k in ks_list:
+            for w in width_mult_list:
+                for ftp in ft_extr_params_list:
+                    subnet_settings.append(
+                        [
+                            {
+                                "ft_extr_type": ft_extr_type,
+                                "ft_extr_params": ftp,
+                                "d": d,
+                                "ks": k,
+                                "w": w,
+                            },
+                            "%s%s-D%s-K%s-W%s" % (ft_extr_type, ftp, d, e, k, w),
+                        ]
+                    )
     if additional_setting is not None:
         subnet_settings += additional_setting
 
@@ -111,7 +106,6 @@ def train_one_epoch(run_manager, args, epoch, warmup_epochs=0, warmup_lr=0):
     dynamic_net.train()
     if distributed:
         run_manager.run_config.train_loader.sampler.set_epoch(epoch)
-    # MyRandomResizedCrop.EPOCH = epoch
 
     nBatch = len(run_manager.run_config.train_loader)
 
@@ -310,7 +304,6 @@ def train_elastic_depth(train_func, run_manager, args, validate_func_dict):
     # add depth list constraints
     if (
             len(set(dynamic_net.ks_list)) == 1
-            and len(set(dynamic_net.expand_ratio_list)) == 1
     ):
         validate_func_dict["depth_list"] = depth_stage_list
     else:
