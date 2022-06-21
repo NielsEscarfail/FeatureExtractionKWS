@@ -463,6 +463,8 @@ class DynamicConvLayer(MyModule):
 
     @property
     def module_str(self):
+        print(type(self.kernel_size))
+        print(self.kernel_size)
         return "DyConv(O%d, K%d%d, S%d)" % (
             self.active_out_channel,
             list(self.kernel_size)[0],
