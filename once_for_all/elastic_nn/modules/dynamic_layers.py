@@ -204,6 +204,7 @@ class DynamicMBConvLayer(MyModule):
                         DynamicConv2d(max_middle_channel, max(self.out_channel_list)),
                     ),
                     ("bn", DynamicBatchNorm2d(max(self.out_channel_list))),
+                    ("act", build_activation(self.act_func)),
                 ]
             )
         )

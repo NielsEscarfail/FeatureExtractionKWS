@@ -50,7 +50,7 @@ class OFAKWSNet(KWSNet):
             DynamicConvLayer(
                 in_channel_list=val2list(1),
                 out_channel_list=input_channel,
-                kernel_size=3,
+                kernel_size=(10, 4),
                 stride=2,
                 use_bn=True,
                 act_func="relu")
@@ -60,7 +60,7 @@ class OFAKWSNet(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)]
+        n_block_list = [1] + [max(self.depth_list)]*2
 
         # blocks
         self.block_group_info = []
