@@ -64,7 +64,7 @@ def validate(
                                 "ks": k,
                                 "w": w,
                             },
-                            "%s%s-D%s-K%s-W%s" % (ft_extr_type, ftp, d, e, k, w),
+                            "%s%s-D%s-K%s-W%s" % (ft_extr_type, ftp, d, k, w),
                         ]
                     )
     if additional_setting is not None:
