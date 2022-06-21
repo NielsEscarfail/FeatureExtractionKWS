@@ -4,7 +4,7 @@ import random
 from once_for_all.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
-from utils import make_divisible
+from utils import make_divisible, MyNetwork
 from utils.layers import (
     ConvLayer,
     IdentityLayer,
