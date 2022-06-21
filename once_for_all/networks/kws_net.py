@@ -13,15 +13,21 @@ class KWSNet(MyNetwork):
 
         self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
-        self.global_avg_pool = nn.AvgPool2d(kernel_size=(25,5), stride=1)  # MyGlobalAvgPool2d(keep_dim=True)
+        self.global_avg_pool = nn.AvgPool2d(kernel_size=(25, 5), stride=1)  # MyGlobalAvgPool2d(keep_dim=True)
         self.classifier = classifier
 
     def forward(self, x):
+        print("0 ", x.shape)
+
         for layer in self.input_stem:
             x = layer(x)
+            print("1 ", x.shape)
         for block in self.blocks:
             x = block(x)
+            print("2 ", x.shape)
+
         x = self.global_avg_pool(x)  # global average pooling
+        print("3 ", x.shape)
         x = x.view(x.size(0), -1)  # torch.flatten(x, 1)
         x = self.classifier(x)
         return x
