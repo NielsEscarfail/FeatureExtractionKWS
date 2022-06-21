@@ -308,7 +308,7 @@ class OFAKWSNet(KWSNet):
             )"""
 
 
-        arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_mult_setting}
+        arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
         print("ARCH CONFIG : ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
