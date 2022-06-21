@@ -133,8 +133,8 @@ class OFAKWSNet(KWSNet):
         for layer in self.input_stem:
             _str += layer.module_str + "\n"
         for stage_id, block_idx in enumerate(self.block_group_info):
-            depth = self.runtime_depth[stage_id]
-            active_idx = block_idx[:depth]
+            depth_param = self.runtime_depth[stage_id]
+            active_idx = block_idx[:len(block_idx) - depth_param]
             for idx in active_idx:
                 _str += self.blocks[idx].module_str + "\n"
 
@@ -202,13 +202,13 @@ class OFAKWSNet(KWSNet):
 
         # set input stem
 
-        print("out list ", self.input_stem[0].out_channel_list)
-        print("in active,", self.input_stem[0].conv.active_out_channel)
-        print("inputstem0 activeoutchannel ", self.input_stem[0].active_out_channel)
-        print("width mul ", width_mult)
-        print("d ", d)
-        print("w ", w)
-        print("ks ", ks)
+        #print("out list ", self.input_stem[0].out_channel_list)
+        #print("in active,", self.input_stem[0].conv.active_out_channel)
+        #print("inputstem0 activeoutchannel ", self.input_stem[0].active_out_channel)
+        #print("width mul ", width_mult)
+        #print("d ", d)
+        #print("w ", w)
+        #print("ks ", ks)
 
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
@@ -230,9 +230,8 @@ class OFAKWSNet(KWSNet):
                     # print("self.blocks[idx].conv.out_channel_list : ", self.blocks[idx].conv.out_channel_list)
                     # print("w : ", w)
 
-                    self.blocks[idx].conv.active_out_channel = int(self.blocks[
-                                                                   idx
-                                                               ].conv.out_channel_list[0] * w)  # TODO check [0]
+                    self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
+                    # TODO check [0]
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
@@ -287,13 +286,13 @@ class OFAKWSNet(KWSNet):
 
         # sample width
         width_setting = []
-        print("width_candidates", width_candidates)
+        # print("width_candidates", width_candidates)
         if not isinstance(width_candidates[0], list):
             width_candidates = [width_candidates for _ in range(len(self.block_group_info))]
         for w_set in width_candidates:
-            print("w_set : ", w_set)
+            # print("w_set : ", w_set)
             w = random.choice(w_set)
-            print("w : ", w)
+            # print("w : ", w)
             width_setting.append(w)
 
         """# sample width_mult
