@@ -213,9 +213,7 @@ class OFAKWSNet(KWSNet):
         print("ks ", ks)
 
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[
-                0
-            ].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[0] * width_mult
 
         # set blocks
         for block, k in zip(self.blocks[1:], ks):
