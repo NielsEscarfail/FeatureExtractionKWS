@@ -147,14 +147,7 @@ class DynamicConv2d(nn.Module):
     def forward(self, x, out_channel=None):
         if out_channel is None:
             out_channel = self.active_out_channel
-
-        print("out_channel : ", out_channel)
-        print(type(out_channel))
         in_channel = x.size(1)
-        print("in_channel : ", in_channel)
-        print(type(in_channel))
-        print("--")
-
         filters = self.get_active_filter(out_channel, in_channel).contiguous()
 
         padding = get_same_padding(self.kernel_size)
