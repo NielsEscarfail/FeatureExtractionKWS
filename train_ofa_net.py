@@ -398,7 +398,15 @@ if __name__ == "__main__":
         raise NotImplementedError
 
     print("Validating all resolutions:")
-    run_manager.validate_all_resolution(is_test=True)
-
+    validate_func_dict = {
+        "ft_extr_type": args.ft_extr_type,
+        "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+        "ks_list": args.ks_list,
+        "expand_ratio_list": args.expand_list,
+        "depth_list": net.depth_list,
+    }
+    print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
+    print("Validation feature extraction parameters search space: ", validate_func_dict['ft_extr_params_list'])
+    validate(run_manager, is_test=True)
     end = time.time()
     print("Total run time: ", end - start)
