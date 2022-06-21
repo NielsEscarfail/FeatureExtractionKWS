@@ -286,21 +286,26 @@ class OFAKWSNet(KWSNet):
 
         # sample width
         width_setting = []
+        print("width_candidates", width_candidates)
         if not isinstance(width_candidates[0], list):
-            width_candidates = [width_candidates for _ in range(len(self.blocks) - 1)]
+            width_candidates = [width_candidates for _ in range(len(self.block_group_info))]
         for w_set in width_candidates:
+            print("w_set : ", w_set)
             w = random.choice(w_set)
+            print("w : ", w)
             width_setting.append(w)
 
-        # sample width_mult
+        """# sample width_mult
         width_mult_setting = [
             random.choice(list(range(len(self.input_stem[0].out_channel_list))))
         ]
+        print()
         for stage_id, block_idx in enumerate(self.grouped_block_index):
             stage_first_block = self.blocks[block_idx[0]]
+            print("stage first block: ", stage_first_block)
             width_mult_setting.append(
                 random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
-            )
+            )"""
 
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_mult_setting}
