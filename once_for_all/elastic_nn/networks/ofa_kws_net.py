@@ -4,6 +4,7 @@ import random
 from once_for_all.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
+from utils import make_divisible
 from utils.layers import (
     ConvLayer,
     IdentityLayer,
@@ -36,17 +37,16 @@ class OFAKWSNet(KWSNet):
         self.depth_list.sort()
         self.width_mult_list.sort()
 
-        # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 2, 2, 2, 1, 2]
-        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
-        se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)] * 5
+        input_channel = [
+            make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE)
+            for width_mult in self.width_mult_list
+        ]
 
         width_list = [64, 64, 64, 64, 64, 64]
         for i, width in enumerate(width_list):
-            width_list[i] = [int(width * width_mult) for width_mult in self.width_mult_list]
+            width_list[i] = [make_divisible(width * width_mult) for width_mult in self.width_mult_list]
 
-        input_channel = [int(width_list[0] * width_mult) for width_mult in self.width_mult_list]
+
         # build input stem
         input_stem = [
             DynamicConvLayer(
@@ -57,6 +57,12 @@ class OFAKWSNet(KWSNet):
                 use_bn=True,
                 act_func="relu")
         ]
+
+        # Set stride, activation function, and SE dim reduction
+        stride_stages = [1, 2, 2, 2, 1, 2]
+        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
+        se_stages = [False, False, False, False, False, False]
+        n_block_list = [1] + [max(self.depth_list)] * 5
 
         # blocks
         self.block_group_info = []

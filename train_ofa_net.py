@@ -92,7 +92,7 @@ elif args.task == "width":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0,.8"
+        args.width_mult_list = "1.0,.75"
         args.depth_list = "2,3,4"
     else:
         args.n_epochs = 60  # 55 # 120
@@ -100,7 +100,7 @@ elif args.task == "width":
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0,.8,.6"
+        args.width_mult_list = "1.0,.75,.5"
         args.depth_list = "2,3,4"
 else:
     raise NotImplementedError
@@ -120,7 +120,7 @@ args.no_decay_keys = "bn#bias"
 args.fp16_allreduce = False
 
 args.model_init = "he_fout"
-args.validation_frequency = 5
+args.validation_frequency = 1
 args.print_frequency = 5
 
 args.n_worker = 8
