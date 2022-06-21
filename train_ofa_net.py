@@ -51,7 +51,7 @@ if args.task == "normal":
     args.base_lr = 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
-    args.ks_list = "7"
+    args.ks_list = "3"  # "7"
     args.width_mult_list = "1.0"
     args.depth_list = "4"
 elif args.task == "kernel":
