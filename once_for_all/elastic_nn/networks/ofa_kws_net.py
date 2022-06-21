@@ -44,7 +44,7 @@ class OFAKWSNet(KWSNet):
 
         width_list = [64, 64, 64, 64, 64, 64]
         for i, width in enumerate(width_list):
-            width_list[i] = [make_divisible(width * width_mult) for width_mult in self.width_mult_list]
+            width_list[i] = [make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE) for width_mult in self.width_mult_list]
 
 
         # build input stem
