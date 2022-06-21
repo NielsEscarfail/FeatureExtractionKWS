@@ -51,12 +51,12 @@ class OFAKWSNet(KWSNet):
         # build input stem
         input_stem = [
             DynamicConvLayer(
-                in_channel_list=["1"],
+                in_channel_list=val2list(1),
                 out_channel_list=input_channel,
                 kernel_size=3,
                 stride=2,
                 use_bn=True,
-                act_func="relu", )
+                act_func="relu")
         ]
 
         # blocks
