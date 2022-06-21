@@ -80,7 +80,7 @@ class OFAKWSNet(KWSNet):
 
             output_channel = width
             for i in range(n_block):
-                stride = 1 # stride = s if i == 0 else 1
+                stride = 1  # stride = s if i == 0 else 1
                 conv = DynamicMBConvLayer(in_channel_list=val2list(feature_dim),
                                           out_channel_list=val2list(output_channel),
                                           kernel_size_list=ks_list,
