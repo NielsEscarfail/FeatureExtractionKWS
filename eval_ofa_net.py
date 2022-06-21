@@ -24,8 +24,6 @@ args.ks_list = "3,5,7"
 args.expand_list = "1,2,4,6"
 args.depth_list = "2,3,4"
 
-
-
 run_config = KWSRunConfig(**args.__dict__, num_replicas=num_gpus)
 ofa_net = OFAKWSNet(
     n_classes=12,
@@ -56,7 +54,7 @@ load_models(
 run_config.data_provider.assign_active_ft_extr_params(args.ft_extr_params)
 run_manager.reset_running_statistics(net=subnet)
 
-print("Test random subnet:")
+print("Test subnet:")
 print(subnet.module_str)
 
 loss, (top1, top5) = run_manager.validate(net=subnet)
