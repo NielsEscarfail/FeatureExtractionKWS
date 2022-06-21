@@ -206,7 +206,7 @@ class OFAKWSNet(KWSNet):
 
         print("out list ", self.input_stem[0].out_channel_list)
         print("in active,", self.input_stem[0].conv.active_out_channel)
-        print("2 ", self.input_stem[0].active_out_channel)
+        print("inputstem0 activeoutchannel ", self.input_stem[0].active_out_channel)
         print("width mul ", width_mult)
         print("d ", d)
         print("w ", w)
@@ -302,7 +302,9 @@ class OFAKWSNet(KWSNet):
                 random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
             )
 
+
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_mult_setting}
+        print("ARCH CONFIG : ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
