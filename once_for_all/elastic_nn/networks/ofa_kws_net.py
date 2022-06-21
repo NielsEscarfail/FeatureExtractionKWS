@@ -229,7 +229,7 @@ class OFAKWSNet(KWSNet):
                 for idx in block_idx:
                     self.blocks[idx].active_out_channel = self.blocks[
                         idx
-                    ].conv.out_channel_list * w
+                    ].conv.out_channel_list[0] * w  # TODO check [0]
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
