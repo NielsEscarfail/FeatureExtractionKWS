@@ -48,7 +48,7 @@ args.path = "exp/" + args.ft_extr_type
 if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 140  # 120  # 180 paper
+    args.n_epochs = 80  # 140  # 120  # 180 paper
     args.base_lr = 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
@@ -58,7 +58,7 @@ if args.task == "normal":
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 120  # 120
+    args.n_epochs = 60  # 120
     args.base_lr = 3e-2
     args.warmup_epochs = 5
     args.warmup_lr = -1
@@ -77,7 +77,7 @@ elif args.task == "depth":
         args.expand_list = "6"
         args.depth_list = "3,4"
     else:
-        args.n_epochs = 120  # 120  # 125 (120 + 5)
+        args.n_epochs = 60  # 120  # 125 (120 + 5)
         args.base_lr = 7.5e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -96,7 +96,7 @@ elif args.task == "expand":
         args.expand_list = "4,6"
         args.depth_list = "2,3,4"
     elif args.phase == 2:
-        args.n_epochs = 60  # 55 # 120
+        args.n_epochs = 35  # 55 # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -104,7 +104,7 @@ elif args.task == "expand":
         args.expand_list = "2,4,6"
         args.depth_list = "2,3,4"
     else:
-        args.n_epochs = 120  # 55 # 120
+        args.n_epochs = 40  # 55 # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -119,7 +119,7 @@ args.manual_seed = 0
 
 args.lr_schedule_type = "cosine"
 
-args.base_batch_size = 256
+args.base_batch_size = 512
 args.valid_size = .1
 
 args.momentum = 0.9
@@ -135,10 +135,10 @@ args.print_frequency = 5
 
 args.n_worker = 8
 args.resize_scale = 0.08
-args.distort_color = "tf"
+# args.distort_color = "tf"
 # args.image_size = "128,160,192,224"
-args.continuous_size = True
-args.not_sync_distributed_image_size = False
+# args.continuous_size = True
+# args.not_sync_distributed_image_size = False
 
 args.bn_momentum = 0.1
 args.bn_eps = 1e-5
@@ -146,11 +146,11 @@ args.dropout = 0.1
 # args.base_stage_width = "proxyless"
 
 args.width_mult_list = "1.0"
-args.dy_conv_scaling_mode = 1
-args.independent_distributed_sampling = False
+# args.dy_conv_scaling_mode = 1
+# args.independent_distributed_sampling = False
 
-# args.kd_ratio = 1.0
-args.kd_ratio = 0
+args.kd_ratio = 1.0
+# args.kd_ratio = 0
 args.kd_type = "ce"
 
 # Set ft_extr_params_list depending on the ft_extr_type
