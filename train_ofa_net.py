@@ -229,7 +229,6 @@ if __name__ == "__main__":
         float(width_mult) for width_mult in args.width_mult_list.split(",")
     ]
     args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
-    args.expand_list = [int(e) for e in args.expand_list.split(",")]
     args.depth_list = [int(d) for d in args.depth_list.split(",")]
 
     args.width_mult_list = (
@@ -247,7 +246,7 @@ if __name__ == "__main__":
         depth_list=args.depth_list,
     )
 
-    # Instantiate largest KWS model possible
+    """# Instantiate largest KWS model possible
     if args.kd_ratio > 0:
         args.teacher_model = KWSNetLarge(
             n_classes=12,
@@ -259,7 +258,7 @@ if __name__ == "__main__":
             depth_param=4,
         )
         if torch.cuda.is_available():
-            args.teacher_model.cuda()
+            args.teacher_model.cuda()"""
 
     """ RunManager """
     run_manager = RunManager(
@@ -269,11 +268,11 @@ if __name__ == "__main__":
     )
     run_manager.save_config()
 
-    # load teacher net weights
+    """# load teacher net weights
     if args.kd_ratio > 0:
         load_models(
             run_manager, args.teacher_model, model_path=args.teacher_path
-        )
+        )"""
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (
@@ -285,8 +284,8 @@ if __name__ == "__main__":
         "ft_extr_type": args.ft_extr_type,
         "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
-        "expand_ratio_list": sorted({min(args.expand_list), max(args.expand_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
+        "width_mult_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
     }
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
@@ -381,8 +380,8 @@ if __name__ == "__main__":
         "ft_extr_type": args.ft_extr_type,
         "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
         "ks_list": args.ks_list,
-        "expand_ratio_list": args.expand_list,
         "depth_list": net.depth_list,
+        "width_mult_list": args.width_mult_list,
     }
     print("Validation dict: ", validate_func_dict)
     validate(run_manager, is_test=True)
