@@ -236,9 +236,7 @@ if __name__ == "__main__":
     args.train_batch_size = args.base_batch_size
     args.test_batch_size = args.base_batch_size * 4
 
-    run_config = KWSRunConfig(
-        **args.__dict__, num_replicas=num_gpus
-    )
+    run_config = KWSRunConfig(**args.__dict__, num_replicas=num_gpus)
 
     # Print run config information
     print("Run config:")
@@ -371,9 +369,24 @@ if __name__ == "__main__":
         if args.phase == 1:
             args.ofa_checkpoint_path += "/normal2kernel/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
+
         else:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
+
+        if run_manager.start_epoch == 0:
+            load_models(
+                run_manager,
+                run_manager.net,
+                args.ofa_checkpoint_path,
+            )
+            run_manager.write_log(
+                "%.3f\t%.3f\t%.3f\t%s"
+                % validate(run_manager, is_test=True, **validate_func_dict),
+                "valid",
+            )
+        else:
+            assert args.resume
 
         print("Start elastic depth training")
 
@@ -393,6 +406,19 @@ if __name__ == "__main__":
         else:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase2/checkpoint/model_best.pth.tar"
 
+        if run_manager.start_epoch == 0:
+            load_models(
+                run_manager,
+                run_manager.net,
+                args.ofa_checkpoint_path,
+            )
+            run_manager.write_log(
+                "%.3f\t%.3f\t%.3f\t%s"
+                % validate(run_manager, is_test=True, **validate_func_dict),
+                "valid",
+            )
+        else:
+            assert args.resume
         print("Start elastic expand training")
 
         train_elastic_expand(train, run_manager, args, validate_func_dict)
