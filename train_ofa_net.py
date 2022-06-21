@@ -53,7 +53,7 @@ if args.task == "normal":
     args.warmup_lr = -1
     args.ks_list = "7"
     args.width_mult_list = "1.0"
-    args.depth_list = "4"
+    args.depth_list = 4 # "4"
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
