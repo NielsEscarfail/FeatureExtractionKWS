@@ -2,7 +2,7 @@ import copy
 import random
 
 from once_for_all.elastic_nn.modules.dynamic_layers import (
-    DynamicMBConvLayer, DynamicConvLayer
+    DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
 from utils.layers import (
     ConvLayer,
@@ -39,15 +39,14 @@ class OFAKWSNet(KWSNet):
         # Set stride, activation function, and SE dim reduction
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
-        bn_stages = [True, True, True, True, True, True]
+        se_stages = [False, False, False, False, False, False]
         n_block_list = [1] + [max(self.depth_list)] * 5
 
         width_list = [64, 64, 64, 64, 64, 64]
         for i, width in enumerate(width_list):
-            width_list[i] = [width * width_mult for width_mult in self.width_mult_list]
+            width_list[i] = [int(width * width_mult) for width_mult in self.width_mult_list]
 
         input_channel = width_list[0]
-
         # build input stem
         input_stem = [
             DynamicConvLayer(
@@ -65,12 +64,12 @@ class OFAKWSNet(KWSNet):
         _block_index = 1
         feature_dim = input_channel
 
-        for n_block, width, s, act_func, use_bn in zip(
+        for n_block, width, s, act_func, use_se in zip(
                 n_block_list,
                 width_list,
                 stride_stages,
                 act_stages,
-                bn_stages,
+                se_stages,
         ):
             self.block_group_info.append([_block_index + i for i in range(n_block)])
             _block_index += n_block
@@ -78,22 +77,23 @@ class OFAKWSNet(KWSNet):
             output_channel = width
             for i in range(n_block):
                 stride = s if i == 0 else 1
-                mobile_inverted_conv = DynamicConvLayer(
-                    in_channel_list=val2list(feature_dim),
-                    out_channel_list=val2list(output_channel),
-                    kernel_size_list=ks_list,
-                    expand_ratio_list=expand_ratio_list,
-                    stride=stride,
-                    act_func=act_func,
-                    use_bn=use_bn,
-                )
+                conv = DynamicMBConvLayer(in_channel_list=val2list(feature_dim),
+                                          out_channel_list=val2list(output_channel),
+                                          kernel_size_list=ks_list,
+                                          expand_ratio_list=val2list(1),
+                                          stride=stride,
+                                          act_func=act_func,
+                                          use_se=use_se)
+
                 shortcut = IdentityLayer(feature_dim,
                                          feature_dim) if stride == 1 and feature_dim == output_channel else None
 
-                blocks.append(ResidualBlock(mobile_inverted_conv, shortcut))
+                blocks.append(ResidualBlock(conv, shortcut))
                 feature_dim = output_channel
 
-        classifier = LinearLayer(feature_dim, n_classes, dropout_rate=dropout_rate)
+        classifier = DynamicLinearLayer(
+            feature_dim, n_classes, dropout_rate=dropout_rate
+        )
 
         super(OFAKWSNet, self).__init__(
             input_stem, blocks, classifier
@@ -119,6 +119,7 @@ class OFAKWSNet(KWSNet):
                 x = self.blocks[idx](x)
 
         x = self.global_avg_pool(x)
+        x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
 
@@ -205,7 +206,7 @@ class OFAKWSNet(KWSNet):
             ]
 
         for stage_id, (block_idx, d, w) in enumerate(
-            zip(self.grouped_block_index, depth[1:], width_mult[2:])
+                zip(self.grouped_block_index, depth[1:], width_mult[2:])
         ):
             if d is not None:
                 self.runtime_depth[stage_id] = max(self.depth_list) - d

@@ -225,17 +225,15 @@ if __name__ == "__main__":
         print("\t%s: %s" % (k, v))
 
     # Build net from args
-    args.width_mult_list = [
-        float(width_mult) for width_mult in args.width_mult_list.split(",")
-    ]
+
     args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
     args.depth_list = [int(d) for d in args.depth_list.split(",")]
-
-    args.width_mult_list = (
+    args.width_mult_list = [float(w) for w in args.width_mult_list.split(",")]
+    """args.width_mult_list = (
         args.width_mult_list[0]
         if len(args.width_mult_list) == 1
         else args.width_mult_list
-    )
+    )"""
     # Instantiate OFA KWS model
     net = OFAKWSNet(
         n_classes=12,
