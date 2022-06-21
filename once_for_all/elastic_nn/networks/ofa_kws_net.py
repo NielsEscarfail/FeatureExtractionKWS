@@ -212,7 +212,7 @@ class OFAKWSNet(KWSNet):
 
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
-            self.input_stem[0].out_channel_list[0] * width_mult[0]
+                int(self.input_stem[0].out_channel_list[0] * width_mult[0])
 
         # set blocks
         for block, k in zip(self.blocks[1:], ks):
@@ -230,9 +230,9 @@ class OFAKWSNet(KWSNet):
                     # print("self.blocks[idx].conv.out_channel_list : ", self.blocks[idx].conv.out_channel_list)
                     # print("w : ", w)
 
-                    self.blocks[idx].conv.active_out_channel = self.blocks[
+                    self.blocks[idx].conv.active_out_channel = int(self.blocks[
                                                                    idx
-                                                               ].conv.out_channel_list[0] * w  # TODO check [0]
+                                                               ].conv.out_channel_list[0] * w)  # TODO check [0]
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
