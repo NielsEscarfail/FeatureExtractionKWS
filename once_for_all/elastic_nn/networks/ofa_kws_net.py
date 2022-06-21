@@ -37,14 +37,13 @@ class OFAKWSNet(KWSNet):
         self.depth_list.sort()
         self.width_mult_list.sort()
 
-        input_channel = [
-            make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE)
-            for width_mult in self.width_mult_list
-        ]
+        input_channel = [int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                         for width_mult in self.width_mult_list]
 
         width_list = [64, 64, 64, 64, 64, 64]
         for i, width in enumerate(width_list):
-            width_list[i] = [make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE) for width_mult in self.width_mult_list]
+            width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                             for width_mult in self.width_mult_list]
 
         # build input stem
         input_stem = [
@@ -212,7 +211,8 @@ class OFAKWSNet(KWSNet):
         print("ks ", ks)
 
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[0] * width_mult[0]
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
+            self.input_stem[0].out_channel_list[0] * width_mult[0]
 
         # set blocks
         for block, k in zip(self.blocks[1:], ks):
@@ -231,8 +231,8 @@ class OFAKWSNet(KWSNet):
                     # print("w : ", w)
 
                     self.blocks[idx].conv.active_out_channel = self.blocks[
-                        idx
-                    ].conv.out_channel_list[0] * w  # TODO check [0]
+                                                                   idx
+                                                               ].conv.out_channel_list[0] * w  # TODO check [0]
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
@@ -307,7 +307,6 @@ class OFAKWSNet(KWSNet):
             width_mult_setting.append(
                 random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
             )"""
-
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
         print("ARCH CONFIG : ", arch_config)
