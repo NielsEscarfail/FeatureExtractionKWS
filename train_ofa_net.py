@@ -149,8 +149,8 @@ args.width_mult_list = "1.0"
 # args.dy_conv_scaling_mode = 1
 # args.independent_distributed_sampling = False
 
-args.kd_ratio = 1.0
-# args.kd_ratio = 0
+# args.kd_ratio = 1.0
+args.kd_ratio = 0
 args.kd_type = "ce"
 
 # Set ft_extr_params_list depending on the ft_extr_type
