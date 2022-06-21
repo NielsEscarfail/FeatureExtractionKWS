@@ -46,7 +46,6 @@ class OFAKWSNet(KWSNet):
         for i, width in enumerate(width_list):
             width_list[i] = [make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE) for width_mult in self.width_mult_list]
 
-
         # build input stem
         input_stem = [
             DynamicConvLayer(
