@@ -13,7 +13,7 @@ class KWSNet(MyNetwork):
 
         self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
-        self.global_avg_pool = nn.AvgPool2d(kernel_size=(9, 5), stride=1)  # MyGlobalAvgPool2d(keep_dim=True)
+        self.global_avg_pool = nn.AvgPool2d(kernel_size=(20, 20), stride=1)  # MyGlobalAvgPool2d(keep_dim=True)
         self.classifier = classifier
 
     def forward(self, x):
