@@ -22,8 +22,7 @@ parser.add_argument(
         "normal",
         "kernel",
         "depth",
-        "expand",
-        "classifier_dim",
+        "width",
     ],
 )
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2, 3])
@@ -53,7 +52,7 @@ if args.task == "normal":
     args.warmup_epochs = 0  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
-    args.expand_list = "6"
+    args.width_mult_list = "1.0"
     args.depth_list = "4"
 elif args.task == "kernel":
     args.path += "/normal2kernel"
@@ -63,7 +62,7 @@ elif args.task == "kernel":
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
-    args.expand_list = "6"
+    args.width_mult_list = "1.0"
     args.depth_list = "4"
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
@@ -74,7 +73,7 @@ elif args.task == "depth":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.expand_list = "6"
+        args.width_mult_list = "1.0"
         args.depth_list = "3,4"
     else:
         args.n_epochs = 60  # 120  # 125 (120 + 5)
@@ -82,9 +81,9 @@ elif args.task == "depth":
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.expand_list = "6"
+        args.width_mult_list = "1.0"
         args.depth_list = "2,3,4"
-elif args.task == "expand":
+elif args.task == "width":
     args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
@@ -93,25 +92,16 @@ elif args.task == "expand":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.expand_list = "4,6"
-        args.depth_list = "2,3,4"
-    elif args.phase == 2:
-        args.n_epochs = 35  # 55 # 120
-        args.base_lr = 7.5e-3
-        args.warmup_epochs = 5
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.expand_list = "2,4,6"
+        args.width_mult_list = "1.0,.8"
         args.depth_list = "2,3,4"
     else:
-        args.n_epochs = 40  # 55 # 120
+        args.n_epochs = 60  # 55 # 120
         args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.expand_list = "1,2,4,6"
+        args.width_mult_list = "1.0,.8,.6"
         args.depth_list = "2,3,4"
-
 else:
     raise NotImplementedError
 
@@ -134,20 +124,11 @@ args.validation_frequency = 5
 args.print_frequency = 5
 
 args.n_worker = 8
-args.resize_scale = 0.08
-# args.distort_color = "tf"
-# args.image_size = "128,160,192,224"
-# args.continuous_size = True
-# args.not_sync_distributed_image_size = False
 
 args.bn_momentum = 0.1
 args.bn_eps = 1e-5
 args.dropout = 0.1
-# args.base_stage_width = "proxyless"
 
-args.width_mult_list = "1.0"
-# args.dy_conv_scaling_mode = 1
-# args.independent_distributed_sampling = False
 
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
@@ -261,10 +242,8 @@ if __name__ == "__main__":
         n_classes=12,
         bn_param=(args.bn_momentum, args.bn_eps),
         dropout_rate=args.dropout,
-        # base_stage_width=args.base_stage_width,
         width_mult=args.width_mult_list,
         ks_list=args.ks_list,
-        expand_ratio_list=args.expand_list,
         depth_list=args.depth_list,
     )
 
@@ -377,9 +356,9 @@ if __name__ == "__main__":
 
         train_elastic_depth(train, run_manager, args, validate_func_dict)
 
-    elif args.task == "expand":
+    elif args.task == "width":
         from once_for_all.elastic_nn.training.progressive_shrinking import (
-            train_elastic_expand,
+            train_elastic_width_mult,
         )
 
         if args.phase == 1:
@@ -393,7 +372,7 @@ if __name__ == "__main__":
 
         print("Start elastic expand training")
 
-        train_elastic_expand(train, run_manager, args, validate_func_dict)
+        train_elastic_width_mult(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
 

@@ -8,35 +8,32 @@ from utils.pytorch_modules import MyGlobalAvgPool2d
 
 class KWSNet(MyNetwork):
 
-    def __init__(self, first_conv, blocks, final_expand_layer, feature_mix_layer, classifier):
+    def __init__(self, input_stem, blocks, classifier):
         super(KWSNet, self).__init__()
 
-        self.first_conv = first_conv
+        self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
-        self.final_expand_layer = final_expand_layer
         self.global_avg_pool = MyGlobalAvgPool2d(keep_dim=True)
-        self.feature_mix_layer = feature_mix_layer
         self.classifier = classifier
 
     def forward(self, x):
-        x = self.first_conv(x)
+        for layer in self.input_stem:
+            x = layer(x)
         for block in self.blocks:
             x = block(x)
-        x = self.final_expand_layer(x)
         x = self.global_avg_pool(x)  # global average pooling
-        x = self.feature_mix_layer(x)
         x = x.view(x.size(0), -1)  # torch.flatten(x, 1)
         x = self.classifier(x)
         return x
 
     @property
     def module_str(self):
-        _str = self.first_conv.module_str + "\n"
+        _str = ""
+        for layer in self.input_stem:
+            _str += layer.module_str + "\n"
         for block in self.blocks:
             _str += block.module_str + "\n"
-        _str += self.final_expand_layer.module_str + "\n"
         _str += self.global_avg_pool.__repr__() + "\n"
-        _str += self.feature_mix_layer.module_str + "\n"
         _str += self.classifier.module_str
         return _str
 
@@ -45,26 +42,24 @@ class KWSNet(MyNetwork):
         return {
             "name": KWSNet.__name__,
             "bn": self.get_bn_param(),
-            "first_conv": self.first_conv.config,
+            "input_stem": [layer.config for layer in self.input_stem],
             "blocks": [block.config for block in self.blocks],
-            "final_expand_layer": self.final_expand_layer.config,
-            "feature_mix_layer": self.feature_mix_layer.config,
             "classifier": self.classifier.config,
         }
 
     @staticmethod
     def build_from_config(config):
-        first_conv = set_layer_from_config(config["first_conv"])
+        input_stem = []
+        for layer_config in config["input_stem"]:
+            input_stem.append(set_layer_from_config(layer_config))
 
         blocks = []
         for block_config in config["blocks"]:
             blocks.append(ResidualBlock.build_from_config(block_config))
 
-        final_expand_layer = set_layer_from_config(config["final_expand_layer"])
-        feature_mix_layer = set_layer_from_config(config["feature_mix_layer"])
         classifier = set_layer_from_config(config["classifier"])
 
-        net = KWSNet(first_conv, blocks, final_expand_layer, feature_mix_layer, classifier)
+        net = KWSNet(input_stem, blocks, classifier)
 
         if "bn" in config:
             net.set_bn_param(**config["bn"])
@@ -93,8 +88,10 @@ class KWSNet(MyNetwork):
             info_list.append(block_index_list)
         return info_list
 
+    # NOT UPDATED YET
     @staticmethod
     def build_net_via_cfg(blocks_cfg, input_channel, last_channel, n_classes, dropout_rate):
+        print("UNUSED / FALSE ARCH")
         # first conv layer
         first_conv = ConvLayer(
             3,
