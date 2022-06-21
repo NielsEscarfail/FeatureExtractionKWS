@@ -227,9 +227,9 @@ class OFAKWSNet(KWSNet):
                 self.runtime_depth[stage_id] = max(self.depth_list) - d
             if w is not None:
                 for idx in block_idx:
-                    print("self.blocks[idx].active_out_channel : ", self.blocks[idx].conv.active_out_channel)
-                    print("self.blocks[idx].conv.out_channel_list : ", self.blocks[idx].conv.out_channel_list)
-                    print("w : ", w)
+                    # print("self.blocks[idx].active_out_channel : ", self.blocks[idx].conv.active_out_channel)
+                    # print("self.blocks[idx].conv.out_channel_list : ", self.blocks[idx].conv.out_channel_list)
+                    # print("w : ", w)
 
                     self.blocks[idx].conv.active_out_channel = self.blocks[
                         idx
