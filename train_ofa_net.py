@@ -55,7 +55,7 @@ if args.task == "normal":
     args.warmup_lr = -1
     args.ks_list = "7"  # "7"
     args.width_mult_list = "2.0"
-    args.depth_list = "8"
+    args.depth_list = "4"
     args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
@@ -66,7 +66,7 @@ elif args.task == "kernel":
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
     args.width_mult_list = "2.0"
-    args.depth_list = "8"  # "4"
+    args.depth_list = "4"  # "4" 3 2 1
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2

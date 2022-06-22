@@ -62,7 +62,7 @@ class OFAKWSNet(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)]
+        n_block_list = [1] + [max(self.depth_list)]*4
 
         # blocks
         self.block_group_info = []
