@@ -156,8 +156,7 @@ class KWSNetLarge(KWSNet):
         stage_width_list = [64, 64, 64, 64]
 
         for i, width in enumerate(stage_width_list):
-            stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
-                                   for width_mult in self.width_mult_list]
+            stage_width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
         # blocks
         blocks = []
