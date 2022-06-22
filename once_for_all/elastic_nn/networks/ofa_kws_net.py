@@ -209,7 +209,7 @@ class OFAKWSNet(KWSNet):
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
-        for i, w in enumerate(width_mult):
+        for i, w in enumerate(width_mult[1:]):
             if w is not None:
                 self.blocks[i].active_out_channel = int(self.blocks[i].conv.out_channel_list[0] * w)
 
