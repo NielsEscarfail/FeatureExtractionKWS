@@ -45,10 +45,11 @@ def validate(
     if depth_list is None:
         depth_list = dynamic_net.depth_list
     if width_mult_list is None:
-        if "width_mult_list" in dynamic_net.__dict__:
+        width_mult_list = dynamic_net.width_mult_list
+        """if "width_mult_list" in dynamic_net.__dict__:
             width_mult_list = list(range(len(dynamic_net.width_mult_list)))
         else:
-            width_mult_list = [0]
+            width_mult_list = [0]"""
 
     subnet_settings = []
     for d in depth_list:
