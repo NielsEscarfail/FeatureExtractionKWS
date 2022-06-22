@@ -197,15 +197,19 @@ class OFAKWSNet(KWSNet):
 
         # print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
 
+        print("self.blocks: ", self.blocks)
+        print("ks : ", ks)
         for block, k in zip(self.blocks, ks):
             if k is not None:
-                block.conv.active_kernel_size = k
+                print("block.conv.active_kernel_size : ", block.conv.active_kernel_size)
+                block.conv.active_kernel_size = k  # why doesn't this work
+                print("block.conv.active_kernel_size : aft ", block.conv.active_kernel_size)
 
         # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult)
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = int(self.input_stem[0].out_channel_list[0] * width_mult[0])
 
-        for i, d in enumerate(depth):
+        for i, d in enumerate(depth):  # that's ok
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
