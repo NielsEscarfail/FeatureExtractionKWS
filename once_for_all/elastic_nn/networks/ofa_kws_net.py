@@ -204,7 +204,7 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
-        print("in set active subnet: ks:%s, d:%s, w:%s" % (ks, d, w))
+        # print("in set active subnet: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         # set input stem
         if width_mult[0] is not None:
