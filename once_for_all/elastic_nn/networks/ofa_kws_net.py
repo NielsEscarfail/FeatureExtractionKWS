@@ -190,11 +190,12 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
-        # print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.block_group_info))  # val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.blocks) + 1)
+
+        print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
 
         for block, k in zip(self.blocks, ks):
             if k is not None:
@@ -224,9 +225,6 @@ class OFAKWSNet(KWSNet):
         for i, d in enumerate(depth):
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)"""
-
-        # TODO width mul
-
         """# set input stem
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].out_channel_list[0] * width_mult[0]
@@ -239,7 +237,6 @@ class OFAKWSNet(KWSNet):
 
             if w is not None:
                 block.conv.active_out_channel = int(w * block.conv.out_channel_list[0])"""
-
         """for stage_id, (block_idx, d, w) in enumerate(
                 zip(self.grouped_block_index, depth, width_mult[1:])
         ):
@@ -249,21 +246,6 @@ class OFAKWSNet(KWSNet):
             if w is not None:
                 for idx in block_idx:
                     self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)"""
-
-    def set_constraint(self, include_list, constraint_type="depth"):
-        if constraint_type == "depth":
-            self.__dict__["_depth_include_list"] = include_list.copy()
-        elif constraint_type == "width_mult":
-            self.__dict__["_width_include_list"] = include_list.copy()
-        elif constraint_type == "kernel_size":
-            self.__dict__["_ks_include_list"] = include_list.copy()
-        else:
-            raise NotImplementedError
-
-    def clear_constraint(self):
-        self.__dict__["_depth_include_list"] = None
-        self.__dict__["_ks_include_list"] = None
-        self.__dict__["_width_include_list"] = None
 
     def sample_active_subnet(self):
 
@@ -312,6 +294,21 @@ class OFAKWSNet(KWSNet):
         print("arch config ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
+
+    def set_constraint(self, include_list, constraint_type="depth"):
+        if constraint_type == "depth":
+            self.__dict__["_depth_include_list"] = include_list.copy()
+        elif constraint_type == "width_mult":
+            self.__dict__["_width_include_list"] = include_list.copy()
+        elif constraint_type == "kernel_size":
+            self.__dict__["_ks_include_list"] = include_list.copy()
+        else:
+            raise NotImplementedError
+
+    def clear_constraint(self):
+        self.__dict__["_depth_include_list"] = None
+        self.__dict__["_ks_include_list"] = None
+        self.__dict__["_width_include_list"] = None
 
     def get_active_subnet(self, preserve_weight=True):
         input_stem = [copy.deepcopy(self.input_stem[0])]
