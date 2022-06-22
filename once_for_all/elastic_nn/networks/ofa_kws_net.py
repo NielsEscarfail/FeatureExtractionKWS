@@ -207,6 +207,8 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
+        print("in set_active_subnet")
+        print("ks: %s, d:%s , w:%s " % (ks, d, w))
         ks = val2list(ks, len(self.blocks) + 1)
         depth = val2list(d, len(self.block_group_info))
         width_mult = val2list(w, len(self.width_mult_list) + 1)

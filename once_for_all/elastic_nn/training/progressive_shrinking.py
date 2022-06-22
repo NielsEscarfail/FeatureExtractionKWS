@@ -70,6 +70,8 @@ def validate(
     if additional_setting is not None:
         subnet_settings += additional_setting
 
+    print("SUBNET SETTING : ", subnet_settings)
+
     losses_of_subnets, top1_of_subnets, top5_of_subnets = [], [], []
 
     valid_log = ""
