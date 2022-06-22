@@ -79,7 +79,7 @@ class KWSNet(MyNetwork):
     def grouped_block_index(self):
         info_list = []
         block_index_list = []
-        for i, block in enumerate(self.blocks[1:], 1):
+        for i, block in enumerate(self.blocks):
             if block.shortcut is None and len(block_index_list) > 0:
                 info_list.append(block_index_list)
                 block_index_list = []

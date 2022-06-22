@@ -204,7 +204,7 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
-        # print("in set active subnet: ks:%s, d:%s, w:%s" % (ks, d, w))
+        print("in set active subnet: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         # set input stem
         if width_mult[0] is not None:
@@ -212,7 +212,7 @@ class OFAKWSNet(KWSNet):
                 int(self.input_stem[0].out_channel_list[0] * width_mult[0])
 
         # set blocks
-        for block, k in zip(self.blocks[1:], ks):
+        for block, k in zip(self.blocks, ks):
             if k is not None:
                 block.conv.active_kernel_size = k
 
@@ -220,7 +220,8 @@ class OFAKWSNet(KWSNet):
                 zip(self.grouped_block_index, depth, width_mult[1:])
         ):
             if d is not None:
-                self.runtime_depth[stage_id] = max(self.depth_list) - d
+                # self.runtime_depth[stage_id] = max(self.depth_list) - d
+                self.runtime_depth[stage_id] = min(len(self.block_group_info[stage_id]), d)
             if w is not None:
                 for idx in block_idx:
                     self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
@@ -297,13 +298,22 @@ class OFAKWSNet(KWSNet):
         # blocks
         blocks = []
         for stage_id, block_idx in enumerate(self.grouped_block_index):
-            depth_param = self.runtime_depth[stage_id]
-            active_idx = block_idx[: len(block_idx) - depth_param]
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            stage_blocks = []
+            # depth_param = self.runtime_depth[stage_id]
+            # active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
-                blocks.append(
-                    self.blocks[idx].get_active_subnet(input_channel, preserve_weight)
+                stage_blocks.append(
+                    ResidualBlock(
+                        self.blocks[idx].conv.get_active_subnet(
+                            input_channel, preserve_weight
+                        ),
+                        copy.deepcopy(self.blocks[idx].shortcut),
+                    )
                 )
-                input_channel = self.blocks[idx].active_out_channel
+                input_channel = stage_blocks[-1].conv.out_channels
+            blocks += stage_blocks
 
         classifier = self.classifier.get_active_subnet(input_channel, preserve_weight)
         _subnet = KWSNet(input_stem, blocks, classifier)
@@ -311,24 +321,35 @@ class OFAKWSNet(KWSNet):
         return _subnet
 
     def get_active_net_config(self):
-        input_stem_config = [self.input_stem[0].get_active_subnet_config(3)]
-        input_channel = self.input_stem[2].active_out_channel
+        input_stem_config = [self.input_stem[0].get_active_subnet_config(1)]
+        input_channel = self.input_stem_config["conv"]["out_channels"]
 
-        blocks_config = []
-        for stage_id, block_idx in enumerate(self.grouped_block_index):
-            depth_param = self.runtime_depth[stage_id]
-            active_idx = block_idx[: len(block_idx) - depth_param]
+        block_config_list = []
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            depth = self.runtime_depth[stage_id]
+            active_idx = block_idx[:depth]
+            stage_blocks = []
             for idx in active_idx:
-                blocks_config.append(
-                    self.blocks[idx].get_active_subnet_config(input_channel)
+                stage_blocks.append(
+                    {
+                        "name": ResidualBlock.__name__,
+                        "conv": self.blocks[idx].conv.get_active_subnet_config(
+                            input_channel
+                        ),
+                        "shortcut": self.blocks[idx].shortcut.config
+                        if self.blocks[idx].shortcut is not None
+                        else None,
+                    }
                 )
-                input_channel = self.blocks[idx].active_out_channel
+                input_channel = self.blocks[idx].conv.active_out_channel
+            block_config_list += stage_blocks
+
         classifier_config = self.classifier.get_active_subnet_config(input_channel)
         return {
             "name": KWSNet.__name__,
             "bn": self.get_bn_param(),
             "input_stem": input_stem_config,
-            "blocks": blocks_config,
+            "blocks": block_config_list,
             "classifier": classifier_config,
         }
 
