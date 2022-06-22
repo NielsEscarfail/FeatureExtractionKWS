@@ -165,7 +165,8 @@ class OFAKWSNet(KWSNet):
 
     def load_state_dict(self, state_dict, **kwargs):
         model_dict = self.state_dict()
-        print("state dict in ofakwsnet")
+        super(OFAKWSNet, self).load_state_dict(state_dict)
+        """print("state dict in ofakwsnet")
         print(state_dict.keys())
         for key in state_dict:
             new_key = key
@@ -186,7 +187,7 @@ class OFAKWSNet(KWSNet):
             model_dict[new_key] = state_dict[key]
         print("model dict in ofakwsnet")
         print(model_dict.keys())
-        super(OFAKWSNet, self).load_state_dict(model_dict)
+        super(OFAKWSNet, self).load_state_dict(model_dict)"""
         """if ".mobile_inverted_conv." in key:
             new_key = key.replace(".mobile_inverted_conv.", ".conv.")
         else:
