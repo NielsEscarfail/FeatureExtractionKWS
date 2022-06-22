@@ -136,7 +136,7 @@ class KWSNetLarge(KWSNet):
 
         input_channel = int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
-        width_list = [64, 64, 64, 64, 64, 64, 64, 64]
+        width_list = [64] * 16
 
         for i, width in enumerate(width_list):
             width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
