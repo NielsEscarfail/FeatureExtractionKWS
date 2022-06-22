@@ -177,6 +177,8 @@ class KWSNet(MyNetwork):
         return cfg
 
     def load_state_dict(self, state_dict, **kwargs):
+        print("state dict in kwsnet")
+        print(state_dict)
         super(KWSNet, self).load_state_dict(state_dict)
         """ current_state_dict = self.state_dict()
         for key in state_dict:
