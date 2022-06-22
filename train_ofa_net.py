@@ -55,7 +55,7 @@ if args.task == "normal":
     args.warmup_lr = -1
     args.ks_list = "7"  # 7
     args.width_mult_list = "2.0"
-    args.depth_list = "6"
+    args.depth_list = "4"
     args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
@@ -66,7 +66,7 @@ elif args.task == "kernel":
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
     args.width_mult_list = "2.0"
-    args.depth_list = "6"  # "4" 3 2 1
+    args.depth_list = "4"  # "4" 3 2 1
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
@@ -77,7 +77,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0"
-        args.depth_list = "4,6"  # "3,4"
+        args.depth_list = "3,4"  # "3,4"
     elif args.phase == 2:
         args.n_epochs = 25  # 120  # 125 (120 + 5)
         args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
@@ -85,7 +85,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0"
-        args.depth_list = "2,4,6"  # "2,3,4"
+        args.depth_list = "2,3,4"  # "2,3,4"
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
         args.base_lr = 1e-3 # 1e-3  # 7.5e-3 - 0.24 paper
@@ -93,7 +93,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0"
-        args.depth_list = "1,2,4,6"
+        args.depth_list = "1,2,3,4"
 
 elif args.task == "width":
     args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
@@ -113,7 +113,7 @@ elif args.task == "width":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0,1.0,.75"
-        args.depth_list = "1,2,4,6"
+        args.depth_list = "1,2,3,4"
     else:
         args.n_epochs = 80  # 55 # 120
         args.base_lr = 1e-3
@@ -121,7 +121,7 @@ elif args.task == "width":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0,1.0,.75,.5"
-        args.depth_list = "1,2,4,6"
+        args.depth_list = "1,2,3,4"
 
 else:
     raise NotImplementedError
