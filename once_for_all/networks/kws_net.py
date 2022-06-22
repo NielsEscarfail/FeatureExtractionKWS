@@ -178,13 +178,7 @@ class KWSNetLarge(KWSNet):
             feature_dim, n_classes, dropout_rate=dropout_rate
         )
 
-        print("input stem, : ", input_stem)
-        print("blocks , : ", blocks)
-        print("classifier , : ", classifier)
-
-        super(KWSNet, self).__init__(
-            input_stem=input_stem, blocks=blocks, classifier=classifier
-        )
+        super(KWSNetLarge, self).__init__(input_stem, blocks, classifier)
 
         # set bn param
         self.set_bn_param(*bn_param)
