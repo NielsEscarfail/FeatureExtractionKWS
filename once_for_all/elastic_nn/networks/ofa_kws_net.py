@@ -165,53 +165,36 @@ class OFAKWSNet(KWSNet):
 
     def load_state_dict(self, state_dict, **kwargs):
         model_dict = self.state_dict()
-        super(OFAKWSNet, self).load_state_dict(state_dict)
-        """print("state dict in ofakwsnet")
+        print("state dict in ofakwsnet")
         print(state_dict.keys())
         for key in state_dict:
-            new_key = key
+            if ".mobile_inverted_conv." in key:
+                new_key = key.replace(".mobile_inverted_conv.", ".conv.")
+            else:
+                new_key = key
             if new_key in model_dict:
                 pass
+            elif ".bn.bn." in new_key:
+                new_key = new_key.replace(".bn.bn.", ".bn.")
+            elif ".conv.conv.weight" in new_key:
+                new_key = new_key.replace(".conv.conv.weight", ".conv.weight")
+            elif ".linear.linear." in new_key:
+                new_key = new_key.replace(".linear.linear.", ".linear.")
+            ##############################################################################
             elif ".linear." in new_key:
                 new_key = new_key.replace(".linear.", ".linear.linear.")
             elif "bn." in new_key:
                 new_key = new_key.replace("bn.", "bn.bn.")
             elif "conv.weight" in new_key:
                 new_key = new_key.replace("conv.weight", "conv.conv.weight")
-            elif ".mobile_inverted_conv." in key:
-                new_key = key.replace(".mobile_inverted_conv.", ".conv.")
-
             else:
                 raise ValueError(new_key)
             assert new_key in model_dict, "%s" % new_key
             model_dict[new_key] = state_dict[key]
         print("model dict in ofakwsnet")
         print(model_dict.keys())
-        super(OFAKWSNet, self).load_state_dict(model_dict)"""
-        """if ".mobile_inverted_conv." in key:
-            new_key = key.replace(".mobile_inverted_conv.", ".conv.")
-        else:
-            new_key = key
-        if new_key in model_dict:
-            pass
-        elif ".bn.bn." in new_key:
-            new_key = new_key.replace(".bn.bn.", ".bn.")
-        elif ".conv.conv.weight" in new_key:
-            new_key = new_key.replace(".conv.conv.weight", ".conv.weight")
-        elif ".linear.linear." in new_key:
-            new_key = new_key.replace(".linear.linear.", ".linear.")
-        ##############################################################################
-        elif ".linear." in new_key:
-            new_key = new_key.replace(".linear.", ".linear.linear.")
-        elif "bn." in new_key:
-            new_key = new_key.replace("bn.", "bn.bn.")
-        elif "conv.weight" in new_key:
-            new_key = new_key.replace("conv.weight", "conv.conv.weight")
-        else:
-            raise ValueError(new_key)
-        assert new_key in model_dict, "%s" % new_key
-        model_dict[new_key] = state_dict[key]
-        super(OFAKWSNet, self).load_state_dict(model_dict)"""
+        super(OFAKWSNet, self).load_state_dict(model_dict)
+
 
     """ set, sample and get active sub-networks """
 
