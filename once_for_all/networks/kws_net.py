@@ -97,6 +97,7 @@ class KWSNet(MyNetwork):
         current_state_dict = self.state_dict()
         for key in state_dict:
             if key not in current_state_dict:
+                print(key)
                 assert ".mobile_inverted_conv." in key
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
             else:
