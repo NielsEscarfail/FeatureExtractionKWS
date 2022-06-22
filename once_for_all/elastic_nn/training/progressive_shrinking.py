@@ -48,10 +48,10 @@ def validate(
         width_mult_list = dynamic_net.width_mult_list
 
     subnet_settings = []
-    for d in depth_list:
-        for k in ks_list:
-            for w in width_mult_list:
-                for ftp in ft_extr_params_list:
+    for ftp in ft_extr_params_list:
+        for d in depth_list:
+            for k in ks_list:
+                for w in width_mult_list:
                     subnet_settings.append(
                         [
                             {
