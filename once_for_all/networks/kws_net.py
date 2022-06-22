@@ -136,11 +136,6 @@ class KWSNetLarge(KWSNet):
 
         input_channel = int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
-        width_list = [64] * 16
-
-        for i, width in enumerate(width_list):
-            width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
-
         # build input stem
         input_stem = [
             ConvLayer(
@@ -153,20 +148,25 @@ class KWSNetLarge(KWSNet):
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 2, 2, 2, 1, 2]
-        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
-        se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [depth] * 2
+        stride_stages = [1, 2, 2, 2]
+        act_stages = ["relu", "relu", "relu", "relu"]
+        se_stages = [False, False, False, False]
+        n_block_list = [depth] * 4
+
+        stage_width_list = [64, 64, 64, 64]
+
+        for i, width in enumerate(stage_width_list):
+            stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                                   for width_mult in self.width_mult_list]
 
         # blocks
-        self.block_group_info = []
         blocks = []
-        _block_index = 1
-        feature_dim = input_channel
+        self.block_group_info = []
+        _block_index = 0
 
         for n_block, width, s, act_func, use_se in zip(
                 n_block_list,
-                width_list,
+                stage_width_list,
                 stride_stages,
                 act_stages,
                 se_stages,
@@ -174,25 +174,24 @@ class KWSNetLarge(KWSNet):
             self.block_group_info.append([_block_index + i for i in range(n_block)])
             _block_index += n_block
 
-            output_channel = width
             for i in range(n_block):
-                stride = 1  # stride = s if i == 0 else 1
-                conv = MBConvLayer(in_channels=feature_dim,
-                                   out_channels=output_channel,
+                stride = s if i == 0 else 1
+                conv = MBConvLayer(in_channels=input_channel,
+                                   out_channels=width,
                                    kernel_size=ks,
                                    expand_ratio=1,
                                    stride=stride,
                                    act_func=act_func,
                                    use_se=use_se)
 
-                shortcut = IdentityLayer(feature_dim,
-                                         feature_dim) if stride == 1 and feature_dim == output_channel else None
+                shortcut = IdentityLayer(input_channel,
+                                         input_channel) if stride == 1 and input_channel == width else None
 
                 blocks.append(ResidualBlock(conv, shortcut))
-                feature_dim = output_channel
+                input_channel = width
 
         classifier = LinearLayer(
-            feature_dim, n_classes, dropout_rate=dropout_rate
+            input_channel, n_classes, dropout_rate=dropout_rate
         )
 
         super(KWSNetLarge, self).__init__(input_stem, blocks, classifier)
