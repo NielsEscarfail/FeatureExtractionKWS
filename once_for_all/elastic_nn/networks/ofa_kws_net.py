@@ -187,7 +187,7 @@ class OFAKWSNet(KWSNet):
 
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.blocks))
-        width_mult = val2list(w, len(self.width_mult_list) + 1)
+        width_mult = val2list(w, len(self.blocks) + 1)
 
         print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
 
@@ -210,9 +210,9 @@ class OFAKWSNet(KWSNet):
             if d is not None:
                 self.runtime_depth[stage_id] = max(self.depth_list) - d
                 # self.runtime_depth[stage_id] = min(len(self.block_group_info[stage_id]), d)
-            if w is not None:
+            """if w is not None:
                 for idx in block_idx:
-                    self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
+                    self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)"""
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
