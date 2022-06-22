@@ -131,6 +131,8 @@ class KWSDataProvider:
     def data_shape(self):
         if self.ft_extr_type == "lpcc" or self.ft_extr_type == "plp":
             return 1, 1, self.active_ft_extr_params + 1
+        elif self.ft_extr_type == 'mfcc' or 'mel_spectrogram':
+            return 1, 51, 10
         else:
             return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]
 
