@@ -1,6 +1,8 @@
 import copy
 import random
 
+from torch import nn
+
 from once_for_all.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
@@ -50,7 +52,7 @@ class OFAKWSNet(KWSNet):
             DynamicConvLayer(
                 in_channel_list=val2list(1),
                 out_channel_list=input_channel,
-                kernel_size=(9, 3),
+                kernel_size=(9, 5),  # (9, 3) or (9, 5)
                 stride=2,
                 use_bn=True,
                 act_func="relu")
@@ -95,12 +97,14 @@ class OFAKWSNet(KWSNet):
                 blocks.append(ResidualBlock(conv, shortcut))
                 feature_dim = output_channel
 
+        global_avg_pool = nn.AvgPool2d(kernel_size=(26, 5), stride=1)
+
         classifier = DynamicLinearLayer(
             feature_dim, n_classes, dropout_rate=dropout_rate
         )
 
         super(OFAKWSNet, self).__init__(
-            input_stem, blocks, classifier
+            input_stem, blocks, global_avg_pool, classifier
         )
 
         # set bn param

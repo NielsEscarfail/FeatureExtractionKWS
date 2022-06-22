@@ -8,12 +8,12 @@ from utils.pytorch_modules import MyGlobalAvgPool2d
 
 class KWSNet(MyNetwork):
 
-    def __init__(self, input_stem, blocks, classifier):
+    def __init__(self, input_stem, blocks, global_avg_pool, classifier):
         super(KWSNet, self).__init__()
 
         self.input_stem = nn.ModuleList(input_stem)
         self.blocks = nn.ModuleList(blocks)
-        self.global_avg_pool = nn.AvgPool2d(kernel_size=(26, 5), stride=1)  # MyGlobalAvgPool2d(keep_dim=True)
+        self.global_avg_pool = global_avg_pool  # MyGlobalAvgPool2d(keep_dim=True)
         self.classifier = classifier
 
     def forward(self, x):
