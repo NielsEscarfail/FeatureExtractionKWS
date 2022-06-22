@@ -1,21 +1,16 @@
 import copy
 import random
 
-from torch import nn
-
 from once_for_all.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
+from once_for_all.networks.kws_net import KWSNet
 from utils import make_divisible, MyNetwork
+from utils.common_tools import val2list
 from utils.layers import (
-    ConvLayer,
     IdentityLayer,
-    LinearLayer,
-    MBConvLayer,
     ResidualBlock,
 )
-from once_for_all.networks.kws_net import KWSNet
-from utils.common_tools import val2list
 
 __all__ = ["OFAKWSNet"]
 
@@ -42,11 +37,6 @@ class OFAKWSNet(KWSNet):
         input_channel = [int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
                          for width_mult in self.width_mult_list]
 
-        stage_width_list = [64, 64, 64, 64, 64, 64, 64, 64]
-        for i, width in enumerate(stage_width_list):
-            stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
-                                   for width_mult in self.width_mult_list]
-
         # build input stem
         input_stem = [
             DynamicConvLayer(
@@ -62,15 +52,15 @@ class OFAKWSNet(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)]
-        print("n_block_list : ", n_block_list)
+        n_block_list = [1] + [max(self.depth_list)] * 2
+        stage_width_list = [64, 64, 64, 64, 64, 64, 64, 64]
+
+        for i, width in enumerate(stage_width_list):
+            stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                                   for width_mult in self.width_mult_list]
 
         # blocks
-        self.block_group_info = []
         blocks = []
-        _block_index = 0
-        feature_dim = input_channel
-
         for n_block, width, s, act_func, use_se in zip(
                 n_block_list,
                 stage_width_list,
@@ -78,28 +68,24 @@ class OFAKWSNet(KWSNet):
                 act_stages,
                 se_stages,
         ):
-            self.block_group_info.append([_block_index + i for i in range(n_block)])
-            _block_index += n_block
-
-            output_channel = width
             for i in range(n_block):
                 stride = 1  # stride = s if i == 0 else 1
-                conv = DynamicMBConvLayer(in_channel_list=val2list(feature_dim),
-                                          out_channel_list=val2list(output_channel),
+                conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
+                                          out_channel_list=val2list(width),
                                           kernel_size_list=ks_list,
                                           expand_ratio_list=val2list(1),
                                           stride=stride,
                                           act_func=act_func,
                                           use_se=use_se)
 
-                shortcut = IdentityLayer(feature_dim,
-                                         feature_dim) if stride == 1 and feature_dim == output_channel else None
+                shortcut = IdentityLayer(input_channel,
+                                         input_channel) if stride == 1 and input_channel == width else None
 
                 blocks.append(ResidualBlock(conv, shortcut))
-                feature_dim = output_channel
+                input_channel = width
 
         classifier = DynamicLinearLayer(
-            feature_dim, n_classes, dropout_rate=dropout_rate
+            input_channel, n_classes, dropout_rate=dropout_rate
         )
 
         super(OFAKWSNet, self).__init__(
@@ -358,6 +344,10 @@ class OFAKWSNet(KWSNet):
             "blocks": block_config_list,
             "classifier": classifier_config,
         }
+
+    @staticmethod
+    def build_net_via_cfg():
+        raise NotImplementedError
 
     """ Width Related Methods """
 
