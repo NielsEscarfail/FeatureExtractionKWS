@@ -88,93 +88,10 @@ class KWSNet(MyNetwork):
             info_list.append(block_index_list)
         return info_list
 
-    # NOT UPDATED YET
+    # NOT UPDATED YET - might not be needed
     @staticmethod
-    def build_net_via_cfg(blocks_cfg, input_channel, last_channel, n_classes, dropout_rate):
-        print("UNUSED / FALSE ARCH")
-        # first conv layer
-        first_conv = ConvLayer(
-            3,
-            input_channel,
-            kernel_size=3,
-            stride=2,
-            use_bn=True,
-            act_func="h_swish",
-            ops_order="weight_bn_act",
-        )
-        # build mobile blocks
-        feature_dim = input_channel
-        blocks = []
-        for stage_id, block_config_list in blocks_cfg.items():
-            for (
-                    k,
-                    mid_channel,
-                    out_channel,
-                    use_se,
-                    act_func,
-                    stride,
-                    expand_ratio,
-            ) in block_config_list:
-                mb_conv = MBConvLayer(
-                    feature_dim,
-                    out_channel,
-                    k,
-                    stride,
-                    expand_ratio,
-                    mid_channel,
-                    act_func,
-                    use_se,
-                )
-                if stride == 1 and out_channel == feature_dim:
-                    shortcut = IdentityLayer(out_channel, out_channel)
-                else:
-                    shortcut = None
-                blocks.append(ResidualBlock(mb_conv, shortcut))
-                feature_dim = out_channel
-
-            # final expand layer
-            final_expand_layer = ConvLayer(
-                feature_dim,
-                feature_dim * 6,
-                kernel_size=1,
-                use_bn=True,
-                act_func="h_swish",
-                ops_order="weight_bn_act",
-            )
-            # feature mix layer
-            feature_mix_layer = ConvLayer(
-                feature_dim * 6,
-                last_channel,
-                kernel_size=1,
-                bias=False,
-                use_bn=False,
-                act_func="h_swish",
-            )
-        # classifier
-        classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
-
-        return first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
-
-    @staticmethod
-    def adjust_cfg(
-            cfg, ks=None, expand_ratio=None, depth_param=None, stage_width_list=None
-    ):
-        for i, (stage_id, block_config_list) in enumerate(cfg.items()):
-            for block_config in block_config_list:
-                if ks is not None and stage_id != "0":
-                    block_config[0] = ks
-                if expand_ratio is not None and stage_id != "0":
-                    block_config[-1] = expand_ratio
-                    block_config[1] = None
-                    if stage_width_list is not None:
-                        block_config[2] = stage_width_list[i]
-            if depth_param is not None and stage_id != "0":
-                new_block_config_list = [block_config_list[0]]
-                new_block_config_list += [
-                    copy.deepcopy(block_config_list[-1]) for _ in range(depth_param - 1)
-                ]
-                cfg[stage_id] = new_block_config_list
-        return cfg
+    def build_net_via_cfg():
+        raise NotImplementedError
 
     def load_state_dict(self, state_dict, **kwargs):
         current_state_dict = self.state_dict()
@@ -189,6 +106,7 @@ class KWSNet(MyNetwork):
 
 
 class KWSNetLarge(KWSNet):
+
     def __init__(
             self,
             n_classes=12,
@@ -265,8 +183,12 @@ class KWSNetLarge(KWSNet):
         print("classifier , : ", classifier)
 
         super(KWSNet, self).__init__(
-            input_stem, blocks, classifier
+            input_stem=input_stem, blocks=blocks, classifier=classifier
         )
 
         # set bn param
         self.set_bn_param(*bn_param)
+
+    @staticmethod
+    def build_net_via_cfg():
+        raise NotImplementedError
