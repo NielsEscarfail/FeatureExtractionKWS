@@ -262,7 +262,7 @@ class OFAKWSNet(KWSNet):
         # sample kernel size
         ks_setting = []
         print("type(ks_candidates) : ", type(ks_candidates))
-        print("type(ks_candidates)[0] : ", type(ks_candidates)[0])
+        print("type(ks_candidates)[0] : ", type(ks_candidates[0]))
         if not isinstance(ks_candidates[0], list):
             ks_candidates = [ks_candidates for _ in range(len(self.blocks) - 1)]
         for k_set in ks_candidates:
@@ -272,7 +272,7 @@ class OFAKWSNet(KWSNet):
         # sample depth
         depth_setting = []
         print("type(depth_candidates) : ", type(depth_candidates))
-        print("type(depth_candidates)[0] : ", type(depth_candidates)[0])
+        print("type(depth_candidates)[0] : ", type(depth_candidates[0]))
         if not isinstance(depth_candidates[0], list):
             depth_candidates = [
                 depth_candidates for _ in range(len(self.block_group_info))
@@ -284,7 +284,7 @@ class OFAKWSNet(KWSNet):
         # sample width
         width_setting = []
         print("type(width_candidates) : ", type(width_candidates))
-        print("type(width_candidates)[0] : ", type(width_candidates)[0])
+        print("type(width_candidates)[0] : ", type(width_candidates[0]))
         if not isinstance(width_candidates[0], list):
             width_candidates = [width_candidates for _ in range(len(self.block_group_info))]
         for w_set in width_candidates:
