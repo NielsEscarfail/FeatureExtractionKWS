@@ -75,7 +75,10 @@ def validate(
             "-" * 30 + " Validate %s " % name + "-" * 30, "train", should_print=False
         )
         run_manager.run_config.data_provider.assign_active_ft_extr_params(setting.pop("ft_extr_params"))
+        print("BEFORE:")
+        print(dynamic_net)
         dynamic_net.set_active_subnet(**setting)
+        print("AFTER:")
         run_manager.write_log(dynamic_net.module_str, "train", should_print=False)
 
         run_manager.reset_running_statistics(dynamic_net)
