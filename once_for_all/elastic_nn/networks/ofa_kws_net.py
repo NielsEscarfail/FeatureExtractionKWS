@@ -195,7 +195,7 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))  # val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.blocks) + 1)
 
-        print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
+        # print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
 
         for block, k in zip(self.blocks, ks):
             if k is not None:
@@ -291,7 +291,7 @@ class OFAKWSNet(KWSNet):
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
 
-        print("arch config ", arch_config)
+        # print("arch config ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
