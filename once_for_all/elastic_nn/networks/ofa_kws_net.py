@@ -116,26 +116,18 @@ class OFAKWSNet(KWSNet):
         return "OFAKWSNet"
 
     def forward(self, x):
-        print("0 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            print("1 ", x.shape)
 
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
                 x = self.blocks[idx](x)
-                print("2 ", x.shape)
-
-        print("3.1 ", x.shape)
 
         x = self.global_avg_pool(x)
-        print("3 ", x.shape)
         x = x.view(x.size(0), -1)
-        print("4: ", x.shape)
         x = self.classifier(x)
-        print("5 ", x.shape)
         return x
 
     @property
@@ -207,8 +199,6 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
-        print("in set_active_subnet")
-        print("ks: %s, d:%s , w:%s " % (ks, d, w))
         ks = val2list(ks, len(self.blocks) + 1)
         depth = val2list(d, len(self.block_group_info))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
@@ -294,7 +284,6 @@ class OFAKWSNet(KWSNet):
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
 
-        print("ARCH config : ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
