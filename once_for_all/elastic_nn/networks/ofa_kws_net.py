@@ -146,10 +146,6 @@ class OFAKWSNet(KWSNet):
     def build_from_config(config):
         raise ValueError("do not support this function")
 
-    @property
-    def grouped_block_index(self):
-        return self.block_group_info
-
     def load_state_dict(self, state_dict, **kwargs):
         model_dict = self.state_dict()
 
