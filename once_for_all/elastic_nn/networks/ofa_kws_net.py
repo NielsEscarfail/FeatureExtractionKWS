@@ -113,7 +113,7 @@ class OFAKWSNet(KWSNet):
         for layer in self.input_stem:
             x = layer(x)
 
-        for stage_id, block_idx in enumerate(self.grouped_block_index):
+        for stage_id, block_idx in enumerate(self.block_group_info):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
@@ -129,7 +129,7 @@ class OFAKWSNet(KWSNet):
         _str = ""
         for layer in self.input_stem:
             _str += layer.module_str + "\n"
-        for stage_id, block_idx in enumerate(self.grouped_block_index):
+        for stage_id, block_idx in enumerate(self.block_group_info):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[:len(block_idx) - depth_param]
             for idx in active_idx:
