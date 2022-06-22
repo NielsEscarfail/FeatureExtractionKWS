@@ -97,14 +97,14 @@ class OFAKWSNet(KWSNet):
                 blocks.append(ResidualBlock(conv, shortcut))
                 feature_dim = output_channel
 
-        global_avg_pool = nn.AvgPool2d(kernel_size=(26, 5), stride=1)
+        # global_avg_pool = nn.AvgPool2d(kernel_size=(26, 5), stride=1)
 
         classifier = DynamicLinearLayer(
             feature_dim, n_classes, dropout_rate=dropout_rate
         )
 
         super(OFAKWSNet, self).__init__(
-            input_stem, blocks, global_avg_pool, classifier
+            input_stem, blocks, classifier
         )
 
         # set bn param
