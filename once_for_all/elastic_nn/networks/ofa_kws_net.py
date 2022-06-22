@@ -202,8 +202,8 @@ class OFAKWSNet(KWSNet):
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
         print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
 
-        ks = val2list(ks, len(self.blocks) + 1)
-        depth = val2list(d, len(self.block_group_info))
+        ks = val2list(ks, len(self.blocks))
+        depth = val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
         print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
@@ -211,7 +211,7 @@ class OFAKWSNet(KWSNet):
         # set input stem
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
-                int(self.input_stem[0].out_channel_list[0] * width_mult[0])
+                int(self.input_stem[0].out_channel_list[] * width_mult[0])
 
         # set blocks
         for block, k in zip(self.blocks, ks):
@@ -261,6 +261,9 @@ class OFAKWSNet(KWSNet):
             if self.__dict__.get("_width_include_list", None) is None
             else self.__dict__["_width_include_list"]
         )
+
+        print("len self.block_group_info : ", len(self.block_group_info))
+        print("len(self.blocks) : ", len(self.blocks))
 
         # sample kernel size
         ks_setting = []
