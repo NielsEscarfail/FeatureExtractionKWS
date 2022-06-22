@@ -453,11 +453,7 @@ class DynamicConvLayer(MyModule):
         self.active_out_channel = max(self.out_channel_list)
 
     def forward(self, x):
-        print("dynlay activeoutch1 ", self.conv.active_out_channel)
-
         self.conv.active_out_channel = self.active_out_channel
-
-        print("dynlay activeoutch2 ", self.conv.active_out_channel)
         x = self.conv(x)
         if self.use_bn:
             x = self.bn(x)

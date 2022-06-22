@@ -46,10 +46,6 @@ def validate(
         depth_list = dynamic_net.depth_list
     if width_mult_list is None:
         width_mult_list = dynamic_net.width_mult_list
-        """if "width_mult_list" in dynamic_net.__dict__:
-            width_mult_list = list(range(len(dynamic_net.width_mult_list)))
-        else:
-            width_mult_list = [0]"""
 
     subnet_settings = []
     for d in depth_list:
@@ -70,8 +66,6 @@ def validate(
                     )
     if additional_setting is not None:
         subnet_settings += additional_setting
-
-    print("SUBNET SETTING : ", subnet_settings)
 
     losses_of_subnets, top1_of_subnets, top5_of_subnets = [], [], []
 
