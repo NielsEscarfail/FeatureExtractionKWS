@@ -42,10 +42,10 @@ class OFAKWSNet(KWSNet):
         input_channel = [int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
                          for width_mult in self.width_mult_list]
 
-        width_list = [64, 64, 64, 64, 64, 64, 64, 64]
-        for i, width in enumerate(width_list):
-            width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
-                             for width_mult in self.width_mult_list]
+        stage_width_list = [64, 64, 64, 64, 64, 64, 64, 64]
+        for i, width in enumerate(stage_width_list):
+            stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                                   for width_mult in self.width_mult_list]
 
         # build input stem
         input_stem = [
@@ -62,7 +62,8 @@ class OFAKWSNet(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)]*4
+        n_block_list = [1] + [max(self.depth_list)]
+        print("n_block_list : ", n_block_list)
 
         # blocks
         self.block_group_info = []
@@ -72,7 +73,7 @@ class OFAKWSNet(KWSNet):
 
         for n_block, width, s, act_func, use_se in zip(
                 n_block_list,
-                width_list,
+                stage_width_list,
                 stride_stages,
                 act_stages,
                 se_stages,
@@ -109,7 +110,7 @@ class OFAKWSNet(KWSNet):
         self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
 
         # runtime_depth
-        self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
+        self.runtime_depth = [0] * len(n_block_list)
 
     @staticmethod
     def name():
@@ -119,7 +120,7 @@ class OFAKWSNet(KWSNet):
         for layer in self.input_stem:
             x = layer(x)
 
-        for stage_id, block_idx in enumerate(self.block_group_info):
+        for stage_id, block_idx in enumerate(self.grouped_block_index):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
@@ -135,7 +136,7 @@ class OFAKWSNet(KWSNet):
         _str = ""
         for layer in self.input_stem:
             _str += layer.module_str + "\n"
-        for stage_id, block_idx in enumerate(self.block_group_info):
+        for stage_id, block_idx in enumerate(self.grouped_block_index):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[:len(block_idx) - depth_param]
             for idx in active_idx:
@@ -225,8 +226,8 @@ class OFAKWSNet(KWSNet):
                 zip(self.grouped_block_index, depth, width_mult[1:])
         ):
             if d is not None:
-                # self.runtime_depth[stage_id] = max(self.depth_list) - d
-                self.runtime_depth[stage_id] = min(len(self.block_group_info[stage_id]), d)
+                self.runtime_depth[stage_id] = max(self.depth_list) - d
+                # self.runtime_depth[stage_id] = min(len(self.block_group_info[stage_id]), d)
             if w is not None:
                 for idx in block_idx:
                     self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
