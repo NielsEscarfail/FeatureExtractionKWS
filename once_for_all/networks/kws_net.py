@@ -156,7 +156,7 @@ class KWSNetLarge(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [depth] * 2
+        n_block_list = [1] + [depth]
 
         # blocks
         self.block_group_info = []
