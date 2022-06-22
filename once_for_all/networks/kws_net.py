@@ -177,7 +177,8 @@ class KWSNet(MyNetwork):
         return cfg
 
     def load_state_dict(self, state_dict, **kwargs):
-        current_state_dict = self.state_dict()
+        super(KWSNet, self).load_state_dict(state_dict)
+        """ current_state_dict = self.state_dict()
         for key in state_dict:
             if key not in current_state_dict:
                 assert ".mobile_inverted_conv." in key
@@ -185,7 +186,7 @@ class KWSNet(MyNetwork):
             else:
                 new_key = key
             current_state_dict[new_key] = state_dict[key]
-        super(KWSNet, self).load_state_dict(current_state_dict)
+        super(KWSNet, self).load_state_dict(current_state_dict)"""
 
 
 class KWSNetLarge(KWSNet):

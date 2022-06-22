@@ -82,7 +82,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.width_mult_list = "2.0"
-        args.depth_list = "4,6,8"# "2,3,4"
+        args.depth_list = "4,6,8"  # "2,3,4"
     else:
         args.n_epochs = 60  # 120  # 125 (120 + 5)
         args.base_lr = 1e-3  # 7.5e-3 - 0.24 paper
@@ -323,17 +323,6 @@ if __name__ == "__main__":
             "valid",
         )
         print("Resuming training ")"""
-        print("Testing all resolutions and networks:")
-        validate_func_dict = {
-            "ft_extr_type": args.ft_extr_type,
-            "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
-            "ks_list": args.ks_list,
-            "depth_list": net.depth_list,
-            "width_mult_list": args.width_mult_list,
-        }
-        print("Validation dict: ", validate_func_dict)
-        validate(run_manager, is_test=True)
-
         print("Start large net training")
         train(
             run_manager,
@@ -375,10 +364,8 @@ if __name__ == "__main__":
 
         if args.phase == 1:
             args.ofa_checkpoint_path += "/normal2kernel/checkpoint/model_best.pth.tar"
-            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
         elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
-            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
         else:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
 
@@ -407,7 +394,7 @@ if __name__ == "__main__":
     print("Testing all resolutions and networks:")
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
-        "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+        "ft_extr_params_list": args.ft_extr_params_list,
         "ks_list": args.ks_list,
         "depth_list": net.depth_list,
         "width_mult_list": args.width_mult_list,
