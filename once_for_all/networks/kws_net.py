@@ -3,7 +3,7 @@ import torch.nn as nn
 from utils import MyNetwork
 from utils.layers import set_layer_from_config, ResidualBlock, MBConvLayer, IdentityLayer, LinearLayer, \
     ConvLayer
-from utils.pytorch_modules import MyGlobalAvgPool2d
+from utils.pytorch_modules import MyGlobalAvgPool2d, make_divisible
 
 
 class KWSNet(MyNetwork):
@@ -177,10 +177,7 @@ class KWSNet(MyNetwork):
         return cfg
 
     def load_state_dict(self, state_dict, **kwargs):
-        print("state dict in kwsnet")
-        print(state_dict.keys())
-        super(KWSNet, self).load_state_dict(state_dict)
-        """ current_state_dict = self.state_dict()
+        current_state_dict = self.state_dict()
         for key in state_dict:
             if key not in current_state_dict:
                 assert ".mobile_inverted_conv." in key
@@ -188,75 +185,84 @@ class KWSNet(MyNetwork):
             else:
                 new_key = key
             current_state_dict[new_key] = state_dict[key]
-        super(KWSNet, self).load_state_dict(current_state_dict)"""
+        super(KWSNet, self).load_state_dict(current_state_dict)
 
 
 class KWSNetLarge(KWSNet):
     def __init__(
             self,
-            n_classes=1000,
+            n_classes=12,
             bn_param=(0.1, 1e-5),
-            dropout_rate=0.2,
-            ks=None,
-            expand_ratio=None,
-            depth_param=None,
-            stage_width_list=None,
+            dropout_rate=0.1,
+            ks=7,
+            depth=8,
+            width_mult=2.0,
     ):
-        input_channel = 16
-        last_channel = 1280
 
-        cfg = {
-            # for (
-            #                 k,
-            #                 mid_channel,
-            #                 out_channel,
-            #                 use_se,
-            #                 act_func,
-            #                 stride,
-            #                 expand_ratio,
-            #             )
-            #    k,     exp,    c,      se,         nl,         s,      e,
-            "0": [
-                [3, 16, 16, False, "relu", 1, 1],
-            ],
-            "1": [
-                [3, 64, 24, False, "relu", 2, None],  # 4
-                [3, 72, 24, False, "relu", 1, None],  # 3
-            ],
-            "2": [
-                [5, 72, 40, True, "relu", 2, None],  # 3
-                [5, 120, 40, True, "relu", 1, None],  # 3
-                [5, 120, 40, True, "relu", 1, None],  # 3
-            ],
-            "3": [
-                [3, 240, 80, False, "h_swish", 2, None],  # 6
-                [3, 200, 80, False, "h_swish", 1, None],  # 2.5
-                [3, 184, 80, False, "h_swish", 1, None],  # 2.3
-                [3, 184, 80, False, "h_swish", 1, None],  # 2.3
-            ],
-            "4": [
-                [3, 480, 112, True, "h_swish", 1, None],  # 6
-                [3, 672, 112, True, "h_swish", 1, None],  # 6
-            ],
-            "5": [
-                [5, 672, 160, True, "h_swish", 2, None],  # 6
-                [5, 960, 160, True, "h_swish", 1, None],  # 6
-                [5, 960, 160, True, "h_swish", 1, None],  # 6
-            ],
-        }
+        input_channel = int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
-        cfg = self.adjust_cfg(cfg, ks, expand_ratio, depth_param, stage_width_list)
-        (
-            first_conv,
-            blocks,
-            final_expand_layer,
-            feature_mix_layer,
-            classifier,
-        ) = self.build_net_via_cfg(
-            cfg, input_channel, last_channel, n_classes, dropout_rate
+        width_list = [64, 64, 64, 64, 64, 64, 64, 64]
+        for i, width in enumerate(width_list):
+            width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
+                             for width_mult in self.width_mult_list]
+
+        # build input stem
+        input_stem = [
+            ConvLayer(
+                in_channels=1,
+                out_channels=input_channel,
+                kernel_size=(9, 5),
+                stride=2,
+                use_bn=True,
+                act_func="relu")
+        ]
+
+        # Set stride, activation function, and SE dim reduction
+        stride_stages = [1, 2, 2, 2, 1, 2]
+        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
+        se_stages = [False, False, False, False, False, False]
+        n_block_list = [1] + [depth] * 2
+
+        # blocks
+        self.block_group_info = []
+        blocks = []
+        _block_index = 1
+        feature_dim = input_channel
+
+        for n_block, width, s, act_func, use_se in zip(
+                n_block_list,
+                width_list,
+                stride_stages,
+                act_stages,
+                se_stages,
+        ):
+            self.block_group_info.append([_block_index + i for i in range(n_block)])
+            _block_index += n_block
+
+            output_channel = width
+            for i in range(n_block):
+                stride = 1  # stride = s if i == 0 else 1
+                conv = MBConvLayer(in_channels=feature_dim,
+                                   out_channels=output_channel,
+                                   kernel_size=ks,
+                                   expand_ratio=1,
+                                   stride=stride,
+                                   act_func=act_func,
+                                   use_se=use_se)
+
+                shortcut = IdentityLayer(feature_dim,
+                                         feature_dim) if stride == 1 and feature_dim == output_channel else None
+
+                blocks.append(ResidualBlock(conv, shortcut))
+                feature_dim = output_channel
+
+        classifier = LinearLayer(
+            feature_dim, n_classes, dropout_rate=dropout_rate
         )
+
         super(KWSNet, self).__init__(
-            first_conv, blocks, final_expand_layer, feature_mix_layer, classifier
+            input_stem, blocks, classifier
         )
+
         # set bn param
         self.set_bn_param(*bn_param)

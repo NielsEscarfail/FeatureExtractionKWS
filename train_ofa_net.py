@@ -7,7 +7,7 @@ import random
 import torch
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
-from once_for_all.networks.kws_net import KWSNetLarge
+from once_for_all.networks.kws_net import KWSNetLarge, KWSNet
 from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
 
@@ -44,6 +44,8 @@ parser.add_argument("--ft_extr_type",
 args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
+args.kd_ratio = 1.0
+
 if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
@@ -54,6 +56,7 @@ if args.task == "normal":
     args.ks_list = "7"  # "7"
     args.width_mult_list = "2.0"
     args.depth_list = "8"
+    args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
@@ -125,7 +128,6 @@ else:
 
 args.manual_seed = 0
 
-
 args.base_batch_size = 512
 args.valid_size = .1
 
@@ -146,9 +148,6 @@ args.bn_momentum = 0.1
 args.bn_eps = 1e-5
 args.dropout = 0.1
 
-
-# args.kd_ratio = 1.0
-args.kd_ratio = 0
 args.kd_type = "ce"
 
 # Set ft_extr_params_list depending on the ft_extr_type
@@ -264,20 +263,6 @@ if __name__ == "__main__":
         depth_list=args.depth_list,
     )
 
-    """# Instantiate largest KWS model possible
-    if args.kd_ratio > 0:
-        args.teacher_model = KWSNetLarge(
-            n_classes=12,
-            bn_param=(args.bn_momentum, args.bn_eps),
-            dropout_rate=0,
-            width_mult=1.0,
-            ks=7,
-            expand_ratio=6,
-            depth_param=4,
-        )
-        if torch.cuda.is_available():
-            args.teacher_model.cuda()"""
-
     """ RunManager """
     run_manager = RunManager(
         args.path,
@@ -286,11 +271,22 @@ if __name__ == "__main__":
     )
     run_manager.save_config()
 
-    """# load teacher net weights
+    # Instantiate largest KWS model possible
     if args.kd_ratio > 0:
-        load_models(
-            run_manager, args.teacher_model, model_path=args.teacher_path
-        )"""
+
+        args.teacher_model = KWSNetLarge(
+            n_classes=12,
+            bn_param=(args.bn_momentum, args.bn_eps),
+            dropout_rate=0,
+            ks=7,
+            depth=8,
+            width_mult=2.0)
+
+        if torch.cuda.is_available():
+            args.teacher_model.cuda()
+
+        #  load teacher net weights
+        load_models(run_manager, args.teacher_model, model_path=args.teacher_path)
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (

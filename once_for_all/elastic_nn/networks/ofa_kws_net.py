@@ -26,9 +26,9 @@ class OFAKWSNet(KWSNet):
             n_classes=12,
             bn_param=(0.1, 1e-5),
             dropout_rate=0.1,
-            width_mult_list=1.0,
             ks_list=3,
             depth_list=4,
+            width_mult_list=1.0,
     ):
 
         self.ks_list = val2list(ks_list, 1)
@@ -42,7 +42,7 @@ class OFAKWSNet(KWSNet):
         input_channel = [int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
                          for width_mult in self.width_mult_list]
 
-        width_list = [64, 64, 64, 64, 64, 64]
+        width_list = [64, 64, 64, 64, 64, 64, 64, 64]
         for i, width in enumerate(width_list):
             width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
                              for width_mult in self.width_mult_list]
@@ -165,8 +165,7 @@ class OFAKWSNet(KWSNet):
 
     def load_state_dict(self, state_dict, **kwargs):
         model_dict = self.state_dict()
-        print("state dict in ofakwsnet")
-        print(state_dict.keys())
+
         for key in state_dict:
             if ".mobile_inverted_conv." in key:
                 new_key = key.replace(".mobile_inverted_conv.", ".conv.")
@@ -191,10 +190,7 @@ class OFAKWSNet(KWSNet):
                 raise ValueError(new_key)
             assert new_key in model_dict, "%s" % new_key
             model_dict[new_key] = state_dict[key]
-        print("model dict in ofakwsnet")
-        print(model_dict.keys())
         super(OFAKWSNet, self).load_state_dict(model_dict)
-
 
     """ set, sample and get active sub-networks """
 
