@@ -183,13 +183,13 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
-        # print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
+        print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
-        # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
+        print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
 
         # set input stem
         if width_mult[0] is not None:
