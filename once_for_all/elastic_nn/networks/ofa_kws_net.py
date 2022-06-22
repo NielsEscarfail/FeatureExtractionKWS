@@ -203,20 +203,15 @@ class OFAKWSNet(KWSNet):
 
         # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult)
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[
-                0
-            ].active_out_channel = int(self.input_stem[0].out_channel_list[0] * width_mult[0])
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = int(self.input_stem[0].out_channel_list[0] * width_mult[0])
 
-        for stage_id, (block_idx, d, w) in enumerate(
-                zip(self.grouped_block_index, depth, width_mult[1:])
-        ):
+        for i, d in enumerate(depth):
             if d is not None:
-                self.runtime_depth[stage_id] = min(len(self.grouped_block_index[stage_id]), d)
+                self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
+
+        for i, w in enumerate(width_mult):
             if w is not None:
-                for idx in block_idx:
-                    self.blocks[idx].active_out_channel = int(self.blocks[
-                                                                  idx
-                                                              ].conv.out_channel_list[0] * w)
+                self.blocks[i].active_out_channel = int(self.blocks[i].conv.out_channel_list[0] * w)
 
         """for block, k in zip(self.blocks, ks):
             if k is not None:

@@ -75,7 +75,7 @@ class KWSNet(MyNetwork):
                 ):
                     m.conv.point_linear.bn.weight.data.zero_()
 
-    @property
+    """  @property
     def grouped_block_index(self):
         info_list = []
         block_index_list = []
@@ -86,7 +86,7 @@ class KWSNet(MyNetwork):
             block_index_list.append(i)
         if len(block_index_list) > 0:
             info_list.append(block_index_list)
-        return info_list
+        return info_list"""
 
     # NOT UPDATED YET - might not be needed
     @staticmethod
