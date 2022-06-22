@@ -24,11 +24,13 @@ class OFAKWSNet(KWSNet):
             ks_list=3,
             depth_list=4,
             width_mult_list=1.0,
+            expand_ratio_list=1
     ):
 
         self.ks_list = val2list(ks_list, 1)
         self.depth_list = val2list(depth_list, 1)
         self.width_mult_list = val2list(width_mult_list)
+        self.expand_ratio_list = val2list(expand_ratio_list, 1)
 
         self.ks_list.sort()
         self.depth_list.sort()
@@ -52,7 +54,7 @@ class OFAKWSNet(KWSNet):
         stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
         se_stages = [False, False, False, False, False, False]
-        n_block_list = [1] + [max(self.depth_list)]
+        n_block_list = [1] + [max(self.depth_list)] * 2  # block depth = 2
         stage_width_list = [64, 64, 64, 64, 64, 64, 64, 64]
 
         for i, width in enumerate(stage_width_list):
@@ -61,6 +63,8 @@ class OFAKWSNet(KWSNet):
 
         # blocks
         blocks = []
+        self.block_group_info = []
+        _block_index = 0
         for n_block, width, s, act_func, use_se in zip(
                 n_block_list,
                 stage_width_list,
@@ -68,8 +72,11 @@ class OFAKWSNet(KWSNet):
                 act_stages,
                 se_stages,
         ):
+            self.block_group_info.append([_block_index + i for i in range(n_block)])
+            _block_index += n_block
+
             for i in range(n_block):
-                stride = 1  # stride = s if i == 0 else 1
+                stride = s if i == 0 else 1 # stride = 1  #
                 conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
                                           out_channel_list=val2list(width),
                                           kernel_size_list=ks_list,
@@ -96,7 +103,7 @@ class OFAKWSNet(KWSNet):
         self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
 
         # runtime_depth
-        self.runtime_depth = [0] * len(n_block_list)
+        self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     @staticmethod
     def name():
@@ -186,12 +193,22 @@ class OFAKWSNet(KWSNet):
         # print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         ks = val2list(ks, len(self.blocks))
-        depth = val2list(d, len(self.blocks))
+        depth = val2list(d, len(self.block_group_info))  # val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.blocks) + 1)
 
-        # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
+        # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult)
 
-        # set input stem
+        for block, k in zip(self.blocks, ks):
+            if k is not None:
+                block.conv.active_kernel_size = k
+
+        for i, d in enumerate(depth):
+            if d is not None:
+                self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
+
+        # TODO width mul
+
+        """# set input stem
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].out_channel_list[0] * width_mult[0]
             # = int(self.input_stem[0].out_channel_list * width_mult[0])
@@ -202,9 +219,9 @@ class OFAKWSNet(KWSNet):
                 block.conv.active_kernel_size = k
 
             if w is not None:
-                block.conv.active_out_channel = int(w * block.conv.out_channel_list[0])
+                block.conv.active_out_channel = int(w * block.conv.out_channel_list[0])"""
 
-        for stage_id, (block_idx, d, w) in enumerate(
+        """for stage_id, (block_idx, d, w) in enumerate(
                 zip(self.grouped_block_index, depth, width_mult[1:])
         ):
             if d is not None:
@@ -212,7 +229,7 @@ class OFAKWSNet(KWSNet):
                 self.runtime_depth[stage_id] = min(len(self.grouped_block_index[stage_id]), d)
             if w is not None:
                 for idx in block_idx:
-                    self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
+                    self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)"""
 
     def set_constraint(self, include_list, constraint_type="depth"):
         if constraint_type == "depth":
@@ -259,7 +276,7 @@ class OFAKWSNet(KWSNet):
         depth_setting = []
         if not isinstance(depth_candidates[0], list):
             depth_candidates = [
-                depth_candidates for _ in range(len(self.grouped_block_index))
+                depth_candidates for _ in range(len(self.block_group_info))
             ]
         for d_set in depth_candidates:
             d = random.choice(d_set)
@@ -268,7 +285,7 @@ class OFAKWSNet(KWSNet):
         # sample width
         width_setting = []
         if not isinstance(width_candidates[0], list):
-            width_candidates = [width_candidates for _ in range(len(self.grouped_block_index))]
+            width_candidates = [width_candidates for _ in range(len(self.blocks) - 1)]
         for w_set in width_candidates:
             w = random.choice(w_set)
             width_setting.append(w)
@@ -280,11 +297,11 @@ class OFAKWSNet(KWSNet):
         return arch_config
 
     def get_active_subnet(self, preserve_weight=True):
-        input_stem = copy.deepcopy(self.input_stem)
-        input_channel = self.input_stem[0].active_out_channel
+        input_stem = [copy.deepcopy(self.input_stem[0])]
+        input_channel = self.input_stem[0].conv.active_out_channel  # .conv or not
         # blocks
         blocks = []
-        for stage_id, block_idx in enumerate(self.grouped_block_index):
+        for stage_id, block_idx in enumerate(self.block_group_info):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             stage_blocks = []
@@ -326,7 +343,10 @@ class OFAKWSNet(KWSNet):
                         else None,
                     }
                 )
-                input_channel = self.blocks[idx].conv.active_out_channel
+                try:
+                    input_channel = self.blocks[idx].conv.active_out_channel
+                except Exception:
+                    input_channel = self.blocks[idx].conv.out_channels
             block_config_list += stage_blocks
 
         classifier_config = self.classifier.get_active_subnet_config(input_channel)
@@ -345,5 +365,5 @@ class OFAKWSNet(KWSNet):
     """ Width Related Methods """
 
     def re_organize_middle_weights(self, expand_ratio_stage=0):
-        for block in self.blocks[1:]:
+        for block in self.blocks:
             block.conv.re_organize_middle_weights(expand_ratio_stage)
