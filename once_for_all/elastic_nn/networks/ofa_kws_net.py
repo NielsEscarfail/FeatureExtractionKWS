@@ -114,22 +114,22 @@ class OFAKWSNet(KWSNet):
         return "OFAKWSNet"
 
     def forward(self, x):
-        print("0 ", x.shape)
+        # print("0 ", x.shape)
         for layer in self.input_stem:
             x = layer(x)
-            print("1 ", x.shape)
+            # print("1 ", x.shape)
 
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth_param = self.runtime_depth[stage_id]
             active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
                 x = self.blocks[idx](x)
-                print("2 ", x.shape)
+                # print("2 ", x.shape)
 
-        print("3.1 ", x.shape)
+        # print("3.1 ", x.shape)
 
         x = self.global_avg_pool(x)
-        print("3 ", x.shape)
+        # print("3 ", x.shape)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
