@@ -148,6 +148,10 @@ class DynamicConv2d(nn.Module):
         if out_channel is None:
             out_channel = self.active_out_channel
         in_channel = x.size(1)
+
+        print("dynop out_channel ", out_channel)
+        print("dynop in_channel ", in_channel)
+        print("dynop x.shape ", x.shape)
         filters = self.get_active_filter(out_channel, in_channel).contiguous()
 
         padding = get_same_padding(self.kernel_size)
