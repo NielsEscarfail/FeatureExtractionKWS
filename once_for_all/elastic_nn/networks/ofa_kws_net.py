@@ -183,13 +183,13 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
-        print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
+        # print("in set active subnet2: ks:%s, d:%s, w:%s" % (ks, d, w))
 
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.blocks))
         width_mult = val2list(w, len(self.width_mult_list) + 1)
 
-        print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
+        # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult))
 
         # set input stem
         if width_mult[0] is not None:
@@ -247,8 +247,7 @@ class OFAKWSNet(KWSNet):
             else self.__dict__["_width_include_list"]
         )
 
-        print("len self.block_group_info : ", len(self.block_group_info))
-        print("len(self.blocks) : ", len(self.blocks))
+        # print("len(self.blocks) : ", len(self.blocks))
 
         # sample kernel size
         ks_setting = []
@@ -262,7 +261,7 @@ class OFAKWSNet(KWSNet):
         depth_setting = []
         if not isinstance(depth_candidates[0], list):
             depth_candidates = [
-                depth_candidates for _ in range(len(self.block_group_info))
+                depth_candidates for _ in range(len(self.grouped_block_index))
             ]
         for d_set in depth_candidates:
             d = random.choice(d_set)
@@ -271,14 +270,14 @@ class OFAKWSNet(KWSNet):
         # sample width
         width_setting = []
         if not isinstance(width_candidates[0], list):
-            width_candidates = [width_candidates for _ in range(len(self.block_group_info))]
+            width_candidates = [width_candidates for _ in range(len(self.grouped_block_index))]
         for w_set in width_candidates:
             w = random.choice(w_set)
             width_setting.append(w)
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
 
-        print("arch config ", arch_config)
+        # print("arch config ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
