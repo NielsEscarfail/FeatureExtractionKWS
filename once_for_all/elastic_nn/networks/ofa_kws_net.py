@@ -209,7 +209,7 @@ class OFAKWSNet(KWSNet):
         ):
             if d is not None:
                 # self.runtime_depth[stage_id] = max(self.depth_list) - d
-                self.runtime_depth[stage_id] = min(len(self.block_group_info[stage_id]), d)
+                self.runtime_depth[stage_id] = min(len(self.grouped_block_index[stage_id]), d)
             if w is not None:
                 for idx in block_idx:
                     self.blocks[idx].conv.active_out_channel = int(self.blocks[idx].conv.out_channel_list[0] * w)
