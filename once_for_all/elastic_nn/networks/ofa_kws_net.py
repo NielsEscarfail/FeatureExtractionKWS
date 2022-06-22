@@ -210,13 +210,17 @@ class OFAKWSNet(KWSNet):
 
         # set input stem
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
-                int(self.input_stem[0].out_channel_list[] * width_mult[0])
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel * width_mult[0]
+            # = int(self.input_stem[0].out_channel_list * width_mult[0])
 
         # set blocks
-        for block, k in zip(self.blocks, ks):
+        for block, k, w in zip(self.blocks, ks, width_mult[1:]):
             if k is not None:
                 block.conv.active_kernel_size = k
+
+            if w is not None:
+                block.conv.active_out_channel = int(w * block.conv.out_channel_list[])
+
 
         for stage_id, (block_idx, d, w) in enumerate(
                 zip(self.grouped_block_index, depth, width_mult[1:])
@@ -293,7 +297,7 @@ class OFAKWSNet(KWSNet):
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
 
-        # print("arch config ", arch_config)
+        print("arch config ", arch_config)
         self.set_active_subnet(**arch_config)
         return arch_config
 
@@ -306,8 +310,6 @@ class OFAKWSNet(KWSNet):
             depth = self.runtime_depth[stage_id]
             active_idx = block_idx[:depth]
             stage_blocks = []
-            # depth_param = self.runtime_depth[stage_id]
-            # active_idx = block_idx[: len(block_idx) - depth_param]
             for idx in active_idx:
                 stage_blocks.append(
                     ResidualBlock(
