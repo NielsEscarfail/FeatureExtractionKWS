@@ -67,7 +67,7 @@ class OFAKWSNet(KWSNet):
         # blocks
         self.block_group_info = []
         blocks = []
-        _block_index = 1
+        _block_index = 0
         feature_dim = input_channel
 
         for n_block, width, s, act_func, use_se in zip(
