@@ -580,6 +580,7 @@ class MBConvLayer(nn.Module):
                 [
                     ("conv", nn.Conv2d(feature_dim, out_channels, 1, 1, 0, bias=False)),
                     ("bn", nn.BatchNorm2d(out_channels)),
+                    ("act", build_activation(self.act_func, inplace=True)),
                 ]
             )
         )
