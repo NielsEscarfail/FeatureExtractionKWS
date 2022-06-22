@@ -248,11 +248,7 @@ if __name__ == "__main__":
     args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
     args.depth_list = [int(d) for d in args.depth_list.split(",")]
     args.width_mult_list = [float(w) for w in args.width_mult_list.split(",")]
-    """args.width_mult_list = (
-        args.width_mult_list[0]
-        if len(args.width_mult_list) == 1
-        else args.width_mult_list
-    )"""
+
     # Instantiate OFA KWS model
     net = OFAKWSNet(
         n_classes=12,
@@ -287,6 +283,18 @@ if __name__ == "__main__":
 
         #  load teacher net weights
         load_models(run_manager, args.teacher_model, model_path=args.teacher_path)
+
+        # Validate teacher net
+        teach_validate_func_dict = {
+            "ft_extr_type": args.ft_extr_type,
+            "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+            "ks_list": [max(args.ks_list)],
+            "depth_list": [max(net.depth_list)],
+            "width_mult_list": [max(args.width_mult_list)],
+        }
+        print("Teacher validation feature extraction type: ", teach_validate_func_dict['ft_extr_type'])
+        print("Teacher validation feature extraction parameter search space: ", teach_validate_func_dict['ft_extr_params_list'])
+        run_manager.validate_all_resolution(is_test=True, net=args.teacher_model)
 
     """Training"""
     from once_for_all.elastic_nn.training.progressive_shrinking import (

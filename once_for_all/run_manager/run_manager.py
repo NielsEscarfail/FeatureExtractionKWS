@@ -272,7 +272,7 @@ class RunManager:
                     t.update(1)
         return losses.avg, self.get_metric_vals(metric_dict)
 
-    def validate_all_resolution(self, epoch=0, is_test=False, net=None):  # Unused
+    def validate_all_resolution(self, epoch=0, is_test=False, net=None):
 
         if net is None:
             net = self.network
