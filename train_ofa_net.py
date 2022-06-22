@@ -53,61 +53,78 @@ if args.task == "normal":
     args.warmup_lr = -1
     args.ks_list = "7"  # "7"
     args.width_mult_list = "2.0"
-    args.depth_list = "6"
+    args.depth_list = "8"
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 60  # 120
-    args.base_lr = 3e-3
+    args.base_lr = 1e-3
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
-    args.width_mult_list = "1.0"
-    args.depth_list = "4"
+    args.width_mult_list = "2.0"
+    args.depth_list = "8"  # "4"
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
     if args.phase == 1:
         args.n_epochs = 25  # 25
-        args.base_lr = 2.5e-3  # 2.5e-3 - 0.08 paper
+        args.base_lr = 1e-3  # 2.5e-3 - 0.08 paper
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0"
-        args.depth_list = "3,4"
-    else:
-        args.n_epochs = 60  # 120  # 125 (120 + 5)
-        args.base_lr = 7.5e-3  # 7.5e-3 - 0.24 paper
+        args.width_mult_list = "2.0"
+        args.depth_list = "6,8"  # "3,4"
+    elif args.phase == 2:
+        args.n_epochs = 25  # 120  # 125 (120 + 5)
+        args.base_lr = 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0"
-        args.depth_list = "2,3,4"
+        args.width_mult_list = "2.0"
+        args.depth_list = "4,6,8"# "2,3,4"
+    else:
+        args.n_epochs = 60  # 120  # 125 (120 + 5)
+        args.base_lr = 1e-3  # 7.5e-3 - 0.24 paper
+        args.warmup_epochs = 5
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.width_mult_list = "2.0"
+        args.depth_list = "2,4,6,8"
+
 elif args.task == "width":
     args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
         args.n_epochs = 25  # 25
-        args.base_lr = 2.5e-3
+        args.base_lr = 1e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0,.75"
-        args.depth_list = "2,3,4"
-    else:
-        args.n_epochs = 60  # 55 # 120
-        args.base_lr = 7.5e-3
+        args.width_mult_list = "2.0, 1.0"
+        args.depth_list = "2,4,6,8"  # "2,3,4"
+    elif args.phase == 2:
+        args.n_epochs = 25  # 55 # 120
+        args.base_lr = 1e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "1.0,.75,.5"
-        args.depth_list = "2,3,4"
+        args.width_mult_list = "2.0,1.0,.75"
+        args.depth_list = "2,4,6,8"
+    else:
+        args.n_epochs = 80  # 55 # 120
+        args.base_lr = 1e-3
+        args.warmup_epochs = 5
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.width_mult_list = "2.0,1.0,.75,.5"
+        args.depth_list = "2,4,6,8"
+
 else:
     raise NotImplementedError
 
 args.manual_seed = 0
 
-args.lr_schedule_type = "cosine"
 
 args.base_batch_size = 512
 args.valid_size = .1
@@ -206,6 +223,7 @@ if __name__ == "__main__":
 
     # build run config from args
     args.lr_schedule_param = None
+    args.lr_schedule_type = "cosine"
     args.opt_type = "adam"  # cosine, sgd
 
     args.opt_param = {
@@ -347,9 +365,11 @@ if __name__ == "__main__":
         if args.phase == 1:
             args.ofa_checkpoint_path += "/normal2kernel/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D4_E6_K357"
-        else:
+        elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase1/checkpoint/model_best.pth.tar"
             # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D34_E6_K357"
+        else:
+            args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
 
         print("Start elastic depth training")
 
@@ -369,7 +389,7 @@ if __name__ == "__main__":
         else:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase2/checkpoint/model_best.pth.tar"
 
-        print("Start elastic expand training")
+        print("Start elastic width training")
 
         train_elastic_width_mult(train, run_manager, args, validate_func_dict)
     else:
