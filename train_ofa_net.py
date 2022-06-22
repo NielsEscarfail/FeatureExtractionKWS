@@ -323,6 +323,17 @@ if __name__ == "__main__":
             "valid",
         )
         print("Resuming training ")"""
+        print("Testing all resolutions and networks:")
+        validate_func_dict = {
+            "ft_extr_type": args.ft_extr_type,
+            "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+            "ks_list": args.ks_list,
+            "depth_list": net.depth_list,
+            "width_mult_list": args.width_mult_list,
+        }
+        print("Validation dict: ", validate_func_dict)
+        validate(run_manager, is_test=True)
+
         print("Start large net training")
         train(
             run_manager,
@@ -382,10 +393,8 @@ if __name__ == "__main__":
 
         if args.phase == 1:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
-            # args.ofa_checkpoint_path = "/ofa_checkpoints/ofa_D234_E6_K357"
         elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
-            # args.ofa_checkpoint_path = "ofa_checkpoints/ofa_D234_E46_K357"
         else:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase2/checkpoint/model_best.pth.tar"
 
