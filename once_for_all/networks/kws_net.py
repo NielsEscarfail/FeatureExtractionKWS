@@ -203,7 +203,6 @@ class KWSNetLarge(KWSNet):
 
         width_list = [64, 64, 64, 64, 64, 64, 64, 64]
 
-        width_list = width_list * width_mult
         for i, width in enumerate(width_list):
             width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
