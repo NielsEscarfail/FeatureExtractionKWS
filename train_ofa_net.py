@@ -48,12 +48,12 @@ if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 80  # 140  # 120  # 180 paper
-    args.base_lr = 3e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"  # "7"
     args.width_mult_list = "1.0"
-    args.depth_list = "4"
+    args.depth_list = "6"
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
@@ -206,6 +206,8 @@ if __name__ == "__main__":
 
     # build run config from args
     args.lr_schedule_param = None
+    args.opt_type = "adam"  # cosine, sgd
+
     args.opt_param = {
         "momentum": args.momentum,
         "nesterov": not args.no_nesterov,

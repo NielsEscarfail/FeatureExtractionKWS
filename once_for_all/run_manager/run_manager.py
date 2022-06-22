@@ -92,7 +92,7 @@ class RunManager:
                 for param in self.network.parameters():
                     if param.requires_grad:
                         net_params.append(param)
-        self.optimizer = self.run_config.build_optimizer(net_params)
+        self.optimizer = self.run_config.build_opxtimizer(net_params)
 
         self.net = torch.nn.DataParallel(self.net)
 
