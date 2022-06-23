@@ -184,10 +184,10 @@ class DynamicResBlock(MyModule):
                                         stride,
                                         act_func,
                                         use_se)
-        if self.stride == 1 and self.in_channel_list == self.out_channel_list:
-            self.shortcut = IdentityLayer(
-                max(self.in_channel_list), max(self.out_channel_list)
-            )
+        # if self.stride == 1 and self.in_channel_list == self.out_channel_list:
+        self.shortcut = IdentityLayer(
+            max(self.in_channel_list), max(self.out_channel_list)
+        )
 
         self.active_out_channel = max(self.out_channel_list)
 
