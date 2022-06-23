@@ -199,7 +199,7 @@ class DynamicResBlock(MyModule):
 
         self.conv4.active_out_channel = self.active_out_channel
 
-        residual = self.downsample(x)
+        residual = self.shortcut(x)
 
         x = self.conv1(x)
         x = self.conv2(x)
