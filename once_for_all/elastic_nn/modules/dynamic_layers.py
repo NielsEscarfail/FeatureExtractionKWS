@@ -149,6 +149,9 @@ class DynamicResBlock(MyModule):
         self.in_channel_list = in_channel_list
         self.out_channel_list = out_channel_list
 
+        self.global_in_channel = max(val2list(in_channel_list))
+        self.global_out_channel = max(val2list(out_channel_list))
+
         self.kernel_size_list = val2list(kernel_size_list)
         self.expand_ratio_list = val2list(expand_ratio_list)
 
@@ -156,7 +159,7 @@ class DynamicResBlock(MyModule):
         self.act_func = act_func
         self.use_se = use_se
 
-        self.conv1 = DynamicMBConvLayer(max(in_channel_list),
+        self.conv1 = DynamicMBConvLayer(self.global_in_channel,
                                         out_channel_list,
                                         kernel_size_list,
                                         expand_ratio_list,
@@ -178,7 +181,7 @@ class DynamicResBlock(MyModule):
                                         act_func,
                                         use_se)
         self.conv4 = DynamicMBConvLayer(in_channel_list,
-                                        max(out_channel_list),
+                                        self.global_out_channel,
                                         kernel_size_list,
                                         expand_ratio_list,
                                         stride,
@@ -186,7 +189,7 @@ class DynamicResBlock(MyModule):
                                         use_se)
         # if self.stride == 1 and self.in_channel_list == self.out_channel_list:
         self.shortcut = IdentityLayer(
-            max(self.in_channel_list), max(self.out_channel_list)
+            self.global_in_channel, self.global_out_channel
         )
 
         self.active_out_channel = max(self.out_channel_list)
