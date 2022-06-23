@@ -645,7 +645,7 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         print("x shape before : ", x.shape)
-        print("self.conv.shape : ", self.conv.shape)
+        print("self.conv.shape : ", self.conv.conv.shape)
         print("self.shortcut : ", type(self.shortcut))
         if self.conv is None or isinstance(self.conv, ZeroLayer):
             res = x
