@@ -2,7 +2,7 @@ import copy
 import random
 
 from once_for_all.elastic_nn.modules.dynamic_layers import (
-    DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
+    DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer, DynamicResBlock
 )
 from once_for_all.networks.kws_net import KWSNet
 from utils import make_divisible, MyNetwork
@@ -77,7 +77,15 @@ class OFAKWSNet(KWSNet):
 
             for i in range(n_block):
                 stride = s if i == 0 else 1  # stride = 1
-                conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
+                block = DynamicResBlock(in_channel_list=val2list(input_channel),
+                                        out_channel_list=val2list(width),
+                                        kernel_size_list=ks_list,
+                                        expand_ratio_list=val2list(1),
+                                        stride=stride,
+                                        act_func=act_func,
+                                        use_se=use_se)
+                blocks.append(block)
+                """conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
                                           out_channel_list=val2list(width),
                                           kernel_size_list=ks_list,
                                           expand_ratio_list=val2list(1),
@@ -88,7 +96,7 @@ class OFAKWSNet(KWSNet):
                 shortcut = IdentityLayer(max(val2list(input_channel)),
                                          max(val2list(input_channel))) if stride == 1 and input_channel == width else None
 
-                blocks.append(ResidualBlock(conv, shortcut))
+                blocks.append(ResidualBlock(conv, shortcut))"""
                 input_channel = width
 
         classifier = DynamicLinearLayer(
