@@ -231,6 +231,7 @@ if __name__ == "__main__":
 
     args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
     args.depth_list = [int(d) for d in args.depth_list.split(",")]
+    args.expand_list = [int(e) for e in args.expand_list.split(",")]
     args.width_mult_list = [float(w) for w in args.width_mult_list.split(",")]
 
     # Instantiate OFA KWS model
@@ -241,6 +242,7 @@ if __name__ == "__main__":
         width_mult_list=args.width_mult_list,
         ks_list=args.ks_list,
         depth_list=args.depth_list,
+        expand_ratio_list=args.expand_list
     )
 
     """ RunManager """
@@ -260,7 +262,9 @@ if __name__ == "__main__":
             dropout_rate=0,
             ks=max(args.ks_list),
             depth=max(args.depth_list),
-            width_mult=max(args.width_mult_list))
+            width_mult=max(args.width_mult_list),
+            expand_ratio=max(args.expand_list)
+        )
 
         if torch.cuda.is_available():
             args.teacher_model.cuda()
@@ -275,7 +279,7 @@ if __name__ == "__main__":
             "width_mult_list": [max(args.width_mult_list)],
             "ks_list": [max(args.ks_list)],
             "depth_list": [max(net.depth_list)],
-            "width_mult_list": [max(args.width_mult_list)],
+            "expand_list": [max(args.expand_list)],
         }
         print("Teacher validation feature extraction type: ", teach_validate_func_dict['ft_extr_type'])
         print("Teacher validation feature extraction parameter search space: ",
