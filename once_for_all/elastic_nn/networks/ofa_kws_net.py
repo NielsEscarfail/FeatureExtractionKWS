@@ -193,7 +193,7 @@ class OFAKWSNet(KWSNet):
 
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.block_group_info))
-        width_mult = val2list(w, len(self.blocks) + 1)
+        width_mult = val2list(w, len(self.block_group_info) + 1)
 
         # print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
         # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult)
@@ -212,14 +212,20 @@ class OFAKWSNet(KWSNet):
 
         # set width
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[self.width_mult_list.index(width_mult[0])]
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
 
-        for i, w in enumerate(width_mult[1:]):
+        """for i, (block_idx, w) in enumerate(width_mult[1:]):
             if w is not None:
-                self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[self.width_mult_list.index(w)]
-                if self.blocks[i].shortcut is not None:
-                    print("here")
-                    self.blocks[i].shortcut.out_channels = self.blocks[i].conv.out_channel_list[self.width_mult_list.index(w)]
+                self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]"""
+
+        for stage_id, (block_idx, w) in enumerate(
+                zip(self.block_group_info, width_mult[1:])
+        ):
+            if w is not None:
+                for idx in block_idx:
+                    self.blocks[idx].active_out_channel = self.blocks[
+                        idx
+                    ].out_channel_list[w]
 
     def sample_active_subnet(self):
 
@@ -256,12 +262,13 @@ class OFAKWSNet(KWSNet):
             depth_setting.append(d)
 
         # sample width
-        width_setting = []
-        if not isinstance(width_candidates[0], list):
-            width_candidates = [width_candidates for _ in range(len(self.blocks))]
-        for w_set in width_candidates:
-            w = random.choice(w_set)
-            width_setting.append(w)
+        width_setting = [random.choice(list(range(len(self.input_stem[0].out_channel_list))))]
+
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            stage_first_block = self.blocks[block_idx[0]]
+            width_setting.append(
+                random.choice(list(range(len(stage_first_block.out_channel_list))))
+            )
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
 
