@@ -206,14 +206,14 @@ class OFAKWSNet(KWSNet):
         """
 
         # set kernel size and expand ratio
-        for i, (block, k, e) in zip(self.blocks, ks, expand_ratio):  # this works
+        for i, (block, k, e) in enumerate(zip(self.blocks, ks, expand_ratio)):
             if k is not None:
                 block.conv.active_kernel_size = k
             if e is not None:
                 block.active_expand_ratio = e
 
         # set depth
-        for i, d in enumerate(depth):  # this works
+        for i, d in enumerate(depth):
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
