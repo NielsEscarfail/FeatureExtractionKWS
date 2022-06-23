@@ -132,6 +132,7 @@ class DynamicLinearLayer(MyModule):
             "dropout_rate": self.dropout_rate,
         }
 
+
 class DynamicResBlock(MyModule):
     def __init__(
             self,
@@ -156,33 +157,33 @@ class DynamicResBlock(MyModule):
         self.use_se = use_se
 
         self.conv1 = DynamicMBConvLayer(in_channel_list,
-                                       out_channel_list,
-                                       kernel_size_list,
-                                       expand_ratio_list,
-                                       stride,
-                                       act_func,
-                                       use_se)
+                                        out_channel_list,
+                                        kernel_size_list,
+                                        expand_ratio_list,
+                                        stride,
+                                        act_func,
+                                        use_se)
         self.conv2 = DynamicMBConvLayer(in_channel_list,
-                                       out_channel_list,
-                                       kernel_size_list,
-                                       expand_ratio_list,
-                                       stride,
-                                       act_func,
-                                       use_se)
+                                        out_channel_list,
+                                        kernel_size_list,
+                                        expand_ratio_list,
+                                        stride,
+                                        act_func,
+                                        use_se)
         self.conv3 = DynamicMBConvLayer(in_channel_list,
-                                       out_channel_list,
-                                       kernel_size_list,
-                                       expand_ratio_list,
-                                       stride,
-                                       act_func,
-                                       use_se)
+                                        out_channel_list,
+                                        kernel_size_list,
+                                        expand_ratio_list,
+                                        stride,
+                                        act_func,
+                                        use_se)
         self.conv4 = DynamicMBConvLayer(in_channel_list,
-                                       out_channel_list,
-                                       kernel_size_list,
-                                       expand_ratio_list,
-                                       stride,
-                                       act_func,
-                                       use_se)
+                                        out_channel_list,
+                                        kernel_size_list,
+                                        expand_ratio_list,
+                                        stride,
+                                        act_func,
+                                        use_se)
         if self.stride == 1 and self.in_channel_list == self.out_channel_list:
             self.shortcut = IdentityLayer(
                 max(self.in_channel_list), max(self.out_channel_list)
@@ -191,7 +192,7 @@ class DynamicResBlock(MyModule):
         self.active_out_channel = max(self.out_channel_list)
 
     def forward(self, x):
-        feature_dim = self.active_middle_channels # we modify active_middle_channels for w search
+        feature_dim = self.active_middle_channels  # we modify active_middle_channels for w search
         self.conv1.conv.active_out_channel = feature_dim
         self.conv2.conv.active_out_channel = feature_dim
         self.conv2.conv.active_out_channel = feature_dim
@@ -269,27 +270,19 @@ class DynamicResBlock(MyModule):
         self.conv1.re_organize_middle_weights(expand_ratio_stage)
         self.conv2.re_organize_middle_weights(expand_ratio_stage)
         self.conv3.re_organize_middle_weights(expand_ratio_stage)
-        self.conv4.re_organize_middle_weights(expand_ratio_stage) # might not be needed
-
-
-
-
-
-
-
-
+        self.conv4.re_organize_middle_weights(expand_ratio_stage)  # might not be needed
 
 
 class DynamicMBConvLayer(MyModule):
     def __init__(
-        self,
-        in_channel_list,
-        out_channel_list,
-        kernel_size_list=3,
-        expand_ratio_list=6,
-        stride=1,
-        act_func="relu6",
-        use_se=False,
+            self,
+            in_channel_list,
+            out_channel_list,
+            kernel_size_list=3,
+            expand_ratio_list=6,
+            stride=1,
+            act_func="relu6",
+            use_se=False,
     ):
         super(DynamicMBConvLayer, self).__init__()
 
@@ -564,14 +557,14 @@ class DynamicMBConvLayer(MyModule):
 
 class DynamicConvLayer(MyModule):
     def __init__(
-        self,
-        in_channel_list,
-        out_channel_list,
-        kernel_size=3,
-        stride=1,
-        dilation=1,
-        use_bn=True,
-        act_func="relu6",
+            self,
+            in_channel_list,
+            out_channel_list,
+            kernel_size=3,
+            stride=1,
+            dilation=1,
+            use_bn=True,
+            act_func="relu6",
     ):
         super(DynamicConvLayer, self).__init__()
 
@@ -613,10 +606,10 @@ class DynamicConvLayer(MyModule):
             self.stride,
         ) if isinstance(self.kernel_size, tuple) else \
             "DyConv(O%d, K%d, S%d)" % (
-            self.active_out_channel,
-            self.kernel_size,
-            self.stride,
-        )
+                self.active_out_channel,
+                self.kernel_size,
+                self.stride,
+            )
 
     @property
     def config(self):
@@ -677,14 +670,14 @@ class DynamicConvLayer(MyModule):
 
 class DynamicResNetBottleneckBlock(MyModule):
     def __init__(
-        self,
-        in_channel_list,
-        out_channel_list,
-        expand_ratio_list=0.25,
-        kernel_size=3,
-        stride=1,
-        act_func="relu",
-        downsample_mode="avgpool_conv",
+            self,
+            in_channel_list,
+            out_channel_list,
+            expand_ratio_list=0.25,
+            kernel_size=3,
+            stride=1,
+            act_func="relu",
+            downsample_mode="avgpool_conv",
     ):
         super(DynamicResNetBottleneckBlock, self).__init__()
 
@@ -993,32 +986,3 @@ class DynamicResNetBottleneckBlock(MyModule):
         )
 
         return None
-
-
-class DynamicResidualBlock(MyModule):
-
-    def __init__(
-            self,
-            in_channel_list,
-            out_channel_list,
-            width_list,
-            kernel_size=3,
-            stride=1,
-            act_func="relu",
-            downsample_mode="avgpool_conv",
-    ):
-
-    def forward(self, x):
-        pass
-
-    @property
-    def module_str(self):
-        pass
-
-    @property
-    def config(self):
-        pass
-
-    @staticmethod
-    def build_from_config(config):
-        pass
