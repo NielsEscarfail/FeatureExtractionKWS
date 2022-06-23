@@ -45,7 +45,7 @@ args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
 args.kd_ratio = 1.0
-args.width_mult_list = "1.0,2.0"
+args.width_mult_list = "1.0"
 
 if args.task == "normal":
     args.path += "/normal"
@@ -92,7 +92,7 @@ elif args.task == "depth":
 
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
-        args.base_lr = 1e-3 # 1e-3  # 7.5e-3 - 0.24 paper
+        args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -278,7 +278,8 @@ if __name__ == "__main__":
             "width_mult_list": [max(args.width_mult_list)],
         }
         print("Teacher validation feature extraction type: ", teach_validate_func_dict['ft_extr_type'])
-        print("Teacher validation feature extraction parameter search space: ", teach_validate_func_dict['ft_extr_params_list'])
+        print("Teacher validation feature extraction parameter search space: ",
+              teach_validate_func_dict['ft_extr_params_list'])
         run_manager.validate_all_resolution(is_test=True, net=args.teacher_model)
 
     """Training"""

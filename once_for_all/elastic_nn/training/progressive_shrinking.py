@@ -25,9 +25,10 @@ def validate(
         is_test=False,
         ft_extr_type=None,
         ft_extr_params_list=None,
+        width_mult_list=None,
         ks_list=None,
         depth_list=None,
-        width_mult_list=None,
+        expand_ratio_list=None,
         additional_setting=None,
 ):
     dynamic_net = run_manager.net
@@ -46,26 +47,30 @@ def validate(
         depth_list = dynamic_net.depth_list
     if width_mult_list is None:
         width_mult_list = dynamic_net.width_mult_list
+    if expand_ratio_list is None:
+        expand_ratio_list = dynamic_net.expand_ratio_list
 
 
     subnet_settings = []
     for ftp in ft_extr_params_list:
-        for d in depth_list:
-            for k in ks_list:
-                for w in width_mult_list:
-                    w_index = dynamic_net.width_mult_list.index(w)
-                    subnet_settings.append(
-                        [
-                            {
-                                "ft_extr_type": ft_extr_type,
-                                "ft_extr_params": ftp,
-                                "d": d,
-                                "ks": k,
-                                "w": w_index,
-                            },
-                            "%s%s-D%s-K%s-W%s" % (ft_extr_type, ftp, d, k, w),
-                        ]
-                    )
+        for w in width_mult_list:
+            for d in depth_list:
+                for k in ks_list:
+                    for e in expand_ratio_list:
+                        w_index = dynamic_net.width_mult_list.index(w)
+                        subnet_settings.append(
+                            [
+                                {
+                                    "ft_extr_type": ft_extr_type,
+                                    "ft_extr_params": ftp,
+                                    "w": w_index,
+                                    "d": d,
+                                    "ks": k,
+                                    "e": e,
+                                },
+                                "%s%s-W%s-D%s-K%s-E%s" % (ft_extr_type, ftp, w, d, k, e),
+                            ]
+                        )
     if additional_setting is not None:
         subnet_settings += additional_setting
 

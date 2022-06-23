@@ -189,39 +189,34 @@ class OFAKWSNet(KWSNet):
             ks=max(self.ks_list), d=max(self.depth_list), w=max(self.width_mult_list)
         )
 
-    def set_active_subnet(self, ks=None, d=None, w=None, **kwargs):
+    def set_active_subnet(self, w=None, ks=None, d=None, e=None, **kwargs):
 
+        width_mult = val2list(w, len(self.block_group_info) + 1)
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.block_group_info))
-        width_mult = val2list(w, len(self.block_group_info) + 1)
+        expand_ratio = val2list(e, len(self.blocks))
 
-        # print("in set active subnet2: ks:%s, depth:%s, w:%s" % (ks, depth, width_mult))
-        # print("in set active subnet2: ks:%s, depth:%s, width_mult:%s" % (ks, depth, width_mult)
-        # print("self.blocks: ", self.blocks)
-        # print("ks : ", ks)
+        """# set width
+        if width_mult[0] is not None:
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
 
-        # set kernel size
-        for block, k in zip(self.blocks, ks):  # this works
+        for i, w in enumerate(width_mult[1:]):
+            if w is not None:
+                self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]
+        """
+
+        # set kernel size and expand ratio
+        for i, (block, k, e) in zip(self.blocks, ks, expand_ratio):  # this works
             if k is not None:
                 block.conv.active_kernel_size = k
+            if e is not None:
+                block.active_expand_ratio = e
 
         # set depth
         for i, d in enumerate(depth):  # this works
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
-        # set width
-        # if width_mult[0] is not None:
-        #    self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
-
-        for i, w in enumerate(width_mult[1:]):
-            if w is not None:
-                """if self.blocks[i].shortcut is not None:
-                    print("in setting w : ", type(self.blocks[i].shortcut))"""
-                if self.blocks[i].shortcut is None or isinstance(self.blocks[i].shortcut, ZeroLayer):
-                    print(type(self.blocks[i].shortcut))
-                    print("wooooowwwww")
-                    self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]
 
         """for stage_id, (block_idx, w) in enumerate(
                 zip(self.block_group_info, width_mult[1:])
@@ -234,7 +229,11 @@ class OFAKWSNet(KWSNet):
                         ].conv.out_channel_list[w]"""
 
     def sample_active_subnet(self):
-
+        width_candidates = (
+            self.width_mult_list
+            if self.__dict__.get("_width_include_list", None) is None
+            else self.__dict__["_width_include_list"]
+        )
         ks_candidates = (
             self.ks_list
             if self.__dict__.get("_ks_include_list", None) is None
@@ -245,11 +244,19 @@ class OFAKWSNet(KWSNet):
             if self.__dict__.get("_depth_include_list", None) is None
             else self.__dict__["_depth_include_list"]
         )
-        width_candidates = (
-            self.width_mult_list
-            if self.__dict__.get("_width_include_list", None) is None
-            else self.__dict__["_width_include_list"]
+        expand_candidates = (
+            self.expand_ratio_list
+            if self.__dict__.get("_expand_include_list", None) is None
+            else self.__dict__["_expand_include_list"]
         )
+        # sample width
+        width_setting = [random.choice(list(range(len(self.input_stem[0].out_channel_list))))]
+
+        for stage_id, block_idx in enumerate(self.block_group_info):
+            stage_first_block = self.blocks[block_idx[0]]
+            width_setting.append(
+                random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
+            )
 
         # sample kernel size
         ks_setting = []
@@ -267,16 +274,15 @@ class OFAKWSNet(KWSNet):
             d = random.choice(d_set)
             depth_setting.append(d)
 
-        # sample width
-        width_setting = [random.choice(list(range(len(self.input_stem[0].out_channel_list))))]
+        # sample expand ratio
+        expand_setting = []
+        if not isinstance(expand_candidates[0], list):
+            expand_candidates = [expand_candidates for _ in range(len(self.blocks))]
+        for e_set in expand_candidates:
+            e = random.choice(e_set)
+            expand_setting.append(e)
 
-        for stage_id, block_idx in enumerate(self.block_group_info):
-            stage_first_block = self.blocks[block_idx[0]]
-            width_setting.append(
-                random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
-            )
-
-        arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
+        arch_config = {"w": width_setting, "ks": ks_setting, "d": depth_setting, "e": expand_setting}
 
         self.set_active_subnet(**arch_config)
         return arch_config
