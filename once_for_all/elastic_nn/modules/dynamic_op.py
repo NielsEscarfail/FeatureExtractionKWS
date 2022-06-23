@@ -399,32 +399,3 @@ class DynamicLinear(nn.Module):
         bias = self.get_active_bias(out_features)
         y = F.linear(x, weight, bias)
         return y
-
-
-class DynamicIdentity(nn.Module):
-    def __init__(self, max_in_features, max_out_features, bias=True):
-        super(DynamicIdentity, self).__init__()
-
-        self.max_in_features = max_in_features
-        self.max_out_features = max_out_features
-        self.bias = bias
-
-        self.linear = nn.Linear(self.max_in_features, self.max_out_features, self.bias)
-
-        self.active_out_features = self.max_out_features
-
-    def get_active_weight(self, out_features, in_features):
-        return self.linear.weight[:out_features, :in_features]
-
-    def get_active_bias(self, out_features):
-        return self.linear.bias[:out_features] if self.bias else None
-
-    def forward(self, x, out_features=None):
-        if out_features is None:
-            out_features = self.active_out_features
-
-        in_features = x.size(1)
-        weight = self.get_active_weight(out_features, in_features).contiguous()
-        bias = self.get_active_bias(out_features)
-        y = F.linear(x, weight, bias)
-        return y
