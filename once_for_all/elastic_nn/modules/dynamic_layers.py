@@ -156,7 +156,7 @@ class DynamicResBlock(MyModule):
         self.act_func = act_func
         self.use_se = use_se
 
-        self.conv1 = DynamicMBConvLayer(in_channel_list,
+        self.conv1 = DynamicMBConvLayer(max(in_channel_list),
                                         out_channel_list,
                                         kernel_size_list,
                                         expand_ratio_list,
@@ -178,7 +178,7 @@ class DynamicResBlock(MyModule):
                                         act_func,
                                         use_se)
         self.conv4 = DynamicMBConvLayer(in_channel_list,
-                                        out_channel_list,
+                                        max(out_channel_list),
                                         kernel_size_list,
                                         expand_ratio_list,
                                         stride,
