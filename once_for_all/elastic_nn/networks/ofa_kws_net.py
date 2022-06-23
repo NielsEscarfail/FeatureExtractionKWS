@@ -217,6 +217,7 @@ class OFAKWSNet(KWSNet):
         for i, w in enumerate(width_mult[1:]):
             if w is not None:
                 self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[self.width_mult_list.index(w)]
+                self.blocks[i].shortcut.out_channels = self.blocks[i].conv.out_channel_list[self.width_mult_list.index(w)]
 
     def sample_active_subnet(self):
 
