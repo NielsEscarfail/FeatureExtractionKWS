@@ -211,8 +211,8 @@ class OFAKWSNet(KWSNet):
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
         # set width
-        if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
+        # if width_mult[0] is not None:
+        #    self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
 
         for i, w in enumerate(width_mult[1:]):
             if w is not None:
