@@ -269,9 +269,9 @@ if __name__ == "__main__":
             n_classes=12,
             bn_param=(args.bn_momentum, args.bn_eps),
             dropout_rate=0,
-            ks=7,
-            depth=8,
-            width_mult=2.0)
+            ks=max(args.ks_list),
+            depth=max(args.depth_list),
+            width_mult=max(args.width_mult_list))
 
         if torch.cuda.is_available():
             args.teacher_model.cuda()

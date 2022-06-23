@@ -88,7 +88,6 @@ class KWSNet(MyNetwork):
             info_list.append(block_index_list)
         return info_list"""
 
-    # NOT UPDATED YET - might not be needed
     @staticmethod
     def build_net_via_cfg():
         raise NotImplementedError
@@ -130,7 +129,7 @@ class KWSNetLarge(KWSNet):
             bn_param=(0.1, 1e-5),
             dropout_rate=0.1,
             ks=7,
-            depth=8,
+            depth=4,
             width_mult=2.0,
     ):
 
