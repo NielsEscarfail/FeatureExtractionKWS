@@ -149,8 +149,8 @@ class DynamicResBlock(MyModule):
         self.in_channel_list = in_channel_list
         self.out_channel_list = out_channel_list
 
-        self.global_in_channel = max(val2list(in_channel_list))
-        self.global_out_channel = max(val2list(out_channel_list))
+        self.global_in_channel = val2list(max(val2list(in_channel_list)))
+        self.global_out_channel = val2list(max(val2list(out_channel_list)))
 
         self.kernel_size_list = val2list(kernel_size_list)
         self.expand_ratio_list = val2list(expand_ratio_list)

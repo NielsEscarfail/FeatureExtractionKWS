@@ -24,7 +24,7 @@ class OFAKWSNet(KWSNet):
             ks_list=3,
             depth_list=4,
             width_mult_list=1.0,
-            expand_ratio_list=1
+            expand_ratio_list=1,
     ):
 
         self.ks_list = val2list(ks_list, 1)
@@ -77,26 +77,18 @@ class OFAKWSNet(KWSNet):
 
             for i in range(n_block):
                 stride = s if i == 0 else 1  # stride = 1
-                block = DynamicResBlock(in_channel_list=val2list(input_channel),
-                                        out_channel_list=val2list(width),
-                                        kernel_size_list=ks_list,
-                                        expand_ratio_list=val2list(1),
-                                        stride=stride,
-                                        act_func=act_func,
-                                        use_se=use_se)
-                blocks.append(block)
-                """conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
+                conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
                                           out_channel_list=val2list(width),
                                           kernel_size_list=ks_list,
-                                          expand_ratio_list=val2list(1),
+                                          expand_ratio_list=expand_ratio_list,
                                           stride=stride,
                                           act_func=act_func,
                                           use_se=use_se)
 
-                shortcut = IdentityLayer(max(val2list(input_channel)),
-                                         max(val2list(input_channel))) if stride == 1 and input_channel == width else None
+                shortcut = IdentityLayer(input_channel,
+                                         input_channel) if stride == 1 and input_channel == width else None
 
-                blocks.append(ResidualBlock(conv, shortcut))"""
+                blocks.append(ResidualBlock(conv, shortcut))
                 input_channel = width
 
         classifier = DynamicLinearLayer(

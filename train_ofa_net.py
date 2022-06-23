@@ -45,6 +45,7 @@ args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
 args.kd_ratio = 1.0
+args.width_mult_list = "1.0,2.0"
 
 if args.task == "normal":
     args.path += "/normal"
@@ -54,8 +55,8 @@ if args.task == "normal":
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"  # 7
-    args.width_mult_list = "2.0"
     args.depth_list = "4"
+    args.expand_list = "3"
     args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
@@ -65,8 +66,9 @@ elif args.task == "kernel":
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
-    args.width_mult_list = "2.0"
     args.depth_list = "4"  # "4" 3 2 1
+    args.expand_list = "3"
+
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
@@ -76,27 +78,30 @@ elif args.task == "depth":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0"
         args.depth_list = "3,4"  # "3,4"
+        args.expand_list = "3"
+
     elif args.phase == 2:
         args.n_epochs = 25  # 120  # 125 (120 + 5)
         args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0"
         args.depth_list = "2,3,4"  # "2,3,4"
+        args.expand_list = "3"
+
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
         args.base_lr = 1e-3 # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0"
         args.depth_list = "1,2,3,4"
+        args.expand_list = "3"
 
-elif args.task == "width":
-    args.path += "/kernel_depth2kernel_depth_width/phase%d" % args.phase
+
+elif args.task == "expand":
+    args.path += "/kernel_depth2kernel_depth_expand/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
         args.n_epochs = 25  # 25
@@ -104,24 +109,17 @@ elif args.task == "width":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0, 1.0"
         args.depth_list = "1,2,4,6"  # "2,3,4"
+        args.expand_list = "3,2"
+
     elif args.phase == 2:
-        args.n_epochs = 25  # 55 # 120
+        args.n_epochs = 100  # 55 # 120
         args.base_lr = 1e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0,1.0,.75"
         args.depth_list = "1,2,3,4"
-    else:
-        args.n_epochs = 80  # 55 # 120
-        args.base_lr = 1e-3
-        args.warmup_epochs = 5
-        args.warmup_lr = -1
-        args.ks_list = "3,5,7"
-        args.width_mult_list = "2.0,1.0,.75,.5"
-        args.depth_list = "1,2,3,4"
+        args.expand_list = "3,2,1"
 
 else:
     raise NotImplementedError
@@ -274,6 +272,7 @@ if __name__ == "__main__":
         teach_validate_func_dict = {
             "ft_extr_type": args.ft_extr_type,
             "ft_extr_params_list": args.ft_extr_params_list,
+            "width_mult_list": [max(args.width_mult_list)],
             "ks_list": [max(args.ks_list)],
             "depth_list": [max(net.depth_list)],
             "width_mult_list": [max(args.width_mult_list)],
@@ -293,7 +292,7 @@ if __name__ == "__main__":
         "ft_extr_params_list": args.ft_extr_params_list,
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
-        "width_mult_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
+        "expand_list": sorted({min(args.expand_list), max(args.expand_list)}),
     }
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
@@ -364,21 +363,21 @@ if __name__ == "__main__":
 
         train_elastic_depth(train, run_manager, args, validate_func_dict)
 
-    elif args.task == "width":
+    elif args.task == "expand":
         from once_for_all.elastic_nn.training.progressive_shrinking import (
-            train_elastic_width_mult,
+            train_elastic_expand,
         )
 
         if args.phase == 1:
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
         elif args.phase == 2:
-            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase1/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase1/checkpoint/model_best.pth.tar"
         else:
-            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase2/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
         print("Start elastic width training")
 
-        train_elastic_width_mult(train, run_manager, args, validate_func_dict)
+        train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
 
