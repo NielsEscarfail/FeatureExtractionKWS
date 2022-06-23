@@ -132,6 +132,36 @@ class DynamicLinearLayer(MyModule):
             "dropout_rate": self.dropout_rate,
         }
 
+class DynamicResBlock(MyModule):
+    def __init__(
+            self,
+            in_channel_list,
+            out_channel_list,
+            kernel_size_list=3,
+            expand_ratio_list=6,
+            stride=1,
+            act_func="relu6",
+            use_se=False,
+    ):
+        super(DynamicResBlock, self).__init__()
+
+        self.in_channel_list = in_channel_list
+        self.out_channel_list = out_channel_list
+
+        self.kernel_size_list = val2list(kernel_size_list)
+        self.expand_ratio_list = val2list(expand_ratio_list)
+
+        self.stride = stride
+        self.act_func = act_func
+        self.use_se = use_se
+
+        self.conv = DynamicMBConvLayer(in_channel_list,
+                                       out_channel_list,
+                                       kernel_size_list,
+                                       expand_ratio_list,
+                                       stride,
+                                       act_func,
+                                       use_se)
 
 class DynamicMBConvLayer(MyModule):
     def __init__(

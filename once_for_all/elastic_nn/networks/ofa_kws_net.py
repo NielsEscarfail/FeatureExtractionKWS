@@ -76,7 +76,7 @@ class OFAKWSNet(KWSNet):
             _block_index += n_block
 
             for i in range(n_block):
-                stride = s if i == 0 else 1  # stride = 1  #
+                stride = s if i == 0 else 1  # stride = 1
                 conv = DynamicMBConvLayer(in_channel_list=val2list(input_channel),
                                           out_channel_list=val2list(width),
                                           kernel_size_list=ks_list,
@@ -214,18 +214,21 @@ class OFAKWSNet(KWSNet):
         if width_mult[0] is not None:
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[width_mult[0]]
 
-        """for i, (block_idx, w) in enumerate(width_mult[1:]):
+        for i, (block_idx, w) in enumerate(width_mult[1:]):
             if w is not None:
-                self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]"""
+                if self.blocks[i].shortcut is None:
+                    print("wooooowwwww")
+                    self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]
 
-        for stage_id, (block_idx, w) in enumerate(
+        """for stage_id, (block_idx, w) in enumerate(
                 zip(self.block_group_info, width_mult[1:])
         ):
             if w is not None:
                 for idx in block_idx:
-                    self.blocks[idx].conv.active_out_channel = self.blocks[
-                        idx
-                    ].conv.out_channel_list[w]
+                    if self.blocks[idx].shortcut is None:
+                        self.blocks[idx].conv.active_out_channel = self.blocks[
+                            idx
+                        ].conv.out_channel_list[w]"""
 
     def sample_active_subnet(self):
 
