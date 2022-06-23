@@ -48,14 +48,14 @@ def validate(
     if width_mult_list is None:
         width_mult_list = dynamic_net.width_mult_list
     if expand_list is None:
-        expand_ratio_list = dynamic_net.expand_ratio_list
+        expand_list = dynamic_net.expand_ratio_list
 
     subnet_settings = []
     for ftp in ft_extr_params_list:
         for w in width_mult_list:
             for d in depth_list:
                 for k in ks_list:
-                    for e in expand_ratio_list:
+                    for e in expand_list:
                         w_index = dynamic_net.width_mult_list.index(w)
                         subnet_settings.append(
                             [
