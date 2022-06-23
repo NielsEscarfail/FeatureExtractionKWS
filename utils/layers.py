@@ -644,14 +644,13 @@ class ResidualBlock(nn.Module):
         self.shortcut = shortcut
 
     def forward(self, x):
-        print("x shape before : ", x.shape)
+        """        print("x shape before : ", x.shape)
         print("self.shortcut : ", type(self.shortcut))
         if self.shortcut is None:
             print("shortcut none")
         else:
             print("shortcut shape : ", self.shortcut(x).shape)
-        print("conv shape : ", self.conv(x).shape)
-
+        print("conv shape : ", self.conv(x).shape)"""
         if self.conv is None or isinstance(self.conv, ZeroLayer):
             res = x
         elif self.shortcut is None or isinstance(self.shortcut, ZeroLayer):

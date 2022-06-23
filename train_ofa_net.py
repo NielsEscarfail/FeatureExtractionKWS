@@ -155,17 +155,8 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
     args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    # args.ft_extr_params_list = [(40, 40)]
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
-
-    """args.ft_extr_params_list = [(10, 10), (10, 20), (10, 40),
-                                (20, 10), (20, 20), (20, 40),
-                                (30, 10), (30, 20), (30, 40),
-                                (40, 10), (40, 20), (40, 40)]"""
-    """args.ft_extr_params_list = [(40, 20), (40, 30), (40, 40),
-                                (80, 20), (80, 30), (80, 40), ]"""  # 30 ftbins gets
-    """args.ft_extr_params_list = [(40, 20), (40, 40), (80, 20), (80, 40)]"""
-
+    args.ft_extr_params_list = [(40, 40)]
+    # args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
 
 
 elif args.ft_extr_type == "linear_stft":  # n_mels unused
