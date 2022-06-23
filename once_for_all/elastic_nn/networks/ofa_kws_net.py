@@ -85,8 +85,8 @@ class OFAKWSNet(KWSNet):
                                           act_func=act_func,
                                           use_se=use_se)
 
-                shortcut = IdentityLayer(input_channel,
-                                         input_channel) if stride == 1 and input_channel == width else None
+                shortcut = IdentityLayer(max(val2list(input_channel)),
+                                         max(val2list(input_channel))) if stride == 1 and input_channel == width else None
 
                 blocks.append(ResidualBlock(conv, shortcut))
                 input_channel = width
