@@ -223,7 +223,7 @@ if __name__ == "__main__":
     # build run config from args
     args.lr_schedule_param = None
     args.lr_schedule_type = "cosine"
-    args.opt_type = "adam"  # cosine, sgd
+    args.opt_type = "sgd"  # cosine, sgd
 
     args.opt_param = {
         "momentum": args.momentum,

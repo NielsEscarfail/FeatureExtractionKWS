@@ -131,7 +131,7 @@ class OFAKWSNet(KWSNet):
             _str += layer.module_str + "\n"
         for stage_id, block_idx in enumerate(self.block_group_info):
             depth_param = self.runtime_depth[stage_id]
-            active_idx = block_idx[:len(block_idx) - depth_param]
+            active_idx = block_idx[:depth_param]
             for idx in active_idx:
                 _str += self.blocks[idx].module_str + "\n"
 
