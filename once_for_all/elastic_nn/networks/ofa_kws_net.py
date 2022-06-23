@@ -223,9 +223,9 @@ class OFAKWSNet(KWSNet):
         ):
             if w is not None:
                 for idx in block_idx:
-                    self.blocks[idx].active_out_channel = self.blocks[
+                    self.blocks[idx].conv.active_out_channel = self.blocks[
                         idx
-                    ].out_channel_list[w]
+                    ].conv.out_channel_list[w]
 
     def sample_active_subnet(self):
 
