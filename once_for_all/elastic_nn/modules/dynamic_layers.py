@@ -155,13 +155,130 @@ class DynamicResBlock(MyModule):
         self.act_func = act_func
         self.use_se = use_se
 
-        self.conv = DynamicMBConvLayer(in_channel_list,
+        self.conv1 = DynamicMBConvLayer(in_channel_list,
                                        out_channel_list,
                                        kernel_size_list,
                                        expand_ratio_list,
                                        stride,
                                        act_func,
                                        use_se)
+        self.conv2 = DynamicMBConvLayer(in_channel_list,
+                                       out_channel_list,
+                                       kernel_size_list,
+                                       expand_ratio_list,
+                                       stride,
+                                       act_func,
+                                       use_se)
+        self.conv3 = DynamicMBConvLayer(in_channel_list,
+                                       out_channel_list,
+                                       kernel_size_list,
+                                       expand_ratio_list,
+                                       stride,
+                                       act_func,
+                                       use_se)
+        self.conv4 = DynamicMBConvLayer(in_channel_list,
+                                       out_channel_list,
+                                       kernel_size_list,
+                                       expand_ratio_list,
+                                       stride,
+                                       act_func,
+                                       use_se)
+        if self.stride == 1 and self.in_channel_list == self.out_channel_list:
+            self.shortcut = IdentityLayer(
+                max(self.in_channel_list), max(self.out_channel_list)
+            )
+
+        self.active_out_channel = max(self.out_channel_list)
+
+    def forward(self, x):
+        feature_dim = self.active_middle_channels # we modify active_middle_channels for w search
+        self.conv1.conv.active_out_channel = feature_dim
+        self.conv2.conv.active_out_channel = feature_dim
+        self.conv2.conv.active_out_channel = feature_dim
+
+        self.conv4.conv.active_out_channel = self.active_out_channel
+
+        residual = self.downsample(x)
+
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+
+        x = x + residual
+        return x
+
+    @property
+    def module_str(self):
+        return "ResStrNotImplementedYet"
+
+    @property
+    def config(self):
+        return {
+            "name": DynamicResBlock.__name__,
+            "in_channel_list": self.in_channel_list,
+            "out_channel_list": self.out_channel_list,
+            "kernel_size_list": self.kernel_size_list,
+            "expand_ratio_list": self.expand_ratio_list,
+            "stride": self.stride,
+            "act_func": self.act_func,
+            "use_se": self.use_se,
+        }
+
+    @staticmethod
+    def build_from_config(config):
+        return DynamicResBlock(**config)
+
+    @property
+    def in_channels(self):
+        return max(self.in_channel_list)
+
+    @property
+    def out_channels(self):
+        return max(self.out_channel_list)
+
+    def active_middle_channel(self, in_channel):
+        return self.conv1.active_middle_channel(in_channel)
+
+    def get_active_subnet(self, in_channel, preserve_weight=True):
+        # build the new layer
+        sub_layer = set_layer_from_config(self.get_active_subnet_config(in_channel))
+        sub_layer = sub_layer.to(get_net_device(self))
+        if not preserve_weight:
+            return sub_layer
+
+        sub_layer.conv1 = self.conv1.get_active_subnet(in_channel, preserve_weight)
+        sub_layer.conv2 = self.conv2.get_active_subnet(in_channel, preserve_weight)
+        sub_layer.conv3 = self.conv3.get_active_subnet(in_channel, preserve_weight)
+        sub_layer.conv4 = self.conv4.get_active_subnet(in_channel, preserve_weight)
+
+    def get_active_subnet_config(self, in_channel):
+        return {
+            "name": DynamicResBlock.__name__,
+            "in_channels": in_channel,
+            "out_channels": self.active_out_channel,
+            "kernel_size": self.active_kernel_size,
+            "stride": self.stride,
+            "expand_ratio": self.active_expand_ratio,
+            "mid_channels": self.active_middle_channel(in_channel),
+            "act_func": self.act_func,
+            "use_se": self.use_se,
+        }
+
+    def re_organize_middle_weights(self, expand_ratio_stage=0):
+        self.conv1.re_organize_middle_weights(expand_ratio_stage)
+        self.conv2.re_organize_middle_weights(expand_ratio_stage)
+        self.conv3.re_organize_middle_weights(expand_ratio_stage)
+        self.conv4.re_organize_middle_weights(expand_ratio_stage) # might not be needed
+
+
+
+
+
+
+
+
+
 
 class DynamicMBConvLayer(MyModule):
     def __init__(
@@ -876,3 +993,32 @@ class DynamicResNetBottleneckBlock(MyModule):
         )
 
         return None
+
+
+class DynamicResidualBlock(MyModule):
+
+    def __init__(
+            self,
+            in_channel_list,
+            out_channel_list,
+            width_list,
+            kernel_size=3,
+            stride=1,
+            act_func="relu",
+            downsample_mode="avgpool_conv",
+    ):
+
+    def forward(self, x):
+        pass
+
+    @property
+    def module_str(self):
+        pass
+
+    @property
+    def config(self):
+        pass
+
+    @staticmethod
+    def build_from_config(config):
+        pass
