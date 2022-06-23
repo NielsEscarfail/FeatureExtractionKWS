@@ -24,7 +24,7 @@ class OFAKWSNet(KWSNet):
             ks_list=3,
             depth_list=4,
             width_mult_list=1.0,
-            expand_ratio_list=1,
+            expand_ratio_list=3,
     ):
 
         self.ks_list = val2list(ks_list, 1)

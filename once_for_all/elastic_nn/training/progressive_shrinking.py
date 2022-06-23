@@ -28,7 +28,7 @@ def validate(
         width_mult_list=None,
         ks_list=None,
         depth_list=None,
-        expand_ratio_list=None,
+        expand_list=None,
         additional_setting=None,
 ):
     dynamic_net = run_manager.net
@@ -47,9 +47,8 @@ def validate(
         depth_list = dynamic_net.depth_list
     if width_mult_list is None:
         width_mult_list = dynamic_net.width_mult_list
-    if expand_ratio_list is None:
+    if expand_list is None:
         expand_ratio_list = dynamic_net.expand_ratio_list
-
 
     subnet_settings = []
     for ftp in ft_extr_params_list:
