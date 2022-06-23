@@ -47,11 +47,13 @@ def validate(
     if width_mult_list is None:
         width_mult_list = dynamic_net.width_mult_list
 
+
     subnet_settings = []
     for ftp in ft_extr_params_list:
         for d in depth_list:
             for k in ks_list:
                 for w in width_mult_list:
+                    w_index = dynamic_net.width_mult_list.index(w)
                     subnet_settings.append(
                         [
                             {
@@ -59,7 +61,7 @@ def validate(
                                 "ft_extr_params": ftp,
                                 "d": d,
                                 "ks": k,
-                                "w": w,
+                                "w": w_index,
                             },
                             "%s%s-D%s-K%s-W%s" % (ft_extr_type, ftp, d, k, w),
                         ]
