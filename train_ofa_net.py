@@ -193,11 +193,7 @@ if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
     start = time.time()
 
-    # Initialize Horovod
-    # hvd.init()
-
     num_gpus = torch.cuda.device_count()
-    # num_gpus = 1
     print("Using %f gpus" % num_gpus)
 
     # Set random seed
@@ -216,14 +212,13 @@ if __name__ == "__main__":
     else:
         print('Using CPU.')
 
-    # args.teacher_path = "ofa_checkpoints/ofa_D4_E6_K7"
     args.teacher_path = "exp/" + args.ft_extr_type
     args.teacher_path += "/normal/checkpoint/checkpoint.pth.tar"
 
     # build run config from args
     args.lr_schedule_param = None
     args.lr_schedule_type = "cosine"
-    args.opt_type = "sgd"  # cosine, sgd
+    args.opt_type = "adam"  # cosine, sgd, adam
 
     args.opt_param = {
         "momentum": args.momentum,
@@ -287,7 +282,7 @@ if __name__ == "__main__":
         # Validate teacher net
         teach_validate_func_dict = {
             "ft_extr_type": args.ft_extr_type,
-            "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+            "ft_extr_params_list": args.ft_extr_params_list,
             "ks_list": [max(args.ks_list)],
             "depth_list": [max(net.depth_list)],
             "width_mult_list": [max(args.width_mult_list)],
@@ -304,7 +299,7 @@ if __name__ == "__main__":
 
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
-        "ft_extr_params_list": args.ft_extr_params_list,  # "ft_extr_params_list": [(10, 40), (40, 40), (40, 80)],
+        "ft_extr_params_list": args.ft_extr_params_list,
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
         "width_mult_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
@@ -314,6 +309,7 @@ if __name__ == "__main__":
 
     args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
     if args.task == "normal":
+        # Uncomment to resume training large net only
         """args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
 
         load_models(

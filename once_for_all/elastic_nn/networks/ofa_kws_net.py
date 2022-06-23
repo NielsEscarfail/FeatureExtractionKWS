@@ -200,21 +200,23 @@ class OFAKWSNet(KWSNet):
         # print("self.blocks: ", self.blocks)
         # print("ks : ", ks)
 
+        # set kernel size
         for block, k in zip(self.blocks, ks):  # this works
             if k is not None:
                 block.conv.active_kernel_size = k
 
+        # set depth
         for i, d in enumerate(depth):  # this works
             if d is not None:
                 self.runtime_depth[i] = min(len(self.block_group_info[i]), d)
 
+        # set width
         if width_mult[0] is not None:
-            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = int(
-                self.input_stem[0].out_channel_list[0] * width_mult[0])
+            self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = self.input_stem[0].out_channel_list[self.width_mult_list.index(width_mult[0])]
 
         for i, w in enumerate(width_mult[1:]):
             if w is not None:
-                self.blocks[i].active_out_channel = int(self.blocks[i].conv.out_channel_list[0] * w)
+                self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[self.width_mult_list.index(w)]
 
     def sample_active_subnet(self):
 
