@@ -9,7 +9,7 @@ from utils import make_divisible, MyNetwork
 from utils.common_tools import val2list
 from utils.layers import (
     IdentityLayer,
-    ResidualBlock,
+    ResidualBlock, ZeroLayer,
 )
 
 __all__ = ["OFAKWSNet"]
@@ -216,7 +216,9 @@ class OFAKWSNet(KWSNet):
 
         for i, w in enumerate(width_mult[1:]):
             if w is not None:
-                if self.blocks[i].shortcut is None:
+                if self.blocks[i].shortcut is not None:
+                    print("in setting w : ", type(self.blocks[i].shortcut))
+                if self.blocks[i].shortcut is None or isinstance(self.blocks[i].shortcut, ZeroLayer):
                     print("wooooowwwww")
                     self.blocks[i].active_out_channel = self.blocks[i].conv.out_channel_list[w]
 
