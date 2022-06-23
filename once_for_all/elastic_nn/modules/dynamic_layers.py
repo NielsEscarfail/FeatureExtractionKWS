@@ -192,10 +192,10 @@ class DynamicResBlock(MyModule):
         self.active_out_channel = max(self.out_channel_list)
 
     def forward(self, x):
-        feature_dim = self.active_middle_channels  # we modify active_middle_channels for w search
+        feature_dim = self.conv1.active_out_channel  # we modify active_middle_channels for w search
         self.conv1.conv.active_out_channel = feature_dim
         self.conv2.conv.active_out_channel = feature_dim
-        self.conv2.conv.active_out_channel = feature_dim
+        self.conv3.conv.active_out_channel = feature_dim
 
         self.conv4.conv.active_out_channel = self.active_out_channel
 
