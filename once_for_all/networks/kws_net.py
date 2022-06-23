@@ -128,11 +128,12 @@ class KWSNetLarge(KWSNet):
             n_classes=12,
             bn_param=(0.1, 1e-5),
             dropout_rate=0.1,
+            width_mult=1.0,
             ks=7,
             depth=4,
-            width_mult=2.0,
+            expand_ratio=3,
     ):
-
+        expand_ratio = 3 if expand_ratio is None else expand_ratio
         input_channel = int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
         # build input stem
@@ -177,7 +178,7 @@ class KWSNetLarge(KWSNet):
                 conv = MBConvLayer(in_channels=input_channel,
                                    out_channels=width,
                                    kernel_size=ks,
-                                   expand_ratio=1,
+                                   expand_ratio=expand_ratio,
                                    stride=stride,
                                    act_func=act_func,
                                    use_se=use_se)
