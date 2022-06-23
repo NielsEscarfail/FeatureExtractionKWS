@@ -267,7 +267,7 @@ class OFAKWSNet(KWSNet):
         for stage_id, block_idx in enumerate(self.block_group_info):
             stage_first_block = self.blocks[block_idx[0]]
             width_setting.append(
-                random.choice(list(range(len(stage_first_block.out_channel_list))))
+                random.choice(list(range(len(stage_first_block.conv.out_channel_list))))
             )
 
         arch_config = {"ks": ks_setting, "d": depth_setting, "w": width_setting}
