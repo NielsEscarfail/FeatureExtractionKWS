@@ -44,7 +44,8 @@ parser.add_argument("--ft_extr_type",
 args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
-args.kd_ratio = 1.0
+# args.kd_ratio = 1.0
+args.kd_ratio = 0
 args.width_mult_list = "1.0"
 
 if args.task == "normal":
