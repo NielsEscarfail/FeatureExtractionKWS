@@ -148,21 +148,35 @@ args.dropout = 0.1
 
 args.kd_type = "ce"
 
-# Set ft_extr_params_list depending on the ft_extr_type
-if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
+"""Set ft_extr_params_list depending on the ft_extr_type"""
+
+if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
+    """MFCC params, shape (n_mels, win_len), n_mfcc is fixed to 10.
+    used:
+        - [(40, 40)]
+        - [(40, 30), (40, 40), (40, 50),
+          (80, 30), (80, 30), (80, 30)]
+        - [(40, 30), (40, 40), (40, 50)]
+    """
+    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
+                                (80, 30), (80, 40), (80, 50)]
+
+elif args.ft_extr_type == "mel_spectrogram":
+    """MelSpectrogram params, shape (n_mels, win_len)
+    used:
+        - [(10, 20), (10, 25), (10, 30)]
+    """
     args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
 
-elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
-                                (80, 30), (80, 30), (80, 30)]
-    # args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
-
-
 elif args.ft_extr_type == "linear_stft":  # n_mels unused
+    """Linear STFT params, shape (_, win_len)
+    in progress: first dimension is unused
+        used:
+            - [(1, 10), (1, 20), (1, 30), (1, 40), (1, 50), (1, 60)]
+            - (1024, 40), (1024, 60), (1024, 80),
+            (2048, 40), (2048, 60), (2048, 80)]
+    """
     args.ft_extr_params_list = [(1, 10), (1, 20), (1, 30), (1, 40), (1, 50), (1, 60)]
-    """args.ft_extr_params_list = [
-        (1024, 40), (1024, 60), (1024, 80),
-        (2048, 40), (2048, 60), (2048, 80)]"""
 
 elif args.ft_extr_type == "lpcc":
     args.ft_extr_params_list = [7, 9, 11, 13, 15]

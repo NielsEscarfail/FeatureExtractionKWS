@@ -192,18 +192,17 @@ class KWSDataProvider:
             n_fft : number of ffts
             win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
         """
-        # TODO check n_mels + window_size_samples + window_stride_samples
         self.transformations = []
         if self.ft_extr_type == 'mfcc':
-            for (n_mfcc, win_size_ms) in self.ft_extr_params_list:  # resolution instead of crop
+            for (n_mfcc, win_size_ms) in self.ft_extr_params_list:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
                 hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
-                melkwargs = {'n_fft': 1024, 'win_length': win_length,  # This is resolution
+                melkwargs = {'n_fft': 1024, 'win_length': win_length,  # Resolution 1
                              'hop_length': hop_length,
-                             'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # might set it fixed
+                             'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # Resolution 2
                 mfcc_transformation = MFCC(
-                    n_mfcc=10,  # this is crop
+                    n_mfcc=10,  # this is the "crop", number of top mfccs to keep, it seems it has to be fixed
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
                     norm='ortho')
                 self.transformations.append(mfcc_transformation)
@@ -216,8 +215,8 @@ class KWSDataProvider:
 
                 melspect_transformation = torchaudio.transforms.MelSpectrogram(
                     sample_rate=self.audio_processor.desired_samples,
-                    n_fft=2048, win_length=win_length,
-                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels
+                    n_fft=2048, win_length=win_length,  # Resolution 1
+                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels # Resolution 2
                 )
                 self.transformations.append(melspect_transformation)
 
