@@ -22,7 +22,7 @@ parser.add_argument(
         "normal",
         "kernel",
         "depth",
-        "width",
+        "expand",
     ],
 )
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2, 3])
@@ -153,7 +153,8 @@ if args.ft_extr_type == "mel_spectrogram":  # n_mels, win_len
     args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
 
 elif args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    args.ft_extr_params_list = [(40, 40)]
+    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
+                                (80, 30), (80, 30), (80, 30)]
     # args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
 
 
@@ -295,6 +296,7 @@ if __name__ == "__main__":
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
         "ft_extr_params_list": args.ft_extr_params_list,
+        "width_mul_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
         "expand_list": sorted({min(args.expand_list), max(args.expand_list)}),
@@ -390,9 +392,10 @@ if __name__ == "__main__":
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
         "ft_extr_params_list": args.ft_extr_params_list,
-        "ks_list": args.ks_list,
+        "width_mult_list": net.width_mult_list,
+        "ks_list": net.ks_list,
         "depth_list": net.depth_list,
-        "width_mult_list": args.width_mult_list,
+        "expand_list": net.expand_list,
     }
     print("Validation dict: ", validate_func_dict)
     validate(run_manager, is_test=True)

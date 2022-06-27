@@ -41,12 +41,12 @@ def validate(
         ft_extr_type = run_manager.run_config.data_provider.ft_extr_type
     if ft_extr_params_list is None:
         ft_extr_params_list = run_manager.run_config.data_provider.ft_extr_params_list
+    if width_mult_list is None:
+        width_mult_list = dynamic_net.width_mult_list
     if ks_list is None:
         ks_list = dynamic_net.ks_list
     if depth_list is None:
         depth_list = dynamic_net.depth_list
-    if width_mult_list is None:
-        width_mult_list = dynamic_net.width_mult_list
     if expand_list is None:
         expand_list = dynamic_net.expand_ratio_list
 

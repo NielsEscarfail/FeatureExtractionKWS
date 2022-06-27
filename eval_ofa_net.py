@@ -1,3 +1,8 @@
+"""
+Randomly samples N subnets from a given OFAKWSNet.
+Evaluates them and saves their performance results to a csv file.
+"""
+
 import os
 import torch
 import argparse
@@ -7,6 +12,20 @@ from once_for_all.elastic_nn.training.progressive_shrinking import load_models
 from once_for_all.run_manager import RunManager, KWSRunConfig
 
 parser = argparse.ArgumentParser()
+
+parser.add_argument("--ft_extr_type",
+                    type=str,
+                    default="mfcc",
+                    choices=[
+                        "mfcc",
+                        "mel_spectrogram",
+                        "linear_stft",
+                        "lpcc",
+                        "plp",
+                        "ngcc",
+                        "raw"
+                    ])
+
 args = parser.parse_args()
 
 args.ft_extr_type = "mfcc"
@@ -14,9 +33,8 @@ args.ft_extr_params = [(40, 40)]
 
 args.path = "eval/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
-args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_width/phase2/checkpoint/model_best.pth.tar"
+args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
-args.n_epochs = 40  # 55 # 120
 args.base_lr = 7.5e-3
 args.warmup_epochs = 0
 args.warmup_lr = -1
