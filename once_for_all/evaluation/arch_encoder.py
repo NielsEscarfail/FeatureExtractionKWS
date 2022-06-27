@@ -1,3 +1,7 @@
+import random
+
+import numpy as np
+
 
 class KWSNetArchEncoder:
     def __init__(
@@ -10,17 +14,12 @@ class KWSNetArchEncoder:
         base_depth_list=None,
     ):
         self.ft_extr_params_list = [(40, 40)] if ft_extr_params_list is None else ft_extr_params_list
-
+        self.width_mult_list = [1.0] if width_mult_list is None else width_mult_list
         self.ks_list = [3, 5, 7] if ks_list is None else ks_list
         self.expand_list = [3, 2, 1] if expand_list is None else expand_list
         self.depth_list = [1, 2, 3, 4] if depth_list is None else depth_list
-        self.width_mult_list = (
-            [1.0] if width_mult_list is None else width_mult_list
-        )
+        self.base_depth_list = [64, 64, 64, 64] if base_depth_list is None else base_depth_list
 
-        self.base_depth_list = (
-            [64, 64, 64, 64] if base_depth_list is None else base_depth_list
-        )
 
         """" build info dict """
         self.n_dim = 0
@@ -95,30 +94,9 @@ class KWSNetArchEncoder:
             arch_dict["ft_extr_params"],
         )
         feature = np.zeros(self.n_dim)
-        for i in range(self.max_n_blocks):
-            nowd = i % max(self.depth_list)
-            stg = i // max(self.depth_list)
-            if nowd < d[stg]:
-                feature[self.k_info["val2id"][i][ks[i]]] = 1
-                feature[self.e_info["val2id"][i][e[i]]] = 1
         feature[self.r_info["val2id"][r]] = 1
-        return feature
 
-
-    def arch2feature(self, arch_dict):
-        d, e, w, r = (
-            arch_dict["d"],
-            arch_dict["e"],
-            arch_dict["w"],
-            arch_dict["image_size"],
-        )
-        input_stem_skip = 1 if d[0] > 0 else 0
-        d = d[1:]
-
-        feature = np.zeros(self.n_dim)
-        feature[self.r_info["val2id"][r]] = 1
-        feature[self.input_stem_d_info["val2id"][input_stem_skip]] = 1
-        for i in range(self.n_stage + 2):
+        for i in range(self.n_stage + 1):
             feature[self.width_mult_info["val2id"][i][w[i]]] = 1
 
         start_pt = 0
@@ -126,26 +104,153 @@ class KWSNetArchEncoder:
             depth = base_depth + d[i]
             for j in range(start_pt, start_pt + depth):
                 feature[self.e_info["val2id"][j][e[j]]] = 1
-                feature[self.k_info["val2id"][j][ks[]]] = 1
+                feature[self.k_info["val2id"][j][ks[j]]] = 1
             start_pt += max(self.depth_list) + base_depth
 
         return feature
 
-    def arch2feature(self, arch_dict):
-        w, ks, e, d, r = (
-            arch_dict["width_mult"],
-            arch_dict["ks"],
-            arch_dict["e"],
-            arch_dict["d"],
-            arch_dict["ft_extr_params"],
-        )
+    def random_sample_arch(self):
+        return {
+            "w": random.choices(
+                list(range(len(self.width_mult_list))), k=self.n_stage + 1
+            ),
+            "ks": random.choices(self.ks_list, k=self.max_n_blocks),
+            "e": random.choices(self.expand_list, k=self.max_n_blocks),
+            "d": random.choices(self.depth_list, k=self.n_stage),
+            "ft_extr_params": random.choice(self.ft_extr_params_list),
+        }
 
-        feature = np.zeros(self.n_dim)
+    def mutate_resolution(self, arch_dict, mutate_prob):
+        if random.random() < mutate_prob:
+            arch_dict["ft_extr_params"] = random.choice(self.ft_extr_params_list)
+        return arch_dict
+
+    def mutate_arch(self, arch_dict, mutate_prob):
+
+        # width_mult
+        for i in range(len(arch_dict["w"])):
+            if random.random() < mutate_prob:
+                arch_dict["w"][i] = random.choice(
+                    list(range(len(self.width_mult_list)))
+                )
+
+        # kernel size
+        for i in range(1, len(arch_dict["ks"])):
+            if random.random() < mutate_prob:
+                arch_dict["ks"][i] = random.choice(self.ks_list)
+
+        # depth
+        for i in range(1, len(arch_dict["d"])):
+            if random.random() < mutate_prob:
+                arch_dict["d"][i] = random.choice(self.depth_list)
+
+        # expand ratio
+        for i in range(len(arch_dict["e"])):
+            if random.random() < mutate_prob:
+                arch_dict["e"][i] = random.choice(self.expand_list)
+
+    # IN PROGRESS
+    def feature2arch(self, feature):
+        return True
+
+    def feature2arch(self, feature): # TODO
+        img_sz = self.r_info["id2val"][
+            int(np.argmax(feature[self.r_info["L"][0] : self.r_info["R"][0]]))
+            + self.r_info["L"][0]
+        ]
+        assert img_sz in self.image_size_list
+        arch_dict = {"ks": [], "e": [], "d": [], "image_size": img_sz}
+
+        d = 0
         for i in range(self.max_n_blocks):
-            nowd = i % max(self.depth_list)
-            stg = i // max(self.depth_list)
-            if nowd < d[stg]:
-                feature[self.k_info["val2id"][i][ks[i]]] = 1
-                feature[self.e_info["val2id"][i][e[i]]] = 1
-        feature[self.r_info["val2id"][r]] = 1
-        return feature
+            skip = True
+            for j in range(self.k_info["L"][i], self.k_info["R"][i]):
+                if feature[j] == 1:
+                    arch_dict["ks"].append(self.k_info["id2val"][i][j])
+                    skip = False
+                    break
+
+            for j in range(self.e_info["L"][i], self.e_info["R"][i]):
+                if feature[j] == 1:
+                    arch_dict["e"].append(self.e_info["id2val"][i][j])
+                    assert not skip
+                    skip = False
+                    break
+
+            if skip:
+                arch_dict["e"].append(0)
+                arch_dict["ks"].append(0)
+            else:
+                d += 1
+
+            if (i + 1) % max(self.depth_list) == 0 or (i + 1) == self.max_n_blocks:
+                arch_dict["d"].append(d)
+                d = 0
+        return arch_dict
+
+    def feature2arch(self, feature):
+        img_sz = self.r_info["id2val"][
+            int(np.argmax(feature[self.r_info["L"][0] : self.r_info["R"][0]]))
+            + self.r_info["L"][0]
+        ]
+        input_stem_skip = (
+            self.input_stem_d_info["id2val"][
+                int(
+                    np.argmax(
+                        feature[
+                            self.input_stem_d_info["L"][0] : self.input_stem_d_info[
+                                "R"
+                            ][0]
+                        ]
+                    )
+                )
+                + self.input_stem_d_info["L"][0]
+            ]
+            * 2
+        )
+        assert img_sz in self.image_size_list
+        arch_dict = {"d": [input_stem_skip], "e": [], "w": [], "image_size": img_sz}
+
+        for i in range(self.n_stage + 2):
+            arch_dict["w"].append(
+                self.width_mult_info["id2val"][i][
+                    int(
+                        np.argmax(
+                            feature[
+                                self.width_mult_info["L"][i] : self.width_mult_info[
+                                    "R"
+                                ][i]
+                            ]
+                        )
+                    )
+                    + self.width_mult_info["L"][i]
+                ]
+            )
+
+        d = 0
+        skipped = 0
+        stage_id = 0
+        for i in range(self.max_n_blocks):
+            skip = True
+            for j in range(self.e_info["L"][i], self.e_info["R"][i]):
+                if feature[j] == 1:
+                    arch_dict["e"].append(self.e_info["id2val"][i][j])
+                    skip = False
+                    break
+            if skip:
+                arch_dict["e"].append(0)
+                skipped += 1
+            else:
+                d += 1
+
+            if (
+                i + 1 == self.max_n_blocks
+                or (skipped + d)
+                % (max(self.depth_list) + self.base_depth_list[stage_id])
+                == 0
+            ):
+                arch_dict["d"].append(d - self.base_depth_list[stage_id])
+                d, skipped = 0, 0
+                stage_id += 1
+        return arch_dict
+
