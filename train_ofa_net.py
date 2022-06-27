@@ -296,7 +296,7 @@ if __name__ == "__main__":
     validate_func_dict = {
         "ft_extr_type": args.ft_extr_type,
         "ft_extr_params_list": args.ft_extr_params_list,
-        "width_mul_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
+        "width_mult_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
         "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
         "expand_list": sorted({min(args.expand_list), max(args.expand_list)}),
