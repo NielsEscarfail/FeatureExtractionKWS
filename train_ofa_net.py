@@ -415,7 +415,7 @@ if __name__ == "__main__":
         "width_mult_list": net.width_mult_list,
         "ks_list": net.ks_list,
         "depth_list": net.depth_list,
-        "expand_list": net.expand_list,
+        "expand_list": net.expand_ratio_list,
     }
     print("Validation dict: ", validate_func_dict)
     validate(run_manager, is_test=True)
