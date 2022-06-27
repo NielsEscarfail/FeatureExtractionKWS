@@ -137,7 +137,7 @@ args.no_decay_keys = "bn#bias"
 args.fp16_allreduce = False
 
 args.model_init = "he_fout"
-args.validation_frequency = 2
+args.validation_frequency = 3
 args.print_frequency = 5
 
 args.n_worker = 8
@@ -155,11 +155,15 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     used:
         - [(40, 40)]
         - [(40, 30), (40, 40), (40, 50),
-          (80, 30), (80, 30), (80, 30)]
+            (80, 30), (80, 30), (80, 30)] works but 80 is meh
         - [(40, 30), (40, 40), (40, 50)]
+        - [(20, 30), (20, 40), (20, 50),
+            (30, 30), (30, 40), (30, 50),
+            (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
-                                (80, 30), (80, 40), (80, 50)]
+    args.ft_extr_params_list = [(20, 30), (20, 40), (20, 50),
+                                (30, 30), (30, 40), (30, 50),
+                                (40, 30), (40, 40), (40, 50)]
 
 elif args.ft_extr_type == "mel_spectrogram":
     """MelSpectrogram params, shape (n_mels, win_len)
@@ -243,7 +247,6 @@ if __name__ == "__main__":
         print("\t%s: %s" % (k, v))
 
     # Build net from args
-
     args.ks_list = [int(ks) for ks in args.ks_list.split(",")]
     args.depth_list = [int(d) for d in args.depth_list.split(",")]
     args.expand_list = [int(e) for e in args.expand_list.split(",")]
