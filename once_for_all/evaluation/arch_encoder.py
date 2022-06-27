@@ -87,6 +87,25 @@ class KWSNetArchEncoder:
                 target_dict["R"].append(self.n_dim)
 
     def arch2feature(self, arch_dict):
+        w, ks, e, d, r = (
+            arch_dict["width_mult"],
+            arch_dict["ks"],
+            arch_dict["e"],
+            arch_dict["d"],
+            arch_dict["ft_extr_params"],
+        )
+        feature = np.zeros(self.n_dim)
+        for i in range(self.max_n_blocks):
+            nowd = i % max(self.depth_list)
+            stg = i // max(self.depth_list)
+            if nowd < d[stg]:
+                feature[self.k_info["val2id"][i][ks[i]]] = 1
+                feature[self.e_info["val2id"][i][e[i]]] = 1
+        feature[self.r_info["val2id"][r]] = 1
+        return feature
+
+
+    def arch2feature(self, arch_dict):
         d, e, w, r = (
             arch_dict["d"],
             arch_dict["e"],
@@ -107,16 +126,18 @@ class KWSNetArchEncoder:
             depth = base_depth + d[i]
             for j in range(start_pt, start_pt + depth):
                 feature[self.e_info["val2id"][j][e[j]]] = 1
+                feature[self.k_info["val2id"][j][ks[]]] = 1
             start_pt += max(self.depth_list) + base_depth
 
         return feature
 
     def arch2feature(self, arch_dict):
-        ks, e, d, r = (
+        w, ks, e, d, r = (
+            arch_dict["width_mult"],
             arch_dict["ks"],
             arch_dict["e"],
             arch_dict["d"],
-            arch_dict["image_size"],
+            arch_dict["ft_extr_params"],
         )
 
         feature = np.zeros(self.n_dim)
