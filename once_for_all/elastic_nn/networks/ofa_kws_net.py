@@ -195,11 +195,8 @@ class OFAKWSNet(KWSNet):
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.block_group_info))
         expand_ratio = val2list(e, len(self.blocks))
-        print("w mul : ", width_mult)
         # set width mult
         if width_mult[0] is not None:  # input stem
-            print("i 0  ",width_mult[0])
-
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
                 self.input_stem[0].out_channel_list[width_mult[0]]
 
