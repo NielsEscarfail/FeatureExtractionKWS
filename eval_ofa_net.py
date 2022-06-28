@@ -4,13 +4,16 @@ Evaluates them and saves their performance results to a csv file.
 """
 
 import os
+import random
 import time
 
+import numpy as np
 import torch
 import argparse
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.elastic_nn.training.progressive_shrinking import load_models
+from once_for_all.evaluation.perf_dataset import PerformanceDataset
 from once_for_all.run_manager import RunManager, KWSRunConfig
 
 parser = argparse.ArgumentParser()
@@ -21,39 +24,43 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
-                        "linear_stft",
-                        "lpcc",
-                        "plp",
-                        "ngcc",
-                        "raw"
                     ])
 
 args = parser.parse_args()
 
-# Fixed path parameters
+"""Set width_mult_list, ks_list, expand_list and depth_list"""
 
-
-# Set width_mult_list, ks_list, expand_list and depth_list
 args.width_mult_list = "1.0"
 args.ks_list = "3,5,7"
-args.expand_list = "1,2,4,6"
-args.depth_list = "2,3,4"
+args.expand_list = "1,2,3"
+args.depth_list = "0,1,2,3,4"
 
-# Set ft_extr_params
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
 if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     """MFCC params, shape (n_mels, win_len), n_mfcc is fixed to 10.
-    used:
+    We choose to fix n_mels to 10, 40, 80 in each runs,
+    as OFA tends to learn only one n_mels configuration when mixing them.
+    params used:
+        - [(40, 40)]
+        - [(10, 30), (10, 40), (10, 50)], n_bin_count=10
+        - [(40, 30), (40, 40), (40, 50)], n_bin_count=10, 40
+        - [(80, 30), (80, 40), (80, 50)], n_bin_count=10, 40, 80
+        Experimental:
         - [(40, 40)]
         - [(40, 30), (40, 40), (40, 50),
-          (80, 30), (80, 30), (80, 30)]
+            (80, 30), (80, 30), (80, 30)] works but 80 is meh
         - [(40, 30), (40, 40), (40, 50)]
+        - [(10, 30), (10, 40), (10, 50),
+            (20, 30), (20, 40), (20, 50),
+            (30, 30), (30, 40), (30, 50),
+            (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(40, 40)]
+    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
 
 
+# Fixed path parameters
 args.path = "eval/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
 args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
@@ -107,30 +114,24 @@ if __name__ == "__main__":
     run_manager = RunManager(
         args.path,
         ofa_net,
-        run_config
+        run_config,
+        init=False
     )
 
-    """  Randomly sample a sub-network, 
-    To manually set the sub-network: 
-        ofa_net.set_active_subnet(ks=7, e=6, d=4) 
+    load_models(
+        run_manager,
+        run_manager.net,
+        args.ofa_checkpoint_path,
+    )
+
     """
-    ofa_net.sample_active_subnet()
-    subnet = ofa_net.get_active_subnet(preserve_weight=True)
+    Create & build the performance dataset
+    build_dataset randomly samples n_arch subnets and saves their config, accuracy, n_params, flops, latency
+    """
+    performance_dataset = PerformanceDataset(args.path)
+    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=1000, ft_extr_params_list=args.ft_extr_params_list)
 
-    run_manager = RunManager(".tmp/eval_subnet", subnet, run_config, init=False)
 
-load_models(
-    run_manager,
-    run_manager.net,
-    args.ofa_checkpoint_path,
-)
 
-""" Test sampled subnet """
-run_config.data_provider.assign_active_ft_extr_params(args.ft_extr_params)
-run_manager.reset_running_statistics(net=subnet)
 
-print("Test subnet:")
-print(subnet.module_str)
 
-loss, (top1, top5) = run_manager.validate(net=subnet)
-print("Results: loss=%.5f,\t top1=%.1f,\t top5=%.1f" % (loss, top1, top5))

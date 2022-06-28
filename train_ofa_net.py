@@ -345,7 +345,8 @@ if __name__ == "__main__":
         "ft_extr_params_list": args.ft_extr_params_list,
         "width_mult_list": sorted({min(args.width_mult_list), max(args.width_mult_list)}),
         "ks_list": sorted({min(args.ks_list), max(args.ks_list)}),
-        "depth_list": sorted({min(net.depth_list), max(net.depth_list)}),
+        "depth_list": sorted({max(min(net.depth_list), 1), max(net.depth_list)}),
+        # no reason to test net with all depths = 0
         "expand_list": sorted({min(args.expand_list), max(args.expand_list)}),
     }
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
@@ -355,7 +356,6 @@ if __name__ == "__main__":
     if args.task == "normal":
         # Uncomment to resume training large net only
         """args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
-
         load_models(
             run_manager,
             run_manager.net,
