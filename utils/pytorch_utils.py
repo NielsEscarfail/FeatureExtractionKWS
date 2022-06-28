@@ -293,7 +293,7 @@ def get_net_info(net, input_shape=(1, 224, 224), measure_latency=None, print_inf
     latency_types = [] if measure_latency is None else measure_latency.split("#")
     for l_type in latency_types:
         latency, measured_latency = measure_net_latency(
-            net, l_type, fast=False, input_shape=input_shape, clean=True
+            net, l_type, fast=True, input_shape=input_shape, clean=True
         )
         net_info["%s latency" % l_type] = {"val": latency, "hist": measured_latency}
 
