@@ -69,6 +69,10 @@ args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint
 
 # Other parameters
 args.manual_seed = 0
+args.n_worker = 8
+args.bn_momentum = 0.1
+args.bn_eps = 1e-5
+args.dropout = 0.1
 
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
