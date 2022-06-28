@@ -46,7 +46,7 @@ args = parser.parse_args()
 args.path = "exp/" + args.ft_extr_type
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
-args.width_mult_list = "0.75,1.0"
+args.width_mult_list = "1.0"
 
 if args.task == "normal":
     args.path += "/normal"
@@ -69,6 +69,7 @@ elif args.task == "kernel":
     args.ks_list = "3,5,7"
     args.depth_list = "4"  # "4" 3 2 1
     args.expand_list = "3"
+    args.width_mult_list = "0.75, 1.0"
 
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
@@ -179,7 +180,13 @@ args.kd_type = "ce"
 
 if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     """MFCC params, shape (n_mels, win_len), n_mfcc is fixed to 10.
+    We choose to fix n_mels to 10, 40, 80 in each runs, as OFA tends to learn only one n_mels configuration when mixing them.
     used:
+        - [(40, 40)]
+        - [(10, 30), (10, 40), (10, 50)], n_bin_count=10
+        - [(40, 30), (40, 40), (40, 50)], n_bin_count=10, 40
+        - [(80, 30), (80, 40), (80, 50)], n_bin_count=10, 40, 80
+        Experimental:
         - [(40, 40)]
         - [(40, 30), (40, 40), (40, 50),
             (80, 30), (80, 30), (80, 30)] works but 80 is meh
@@ -189,8 +196,7 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
             (30, 30), (30, 40), (30, 50),
             (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
-                                (10, 30), (10, 40), (10, 50)]
+    args.ft_extr_params_list = [(10, 30), (10, 40), (10, 50)]
 
 elif args.ft_extr_type == "mel_spectrogram":
     """MelSpectrogram params, shape (n_mels, win_len)
