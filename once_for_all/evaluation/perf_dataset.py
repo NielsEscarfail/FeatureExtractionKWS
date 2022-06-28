@@ -91,6 +91,8 @@ class PerformanceDataset:
                         existing_perf_df = None
 
                     print("net_id_list : ", net_id_list)
+                    print("type ", type(net_id_list))
+                    print("cols : ", net_id_list.columns)
                     for i, net_id in enumerate(net_id_list):
                         print("net_id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
