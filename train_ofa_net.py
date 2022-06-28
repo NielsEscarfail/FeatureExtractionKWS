@@ -146,9 +146,6 @@ elif args.task == "width":
         args.expand_list = "1,2,3"
         args.width_mult_list = "0.5,0.75,1.0"
 
-
-
-
 else:
     raise NotImplementedError
 
