@@ -210,7 +210,7 @@ class OFAKWSNet(KWSNet):
             if k is not None:
                 block.conv.active_kernel_size = k
             if e is not None:
-                block.active_expand_ratio = e
+                block.conv.active_expand_ratio = e
 
         # set depth
         for i, d in enumerate(depth):
