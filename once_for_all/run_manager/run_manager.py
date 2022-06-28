@@ -2,22 +2,18 @@
 # Han Cai, Chuang Gan, Tianzhe Wang, Zhekai Zhang, Song Han
 # International Conference on Learning Representations (ICLR), 2020.
 
-import os
-import random
-import time
 import json
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.nn.parallel
+import os
+
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.nn.parallel
 import torch.optim
 from tqdm import tqdm
 
 from utils import init_models
 from utils.common_tools import AverageMeter, accuracy, write_log
 from utils.pytorch_utils import get_net_info, cross_entropy_with_label_smoothing, cross_entropy_loss_with_soft_target
-
 
 __all__ = ["RunManager"]
 
