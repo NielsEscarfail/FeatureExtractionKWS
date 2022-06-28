@@ -190,7 +190,7 @@ class OFAKWSNet(KWSNet):
         )
 
     def set_active_subnet(self, w=None, ks=None, d=None, e=None, **kwargs):
-        print("w : ", w)
+
         width_mult = val2list(w, len(self.block_group_info) + 1)
         ks = val2list(ks, len(self.blocks))
         depth = val2list(d, len(self.block_group_info))
@@ -199,17 +199,15 @@ class OFAKWSNet(KWSNet):
         # set width mult
         if width_mult[0] is not None:  # input stem
             print("i 0  ",width_mult[0])
-            w_index = self.width_mult_list.index(width_mult[0])
 
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
-                self.input_stem[0].out_channel_list[w_index]
+                self.input_stem[0].out_channel_list[width_mult[0]]
 
         for stage_id, (block_idx, w) in enumerate(zip(self.block_group_info, width_mult[1:])):
             if w is not None:
                 for idx in block_idx:
                     if self.blocks[idx].shortcut is None:
-                        w_index = self.width_mult_list.index(width_mult[0])
-                        self.blocks[idx].conv.active_out_channel = self.blocks[idx].conv.out_channel_list[w_index]
+                        self.blocks[idx].conv.active_out_channel = self.blocks[idx].conv.out_channel_list[w]
 
         # set kernel size and expand ratio
         for i, (block, k, e) in enumerate(zip(self.blocks, ks, expand_ratio)):
