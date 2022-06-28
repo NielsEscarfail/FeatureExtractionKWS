@@ -48,18 +48,8 @@ def set_running_statistics(model, data_loader, distributed=False):
                     var_est.update(batch_var.data, x.size(0))
 
                     # bn forward using calculated mean & var
-                    # print("batch mean ", batch_mean)
-                    # print("batch mean dim ", batch_mean.dim())
-                    # print("BATCH MEAN SHAPE ", batch_mean.shape)
-
-                    # if batch_mean.dim():
-                    #     _feature_dim = batch_mean.size(0)
-                    # else:
-                    #     print("bug")
-                    #    _feature_dim = 1
                     _feature_dim = batch_mean.size(0)
 
-                    #_feature_dim = batch_mean.size()
                     return F.batch_norm(
                         x,
                         batch_mean,
@@ -83,8 +73,6 @@ def set_running_statistics(model, data_loader, distributed=False):
         DynamicBatchNorm2d.SET_RUNNING_STATISTICS = True
         for images, labels in data_loader:
             images = images.to(get_net_device(forward_model))
-            # print("IMAGE shape : ", images.shape)
-            # print("LABEL shape : ", images.shape)
             forward_model(images)
         DynamicBatchNorm2d.SET_RUNNING_STATISTICS = False
 

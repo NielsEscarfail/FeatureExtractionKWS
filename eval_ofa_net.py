@@ -26,6 +26,9 @@ parser.add_argument("--ft_extr_type",
                         "mel_spectrogram",
                     ])
 
+parser.add_argument("--n_arch", type=int, default=5)
+parser.add_argument("--load", type=bool, default=False)
+
 args = parser.parse_args()
 
 """Set width_mult_list, ks_list, expand_list and depth_list"""
@@ -129,4 +132,5 @@ if __name__ == "__main__":
     build_dataset randomly samples n_arch subnets and saves their config, accuracy, n_params, flops, latency
     """
     performance_dataset = PerformanceDataset(args.path)
-    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=1000, ft_extr_params_list=args.ft_extr_params_list)
+    if not args.load:
+        performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)

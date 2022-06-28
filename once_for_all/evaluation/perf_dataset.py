@@ -138,3 +138,24 @@ class PerformanceDataset:
 
                     perf_dict.update({key: info_val})  # Save accuracy, net_info
                     json.dump(perf_dict, open(perf_save_path, "w"), indent=4)
+
+    def merge_acc_dataset(self, ft_extr_params_list=None):
+        # load existing data
+        merged_perf_dict = {}
+        for fname in os.listdir(self.perf_src_folder):
+            if ".dict" not in fname:
+                continue
+            ft_extr_params = int(fname.split(".dict")[0])
+            if ft_extr_params_list is not None and ft_extr_params not in ft_extr_params_list:
+                print("Skip ", fname)
+                continue
+            full_path = os.path.join(self.perf_src_folder, fname)
+            partial_perf_dict = json.load(open(full_path))
+            merged_perf_dict.update(partial_perf_dict)
+            print("loaded %s" % full_path)
+        json.dump(merged_perf_dict, open(self.perf_dict_path, "w"), indent=4)
+        return merged_perf_dict
+
+    def load_dataset(self):
+        # load data
+        return json.load(open(self.perf_dict_path)) # eval/perf.dict
