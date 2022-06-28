@@ -60,7 +60,7 @@ class PerformanceDataset:
                     net_id = self.net_setting2id(net_setting)
                     net_id_list.append(net_id)
                 net_id_list = pd.DataFrame.from_dict(net_id_list)
-                net_id_list.to_csv(self.net_id_path, index=True)
+                net_id_list.to_csv(self.net_id_path, index=False)
             # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
             ft_extr_params_list = (
                 [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
