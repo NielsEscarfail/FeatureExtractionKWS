@@ -7,7 +7,7 @@ import random
 import torch
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
-from once_for_all.networks.kws_net import KWSNetLarge, KWSNet
+from once_for_all.networks.kws_net import KWSNetLarge
 from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
 
@@ -308,9 +308,9 @@ if __name__ == "__main__":
             n_classes=12,
             bn_param=(args.bn_momentum, args.bn_eps),
             dropout_rate=0,
+            width_mult=max(args.width_mult_list),
             ks=max(args.ks_list),
             depth=max(args.depth_list),
-            width_mult=max(args.width_mult_list),
             expand_ratio=max(args.expand_list)
         )
 

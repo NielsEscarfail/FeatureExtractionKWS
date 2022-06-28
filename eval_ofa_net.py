@@ -104,7 +104,7 @@ if __name__ == "__main__":
         n_classes=12,
         bn_param=(args.bn_momentum, args.bn_eps),
         dropout_rate=args.dropout,
-        width_mult=args.width_mult_list,
+        width_mult_list=args.width_mult_list,
         ks_list=args.ks_list,
         expand_ratio_list=args.expand_list,
         depth_list=args.depth_list,
@@ -130,8 +130,3 @@ if __name__ == "__main__":
     """
     performance_dataset = PerformanceDataset(args.path)
     performance_dataset.build_dataset(run_manager, ofa_net, n_arch=1000, ft_extr_params_list=args.ft_extr_params_list)
-
-
-
-
-
