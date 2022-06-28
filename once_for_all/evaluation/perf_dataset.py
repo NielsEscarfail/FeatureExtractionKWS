@@ -88,13 +88,14 @@ class PerformanceDataset:
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
                     else:
-                        existing_perf_df = None
+                        existing_perf_df = {}
 
                     print("net_id_list : ", net_id_list)
                     print("type ", type(net_id_list))
                     print("cols : ", net_id_list.columns)
                     for index, net_id in net_id_list.iterrows():
                         print("net_id : ", net_id)
+                        print(type(net_id))
                         net_setting = self.net_id2setting(net_id)
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_df:  # If setting already logged, don't test
