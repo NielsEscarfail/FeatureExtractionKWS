@@ -31,7 +31,7 @@ class KWSNetArchEncoder:
         self._build_info_dict(target="r2")
         # width_mult
         self.width_mult_info = dict(id2val=[], val2id=[], L=[], R=[])
-        self._build_info_dict(target="width_mult")
+        self._build_info_dict(target="w")
         # kernel size
         self.k_info = dict(id2val=[], val2id=[], L=[], R=[])
         self._build_info_dict(target="k")
@@ -65,7 +65,7 @@ class KWSNetArchEncoder:
                 self.n_dim += 1
             target_dict["R"].append(self.n_dim)
         else:
-            if target == "width_mult":
+            if target == "w":
                 target_dict = self.width_mult_info
                 choices = list(range(len(self.width_mult_list)))
             elif target == "k":
@@ -88,7 +88,7 @@ class KWSNetArchEncoder:
 
     def arch2feature(self, arch_dict):
         w, ks, e, d, r1, r2 = (
-            arch_dict["width_mult"],
+            arch_dict["w"],
             arch_dict["ks"],
             arch_dict["e"],
             arch_dict["d"],

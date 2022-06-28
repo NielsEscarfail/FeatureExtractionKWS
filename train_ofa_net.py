@@ -23,6 +23,7 @@ parser.add_argument(
         "kernel",
         "depth",
         "expand",
+        "width"
     ],
 )
 parser.add_argument("--phase", type=int, default=1, choices=[1, 2, 3])
@@ -69,7 +70,6 @@ elif args.task == "kernel":
     args.ks_list = "3,5,7"
     args.depth_list = "4"  # "4" 3 2 1
     args.expand_list = "3"
-    args.width_mult_list = "0.75, 1.0"
 
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
@@ -111,7 +111,7 @@ elif args.task == "expand":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"  # "2,3,4"
+        args.depth_list = "0,1,2,3,4"
         args.expand_list = "2,3"
 
     elif args.phase == 2:
@@ -132,7 +132,7 @@ elif args.task == "width":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"  # "2,3,4"
+        args.depth_list = "0,1,2,3,4"
         args.expand_list = "1,2,3"
         args.width_mult_list = "0.75,1.0"
 
@@ -196,7 +196,7 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
             (30, 30), (30, 40), (30, 50),
             (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(10, 30), (10, 40), (10, 50)]
+    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
 
 elif args.ft_extr_type == "mel_spectrogram":
     """MelSpectrogram params, shape (n_mels, win_len)
@@ -435,6 +435,22 @@ if __name__ == "__main__":
         print("Start elastic expand training")
 
         train_elastic_expand(train, run_manager, args, validate_func_dict)
+
+    elif args.task == "width":
+        from once_for_all.elastic_nn.training.progressive_shrinking import (
+            train_elastic_width_mult,
+        )
+
+        if args.phase == 1:
+            args.ofa_checkpoint_path += "/kernel2kernel_depth_expand/phase3/checkpoint/model_best.pth.tar"
+        elif args.phase == 2:
+            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand_width/phase1/checkpoint/model_best.pth.tar"
+        else:
+            args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand_width/phase2/checkpoint/model_best.pth.tar"
+
+        print("Start elastic width training")
+
+        train_elastic_width_mult(train, run_manager, args, validate_func_dict)
     else:
         raise NotImplementedError
 
