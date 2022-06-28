@@ -86,7 +86,9 @@ class PerformanceDataset:
                     else:
                         existing_perf_df = None
 
+                    print("net_id_list : ", net_id_list)
                     for i, net_id in enumerate(net_id_list):
+                        print("net_id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_df:  # If setting already logged, don't test
