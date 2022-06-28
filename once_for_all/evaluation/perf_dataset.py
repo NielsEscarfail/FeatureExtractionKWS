@@ -93,7 +93,7 @@ class PerformanceDataset:
                     print("net_id_list : ", net_id_list)
                     print("type ", type(net_id_list))
                     print("cols : ", net_id_list.columns)
-                    for i, net_id in enumerate(net_id_list):
+                    for net_id in net_id_list.itertuples():
                         print("net_id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
