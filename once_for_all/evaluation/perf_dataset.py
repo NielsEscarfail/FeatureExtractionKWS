@@ -73,7 +73,7 @@ class PerformanceDataset:
                 # save path
                 os.makedirs(self.perf_src_folder, exist_ok=True)
                 perf_save_path = os.path.join(
-                    self.perf_src_folder, "%d.dict" % ft_extr_params
+                    self.perf_src_folder, "%s.dict" % str(list(ft_extr_params))
                 )
                 perf_dict = {}
                 # load existing performance dict
