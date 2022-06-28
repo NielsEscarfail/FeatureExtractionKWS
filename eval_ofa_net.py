@@ -27,7 +27,6 @@ parser.add_argument("--ft_extr_type",
                     ])
 
 parser.add_argument("--n_arch", type=int, default=5)
-parser.add_argument("--load", type=bool, default=False)
 
 args = parser.parse_args()
 
@@ -103,6 +102,7 @@ if __name__ == "__main__":
     args.expand_list = [int(e) for e in args.expand_list.split(",")]
     args.width_mult_list = [float(w) for w in args.width_mult_list.split(",")]
 
+    """Instantiate OFAKWSNet and load trained model"""
     ofa_net = OFAKWSNet(
         n_classes=12,
         bn_param=(args.bn_momentum, args.bn_eps),
@@ -132,5 +132,5 @@ if __name__ == "__main__":
     build_dataset randomly samples n_arch subnets and saves their config, accuracy, n_params, flops, latency
     """
     performance_dataset = PerformanceDataset(args.path)
-    if not args.load:
-        performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
+    # if not args.load:
+    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)

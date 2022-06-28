@@ -42,9 +42,16 @@ parser.add_argument("--ft_extr_type",
                     ]
                     )
 
+parser.add_argument("--n_mfcc_bins",
+                    type=int,
+                    default=10)
+
 args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
+if args.ft_extr_type == "mfcc":
+    args.path += args.n_mfcc_bins
+
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
 args.width_mult_list = "1.0"
@@ -426,7 +433,7 @@ if __name__ == "__main__":
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
         elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase1/checkpoint/model_best.pth.tar"
-        else:
+        else: # unused
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
         print("Start elastic expand training")
@@ -439,7 +446,7 @@ if __name__ == "__main__":
         )
 
         if args.phase == 1:
-            args.ofa_checkpoint_path += "/kernel2kernel_depth_expand/phase3/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/kernel2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
         elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand_width/phase1/checkpoint/model_best.pth.tar"
         else:

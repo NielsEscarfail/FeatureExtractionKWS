@@ -26,6 +26,7 @@ class KWSDataProvider:
             ft_extr_type=["mel_spectrogram"],
             # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
             ft_extr_params_list=None,
+            n_mfcc_bins=10,
             rank=None,
             n_worker=4
     ):
@@ -47,7 +48,7 @@ class KWSDataProvider:
         self.active_ft_extr_params = self.ft_extr_params_list[0]
         self.active_transformation = None
 
-        self.init_transformations()
+        self.init_transformations(n_mfcc_bins)
 
         train_loader_class = torch.utils.data.DataLoader
         train_dataset = self.train_dataset()
@@ -173,7 +174,7 @@ class KWSDataProvider:
             transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
             self.active_transformation = self.transformations[transformation_idx]
 
-    def init_transformations(self):
+    def init_transformations(self, n_mfcc_bins):
         """ Transformations:
         mfcc:
             n_mfcc : number of mel bins
@@ -197,7 +198,7 @@ class KWSDataProvider:
                              'hop_length': hop_length,
                              'f_min': 20, 'f_max': 4000, 'n_mels': n_mfcc}  # Resolution 2
                 mfcc_transformation = MFCC(
-                    n_mfcc=10,  # this is the "crop", number of top mfccs to keep, it seems it has to be fixed
+                    n_mfcc=n_mfcc_bins,  # this is the "crop", number of top mfccs to keep, it seems it has to be fixed
                     sample_rate=self.audio_processor.desired_samples, melkwargs=melkwargs, log_mels=True,
                     norm='ortho')
                 self.transformations.append(mfcc_transformation)

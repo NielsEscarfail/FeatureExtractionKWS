@@ -1,7 +1,10 @@
-python train_ofa_net.py --task normal --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_normal.txt
-python train_ofa_net.py --task kernel --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_normal2kernel.txt
-python train_ofa_net.py --task depth --phase 1 --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_kernel2depth1.txt
-python train_ofa_net.py --task depth --phase 2 --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_kernel2depth2.txt
-python train_ofa_net.py --task depth --phase 3 --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_kernel2depth3.txt
-python train_ofa_net.py --task expand --phase 1 --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_depth2width1.txt
-python train_ofa_net.py --task expand --phase 2 --ft_extr_type mfcc 2>&1 | tee term_logs/mfcc_depth2width2.txt
+echo "ft_extr_type: $1"
+echo "n_mfcc_bins: $2"
+python train_ofa_net.py --task normal --ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task kernel -ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task depth --phase 1 -ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task depth --phase 2 -ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task depth --phase 3 -ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task expand --phase 1 -ft_extr_type $1 --n_mfcc_bins $2
+python train_ofa_net.py --task expand --phase 2 -ft_extr_type $1 --n_mfcc_bins $2
+python eval_ofa_net.py --ft_extr_type $1 --n_arch 100

@@ -134,6 +134,7 @@ class KWSRunConfig(RunConfig):
         # Feature extraction parameters
         ft_extr_params_list=[(10, 49)],
         ft_extr_type="mfcc",
+        n_mfcc_bins=10,
         **kwargs
     ):
         super(KWSRunConfig, self).__init__(
@@ -160,6 +161,9 @@ class KWSRunConfig(RunConfig):
         self.ft_extr_type = ft_extr_type
         self.ft_extr_params_list = ft_extr_params_list
 
+        # MFCC n_mfcc
+        self.n_mfcc_bins = n_mfcc_bins
+
     @property
     def data_provider(self):
         if self.__dict__.get("_data_provider", None) is None:
@@ -173,7 +177,8 @@ class KWSRunConfig(RunConfig):
                 valid_size=self.valid_size,
                 n_worker=self.n_worker,
                 ft_extr_type=self.ft_extr_type,
-                ft_extr_params_list=self.ft_extr_params_list
+                ft_extr_params_list=self.ft_extr_params_list,
+                n_mfcc_bins=self.n_mfcc_bins
             )
         return self.__dict__["_data_provider"]
 
