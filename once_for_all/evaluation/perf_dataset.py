@@ -7,18 +7,15 @@ from tqdm import tqdm
 from utils import list_mean, count_parameters, count_net_flops, get_net_info
 
 
+def net_setting2id(net_setting):
+    return json.dumps(net_setting)
+
+
 class PerformanceDataset:
     def __init__(self, path, use_csv):
         self.path = path
         self.use_csv = use_csv
         os.makedirs(self.path, exist_ok=True)
-
-    def net_setting2id(self, net_setting):
-        if self.use_csv:
-            # df = pd.DataFrame.from_dict(net_setting)
-            return net_setting
-        else:
-            return json.dumps(net_setting)
 
     def net_id2setting(self, net_id):
         if self.use_csv:
@@ -58,8 +55,7 @@ class PerformanceDataset:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
                     net_setting = ofa_net.sample_active_subnet()
-                    net_id = self.net_setting2id(net_setting)
-                    net_id_list.append(net_id)
+                    net_id_list.append(net_setting)
 
                 print("net_id_list before save : ", net_id_list)
                 net_id_list = pd.DataFrame.from_dict(net_id_list)
@@ -97,7 +93,7 @@ class PerformanceDataset:
                         print("net_id : ", net_id)
                         print(type(net_id))
                         net_setting = self.net_id2setting(net_id)
-                        key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                        key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_df:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
                             t.set_postfix(
@@ -162,7 +158,7 @@ class PerformanceDataset:
                 net_id_list = set()
                 while len(net_id_list) < n_arch:
                     net_setting = ofa_net.sample_active_subnet()
-                    net_id = self.net_setting2id(net_setting)
+                    net_id = net_setting2id(net_setting)
                     net_id_list.add(net_id)
                 net_id_list = list(net_id_list)
                 net_id_list.sort()
@@ -195,7 +191,7 @@ class PerformanceDataset:
 
                 for net_id in net_id_list:
                     net_setting = self.net_id2setting(net_id)
-                    key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                    key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                     if key in existing_perf_dict:  # If setting already logged, don't test
                         perf_dict[key] = existing_perf_dict[key]
                         t.set_postfix(
