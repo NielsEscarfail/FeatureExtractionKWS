@@ -51,7 +51,7 @@ class OFAKWSNet(KWSNet):
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 2, 2, 2]
+        stride_stages = [1, 1, 1, 1]# [1, 2, 2, 2]
         act_stages = ["relu", "relu", "relu", "relu"]
         se_stages = [False, False, False, False]
         n_block_list = [max(self.depth_list)] * 4  # block depth = 4 blocks
