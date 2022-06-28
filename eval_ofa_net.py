@@ -67,6 +67,8 @@ args.path = "eval/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
 args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
+# Other parameters
+args.manual_seed = 0
 
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
