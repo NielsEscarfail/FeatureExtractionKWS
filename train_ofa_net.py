@@ -46,7 +46,7 @@ args = parser.parse_args()
 args.path = "exp/" + args.ft_extr_type
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
-args.width_mult_list = "1.0"
+args.width_mult_list = "0.75,1.0"
 
 if args.task == "normal":
     args.path += "/normal"
@@ -97,7 +97,7 @@ elif args.task == "depth":
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "1,2,3,4"
+        args.depth_list = "0,1,2,3,4"
         args.expand_list = "3"
 
 
@@ -110,8 +110,8 @@ elif args.task == "expand":
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "1,2,4,6"  # "2,3,4"
-        args.expand_list = "3,2"
+        args.depth_list = "0,1,2,3,4"  # "2,3,4"
+        args.expand_list = "2,3"
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
@@ -119,8 +119,34 @@ elif args.task == "expand":
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "1,2,3,4"
-        args.expand_list = "3,2,1"
+        args.depth_list = "0,1,2,3,4"
+        args.expand_list = "1,2,3"
+
+elif args.task == "width":
+    args.path += "/kernel_depth2kernel_depth_expand_width/phase%d" % args.phase
+    args.dynamic_batch_size = 8
+    if args.phase == 1:
+        args.n_epochs = 25  # 25
+        args.base_lr = 1e-3
+        args.warmup_epochs = 0
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.depth_list = "0,1,2,3,4"  # "2,3,4"
+        args.expand_list = "1,2,3"
+        args.width_mult_list = "0.75,1.0"
+
+    elif args.phase == 2:
+        args.n_epochs = 100  # 55 # 120
+        args.base_lr = 1e-3
+        args.warmup_epochs = 5
+        args.warmup_lr = -1
+        args.ks_list = "3,5,7"
+        args.depth_list = "0,1,2,3,4"
+        args.expand_list = "1,2,3"
+        args.width_mult_list = "0.5,0.75,1.0"
+
+
+
 
 else:
     raise NotImplementedError
@@ -163,10 +189,8 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
             (30, 30), (30, 40), (30, 50),
             (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(10, 30), (10, 40), (10, 50),
-                                (20, 30), (20, 40), (20, 50),
-                                (30, 30), (30, 40), (30, 50),
-                                (40, 30), (40, 40), (40, 50)]
+    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50),
+                                (10, 30), (10, 40), (10, 50)]
 
 elif args.ft_extr_type == "mel_spectrogram":
     """MelSpectrogram params, shape (n_mels, win_len)
@@ -403,7 +427,7 @@ if __name__ == "__main__":
         else:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
-        print("Start elastic width training")
+        print("Start elastic expand training")
 
         train_elastic_expand(train, run_manager, args, validate_func_dict)
     else:

@@ -1,19 +1,14 @@
-import random
-import time
-import warnings
 import os
+import random
+import warnings
+import librosa
 import numpy as np
 import torch.utils.data
 import torchaudio
-from torchaudio.transforms import MFCC
-import librosa
 from spafe.features.rplp import plp
-from spafe.features.ngcc import ngcc
+from torchaudio.transforms import MFCC
 
 from .dataset import AudioGenerator, AudioProcessor
-
-
-# torch.multiprocessing.set_start_method('spawn')  # good solution !!!!
 
 
 class KWSDataProvider:
