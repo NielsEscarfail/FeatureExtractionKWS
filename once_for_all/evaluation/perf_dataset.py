@@ -198,9 +198,9 @@ class PerformanceDataset:
                         print("pref df : ", perf_df)
 
                     perf_df.to_csv(perf_save_path)
-                        print("Saved to csv: ")
-                        print(perf_df)
-                        print()
+                    print("Saved to csv: ")
+                    print(perf_df)
+                    print()
 
         else:  # Use json
             print("Using json")
