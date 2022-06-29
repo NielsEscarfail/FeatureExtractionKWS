@@ -94,6 +94,8 @@ class PerformanceDataset:
                         print("type key : ", type(key))
                         print("net setting : ", net_setting)
                         print("type net set : ", type(net_setting))
+                        net_setting = json.loads(net_setting)
+                        print("json.load : ", net_setting)
 
                         """Add to already loaded performance"""
                         if existing_perf_df is not None and perf_df is not None:
