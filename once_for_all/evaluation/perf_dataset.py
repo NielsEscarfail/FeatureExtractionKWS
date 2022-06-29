@@ -22,7 +22,10 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return {col: net_id[col] for col in net_id}
+
+            net_id = net_id.apply(lambda x: x.strip("[]").split(", "))
+            return net_id.to_dict()
+            # return {col: net_id[col] for col in net_id.index}
             # return net_id.to_dict(orient='list')
         else:
             return json.loads(net_id)
