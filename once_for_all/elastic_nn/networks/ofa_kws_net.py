@@ -196,15 +196,6 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))
         expand_ratio = val2list(e, len(self.blocks))
 
-        print("width_mult : ", width_mult)
-        print("width_mult type : ", type(width_mult))
-        print("ks : ", ks)
-        print("ks type : ", type(ks))
-        print("depth : ", depth)
-        print("depth type : ", type(depth))
-        print("expand_ratio : ", expand_ratio)
-        print("expand_ratio type : ", type(expand_ratio))
-
         # set width mult
         if width_mult[0] is not None:  # input stem
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
