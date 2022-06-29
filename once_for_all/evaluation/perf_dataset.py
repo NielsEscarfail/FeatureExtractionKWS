@@ -94,7 +94,7 @@ class PerformanceDataset:
                         print("type key : ", type(key))
                         print("net setting : ", net_setting)
                         print("type net set : ", type(net_setting))
-                        print("**netset : ", **net_setting)
+
                         """Add to already loaded performance"""
                         if existing_perf_df is not None and perf_df is not None:
                             if key in existing_perf_df.index:  # If setting already logged, don't test
