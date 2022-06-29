@@ -183,7 +183,6 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
-                        perf_df =
 
                         """Save the performance data"""
                         if perf_df is None:
@@ -198,11 +197,7 @@ class PerformanceDataset:
 
                         print("pref df : ", perf_df)
 
-                        # perf_df[key] = norm_net_info
-                        # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
-                        # print("perf df key ", perf_df.loc[key])
-                        # perf_df = pd.DataFrame(perf_dict)
-                        perf_df.to_csv(perf_save_path)
+                    perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
                         print(perf_df)
                         print()
