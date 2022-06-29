@@ -62,7 +62,12 @@ class PerformanceDataset:
         if self.use_csv:
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
-                net_id_list = pd.read_csv(self.net_id_path)
+                net_id_list = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
+                                                                        "ks": lambda x: x.strip("[]").split(", "),
+                                                                        "d": lambda x: x.strip("[]").split(", "),
+                                                                        "e": lambda x: x.strip("[]").split(", ")
+                                                                        })
+                print("loaded : ", net_id_list)
             else:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
