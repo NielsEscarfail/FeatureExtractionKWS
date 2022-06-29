@@ -209,7 +209,7 @@ class PerformanceDataset:
                         t.update()
 
                         """Save the performance data"""
-                        perf_list = perf_list.append(norm_net_info)
+                        perf_list.append(norm_net_info)
 
                         """ if perf_df is None:
                             # print("perf df is none before : ", perf_df)
