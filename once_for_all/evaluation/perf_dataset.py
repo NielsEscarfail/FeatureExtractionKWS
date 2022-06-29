@@ -64,21 +64,22 @@ class PerformanceDataset:
             print("Using csv")
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
-                net_id_list = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
+                net_id_df = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
                                                                         "ks": lambda x: x.strip("[]").split(", "),
                                                                         "d": lambda x: x.strip("[]").split(", "),
                                                                         "e": lambda x: x.strip("[]").split(", ")
                                                                         })
-                print("Loaded : ", net_id_list)
+                print("Loaded : ", net_id_df)
                 print("\n\n")
+                net_id_list = net_id_df.values.tolist()
             else:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
                     net_setting = ofa_net.sample_active_subnet()
                     net_id_list.append(net_setting)
 
-                net_id_list = pd.DataFrame(net_id_list)
-                net_id_list.to_csv(self.net_id_path, index=False)
+                net_id_df = pd.DataFrame(net_id_list)
+                net_id_df.to_csv(self.net_id_path, index=False)
             # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
             ft_extr_params_list = (
                 [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
@@ -105,7 +106,8 @@ class PerformanceDataset:
                     else:
                         existing_perf_df = None
 
-                    for index, net_id in net_id_list.iterrows():
+                    for net_id in net_id_list:
+                        # for index, net_id in net_id_list.iterrows():
                         print("net_id before : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         print("net setting : ", net_setting)
@@ -122,7 +124,7 @@ class PerformanceDataset:
                                 perf_df[key] = existing_perf_df[key]
                                 t.set_postfix(
                                     {
-                                        "net_id": str(net_id),
+                                        "net_id": net_id,
                                         "ft_extr_params": ft_extr_params,
                                         "info_val": perf_df[key],
                                         "status": "loading",
@@ -175,7 +177,7 @@ class PerformanceDataset:
                         # Display
                         t.set_postfix(
                             {
-                                "net_id": str(net_id),
+                                "net_id": net_id,
                                 "ft_extr_params": ft_extr_params,
                                 "info_val": info_val,
                             }
