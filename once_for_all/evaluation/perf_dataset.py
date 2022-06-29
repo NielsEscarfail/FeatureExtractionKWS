@@ -77,7 +77,7 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_dict = {}
+                    perf_df = pd.DataFrame()
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
@@ -143,8 +143,8 @@ class PerformanceDataset:
                         )
                         t.update()
 
-                        perf_dict.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
-                        perf_df = pd.DataFrame(perf_dict)
+                        perf_df.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
+                        # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
                         print(perf_df)
