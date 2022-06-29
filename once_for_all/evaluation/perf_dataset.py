@@ -58,7 +58,7 @@ class PerformanceDataset:
                     net_id_list.append(net_setting)
 
                 print("net_id_list before save : ", net_id_list)
-                net_id_list = pd.DataFrame.from_dict(net_id_list, orient='index')
+                net_id_list = pd.DataFrame(net_id_list)
                 print("net_id_list df : ", net_id_list)
                 net_id_list.to_csv(self.net_id_path, index=False)
             # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
