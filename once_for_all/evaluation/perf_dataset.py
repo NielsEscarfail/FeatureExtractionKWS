@@ -186,6 +186,8 @@ class PerformanceDataset:
 
                 for net_id in net_id_list:
                     net_setting = self.net_id2setting(net_id)
+                    print("net setting dict : ", net_setting)
+
                     key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                     if key in existing_perf_dict:  # If setting already logged, don't test
                         perf_dict[key] = existing_perf_dict[key]
