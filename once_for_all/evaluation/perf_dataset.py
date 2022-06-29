@@ -96,7 +96,7 @@ class PerformanceDataset:
                                 perf_df[key] = existing_perf_df[key]
                                 t.set_postfix(
                                     {
-                                        "net_id": net_id,
+                                        "net_id": str(net_id),
                                         "ft_extr_params": ft_extr_params,
                                         "info_val": perf_df[key],
                                         "status": "loading",
@@ -149,7 +149,7 @@ class PerformanceDataset:
                         # Display
                         t.set_postfix(
                             {
-                                "net_id": net_id,
+                                "net_id": str(net_id),
                                 "ft_extr_params": ft_extr_params,
                                 "info_val": info_val,
                             }
@@ -158,7 +158,8 @@ class PerformanceDataset:
                         print("pref df : ", perf_df)
 
                         """Save the performance data"""
-                        perf_df.update({key: norm_net_info})  # Save accuracy, net_info
+                        perf_df[key] = norm_net_info
+                        # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
                         print("pref df : ", perf_df)
                         print("perf df key ", perf_df[key])
                         # perf_df = pd.DataFrame(perf_dict)
