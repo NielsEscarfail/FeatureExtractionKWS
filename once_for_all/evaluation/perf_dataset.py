@@ -19,10 +19,10 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return {'w': list(net_id['w']),
-                    'ks': list(net_id['w']),
-                    'd': list(net_id['w']),
-                    'e': list(net_id['w'])}
+            return {'w': net_id['w'],
+                    'ks': net_id['ks'],
+                    'd': net_id['d'],
+                    'e': net_id['e']}
         else:
             return json.loads(net_id)
 
@@ -87,9 +87,11 @@ class PerformanceDataset:
                         existing_perf_df = {}
 
                     for index, net_id in net_id_list.iterrows():
+                        print("net id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         print("net setting : ", net_setting)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                        print("key : ", key)
                         if key in existing_perf_df:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
                             t.set_postfix(
