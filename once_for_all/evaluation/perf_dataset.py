@@ -22,7 +22,8 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return net_id.to_dict(orient='list')
+            return {col: net_id[col] for col in net_id}
+            # return net_id.to_dict(orient='list')
         else:
             return json.loads(net_id)
 
@@ -96,13 +97,15 @@ class PerformanceDataset:
                     # print("existing perf df", existing_perf_df)
 
                     for index, net_id in net_id_list.iterrows():
-                        # print("net_id : ", net_id)
+                        print("net_id before : ", net_id)
                         net_setting = self.net_id2setting(net_id)
+                        print("net setting : ", net_setting)
+                        print("type net set : ", type(net_setting))
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                        # print("key : ", key)
-                        # print("type key : ", type(key))
-                        # print("net setting : ", net_setting)
-                        # print("type net set : ", type(net_setting))
+                        print("key : ", key)
+                        print("type key : ", type(key))
+
+                        #
                         # net_setting = json.loads(net_setting)
                         # print("json.load : ", net_setting)
 
