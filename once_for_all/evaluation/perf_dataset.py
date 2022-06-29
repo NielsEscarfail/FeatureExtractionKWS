@@ -16,22 +16,14 @@ class PerformanceDataset:
         self.use_csv = use_csv
         os.makedirs(self.path, exist_ok=True)
 
-    def net_setting2id(self ,net_setting):
+    def net_setting2id(self, net_setting):
         if self.use_csv:
-            net_setting
+            json.dumps(net_setting)
         else:
             return json.dumps(net_setting)
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            print("net_id_2setting start")
-            print(net_id)
-            # print(net_id.columns)
-            # print(net_id.to_dict())
-            # net_id = net_id.infer_objects()
-            # print(net_id)
-            print(net_id.to_dict())
-            print("net_id_2setting end")
             return net_id.to_dict()
         else:
             return json.loads(net_id)
