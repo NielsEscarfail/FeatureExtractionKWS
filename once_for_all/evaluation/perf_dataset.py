@@ -18,7 +18,7 @@ class PerformanceDataset:
 
     def net_setting2id(self ,net_setting):
         if self.use_csv:
-            json.dumps(net_setting)
+            net_setting
         else:
             return json.dumps(net_setting)
 
