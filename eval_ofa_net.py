@@ -27,7 +27,9 @@ parser.add_argument("--ft_extr_type",
                     ])
 
 parser.add_argument("--n_arch", type=int, default=5)
-parser.add_argument("--use_csv", action=argparse.BooleanOptionalAction, default=True)  # pass --use_csv or --no-use_csv
+parser.add_argument('--use_csv', action='store_true')
+parser.add_argument('--use_json', dest='use_csv', action='store_false')
+parser.set_defaults(use_csv=True)
 
 args = parser.parse_args()
 
