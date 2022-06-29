@@ -90,6 +90,7 @@ class PerformanceDataset:
                         net_setting = self.net_id2setting(net_id)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
+                        """Add to already loaded performance"""
                         if existing_perf_df is not None:
                             if key in existing_perf_df.index:  # If setting already logged, don't test
                                 perf_df[key] = existing_perf_df[key]
@@ -103,6 +104,8 @@ class PerformanceDataset:
                                 )
                                 t.update()
                                 continue
+
+                        """Set subnet and record performance"""
                         ofa_net.set_active_subnet(**net_setting)
                         run_manager.reset_running_statistics(ofa_net)
                         net_setting_str = ",".join(
@@ -124,6 +127,7 @@ class PerformanceDataset:
                             no_logs=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
+                        # Gets n_params, flops, latency for gpu4, cpu
                         info_val = {
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
@@ -134,6 +138,7 @@ class PerformanceDataset:
                                                      print_info=False),
                             # Gets n_params, flops, latency for gpu4, cpu
                         }
+                        # Display
                         t.set_postfix(
                             {
                                 "net_id": net_id,
@@ -142,8 +147,14 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
+                        print("INFO VAL")
+                        print()
+                        print(info_val)
+                        print("")
+
+                        """Save the performance data"""
                         print("normalized info : ", pd.json_normalize(info_val, sep='_'))
-                        perf_df.update({key: pd.json_normalize(info_val, sep='_')}, index=[key])  # Save accuracy, net_info
+                        perf_df.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
