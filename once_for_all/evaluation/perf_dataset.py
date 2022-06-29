@@ -8,8 +8,6 @@ from tqdm import tqdm
 from utils import list_mean, count_parameters, count_net_flops, get_net_info
 
 
-
-
 class PerformanceDataset:
     def __init__(self, path, use_csv):
         self.path = path
@@ -52,6 +50,7 @@ class PerformanceDataset:
         - net_encoding: Encoding which can be used to recover the network
         """
         if self.use_csv:
+            print("Using csv")
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
                 net_id_list = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
@@ -201,6 +200,7 @@ class PerformanceDataset:
                         print()
 
         else:  # Use json
+            print("Using json")
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
                 net_id_list = json.load(open(self.net_id_path))
@@ -208,7 +208,7 @@ class PerformanceDataset:
                 net_id_list = set()
                 while len(net_id_list) < n_arch:
                     net_setting = ofa_net.sample_active_subnet()
-                    net_id = net_setting2id(net_setting)
+                    net_id = self.net_setting2id(net_setting)
                     net_id_list.add(net_id)
                 net_id_list = list(net_id_list)
                 net_id_list.sort()
