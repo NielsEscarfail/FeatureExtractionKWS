@@ -47,7 +47,7 @@ class PerformanceDataset:
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
 
-    def net_in_df(self, ):
+    # def net_in_df(self, ):
 
     def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
