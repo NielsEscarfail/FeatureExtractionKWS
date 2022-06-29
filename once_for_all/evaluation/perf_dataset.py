@@ -107,18 +107,10 @@ class PerformanceDataset:
                         existing_perf_df = None
 
                     for net_id in net_id_list:
-                        # for index, net_id in net_id_list.iterrows():
-                        print("net_id before : ", net_id)
                         net_setting = self.net_id2setting(net_id)
-                        print("net setting : ", net_setting)
-                        print("netdsad ", type(net_setting['w']))
-                        print("netdsad2 ", type(net_setting['w'][0]))
-                        print("type net set : ", type(net_setting))
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                        print("key : ", key)
-                        print("type key : ", type(key))
 
-                        """Add to already loaded performance"""
+                        """Add to already loaded performance if it exists"""
                         if existing_perf_df is not None and perf_df is not None:
                             if key in existing_perf_df.index:  # If setting already logged, don't test
                                 perf_df[key] = existing_perf_df[key]
@@ -160,11 +152,10 @@ class PerformanceDataset:
                                                 input_shape=data_shape,
                                                 measure_latency="gpu4#cpu",
                                                 print_info=False)
+
                         info_val = {  # For display purposes for now
                             "ft_extr_params": ft_extr_params,
-                            "data_shape": data_shape,
                             "top1": top1,
-                            "net_info": net_info,
                         }
 
                         norm_net_info = pd.json_normalize(net_info, sep='_')
@@ -204,7 +195,7 @@ class PerformanceDataset:
 
                         # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
-                        print("perf df key ", perf_df.loc[key])
+                        # print("perf df key ", perf_df.loc[key])
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
