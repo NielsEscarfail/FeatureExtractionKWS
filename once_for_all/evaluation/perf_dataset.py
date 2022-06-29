@@ -18,7 +18,7 @@ class PerformanceDataset:
 
     def net_setting2id(self ,net_setting):
         if self.use_csv:
-            return
+            json.dumps(net_setting)
         else:
             return json.dumps(net_setting)
 
@@ -26,10 +26,10 @@ class PerformanceDataset:
         if self.use_csv:
             print("net_id_2setting start")
             print(net_id)
-            print(net_id.columns)
-            print(net_id.to_dict())
-            net_id = net_id.infer_objects()
-            print(net_id)
+            # print(net_id.columns)
+            # print(net_id.to_dict())
+            # net_id = net_id.infer_objects()
+            # print(net_id)
             print(net_id.to_dict())
             print("net_id_2setting end")
             return net_id.to_dict()
@@ -67,7 +67,7 @@ class PerformanceDataset:
                                                                         "d": lambda x: x.strip("[]").split(", "),
                                                                         "e": lambda x: x.strip("[]").split(", ")
                                                                         })
-                print("loaded : ", net_id_list)
+                print("Loaded : ", net_id_list)
             else:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
@@ -106,13 +106,13 @@ class PerformanceDataset:
                     for index, net_id in net_id_list.iterrows():
                         print("net_id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
-                        key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                        key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         print("key : ", key)
                         print("type key : ", type(key))
                         print("net setting : ", net_setting)
                         print("type net set : ", type(net_setting))
-                        net_setting = json.loads(net_setting)
-                        print("json.load : ", net_setting)
+                        # net_setting = json.loads(net_setting)
+                        # print("json.load : ", net_setting)
 
                         """Add to already loaded performance"""
                         if existing_perf_df is not None and perf_df is not None:
