@@ -8,8 +8,6 @@ from tqdm import tqdm
 from utils import list_mean, count_parameters, count_net_flops, get_net_info
 
 
-def net_setting2id(net_setting):
-    return json.dumps(net_setting)
 
 
 class PerformanceDataset:
@@ -18,8 +16,22 @@ class PerformanceDataset:
         self.use_csv = use_csv
         os.makedirs(self.path, exist_ok=True)
 
+    def net_setting2id(self ,net_setting):
+        if self.use_csv:
+            return
+        else:
+            return json.dumps(net_setting)
+
     def net_id2setting(self, net_id):
         if self.use_csv:
+            print("net_id_2setting start")
+            print(net_id)
+            print(net_id.columns)
+            print(net_id.to_dict())
+            net_id = net_id.infer_objects()
+            print(net_id)
+            print(net_id.to_dict())
+            print("net_id_2setting end")
             return net_id.to_dict()
         else:
             return json.loads(net_id)
@@ -225,7 +237,7 @@ class PerformanceDataset:
                     for net_id in net_id_list:
                         net_setting = self.net_id2setting(net_id)
 
-                        key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                        key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_dict:  # If setting already logged, don't test
                             perf_dict[key] = existing_perf_dict[key]
                             t.set_postfix(
