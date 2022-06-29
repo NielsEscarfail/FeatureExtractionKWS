@@ -89,7 +89,9 @@ class PerformanceDataset:
                     for index, net_id in net_id_list.iterrows():
                         net_setting = self.net_id2setting(net_id)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-
+                        print("key : ", key)
+                        print("type key : ", type(key))
+                        print("net setting : ", net_setting)
                         """Add to already loaded performance"""
                         if existing_perf_df is not None:
                             if key in existing_perf_df.index:  # If setting already logged, don't test
