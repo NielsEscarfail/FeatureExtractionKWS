@@ -167,88 +167,88 @@ class PerformanceDataset:
                 # Save sampled net_id_list
                 json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
 
-        # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
-        ft_extr_params_list = (
-            [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
-        )
+            # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
+            ft_extr_params_list = (
+                [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
+            )
 
-        with tqdm(
-                total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
-        ) as t:
-            for ft_extr_params in ft_extr_params_list:
-                # load val dataset into memory
-                val_dataset = []
-                run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
-                for images, labels in run_manager.run_config.valid_loader:
-                    val_dataset.append((images, labels))
-                # save path
-                os.makedirs(self.perf_src_folder, exist_ok=True)
-                perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
-                perf_dict = {}
-                # load existing performance dict
-                if os.path.isfile(perf_save_path):
-                    existing_perf_dict = json.load(open(perf_save_path, "r"))
-                else:
-                    existing_perf_dict = {}
+            with tqdm(
+                    total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
+            ) as t:
+                for ft_extr_params in ft_extr_params_list:
+                    # load val dataset into memory
+                    val_dataset = []
+                    run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
+                    for images, labels in run_manager.run_config.valid_loader:
+                        val_dataset.append((images, labels))
+                    # save path
+                    os.makedirs(self.perf_src_folder, exist_ok=True)
+                    perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
+                    perf_dict = {}
+                    # load existing performance dict
+                    if os.path.isfile(perf_save_path):
+                        existing_perf_dict = json.load(open(perf_save_path, "r"))
+                    else:
+                        existing_perf_dict = {}
 
-                for net_id in net_id_list:
-                    net_setting = self.net_id2setting(net_id)
-                    print("net setting dict : ", net_setting)
+                    for net_id in net_id_list:
+                        net_setting = self.net_id2setting(net_id)
+                        print("net setting dict : ", net_setting)
 
-                    key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                    if key in existing_perf_dict:  # If setting already logged, don't test
-                        perf_dict[key] = existing_perf_dict[key]
+                        key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                        if key in existing_perf_dict:  # If setting already logged, don't test
+                            perf_dict[key] = existing_perf_dict[key]
+                            t.set_postfix(
+                                {
+                                    "net_id": net_id,
+                                    "ft_extr_params": ft_extr_params,
+                                    "info_val": perf_dict[key],
+                                    "status": "loading",
+                                }
+                            )
+                            t.update()
+                            continue
+                        ofa_net.set_active_subnet(**net_setting)
+                        run_manager.reset_running_statistics(ofa_net)
+                        net_setting_str = ",".join(
+                            [
+                                "%s_%s"
+                                % (
+                                    key,
+                                    "%.1f" % list_mean(val)
+                                    if isinstance(val, list)
+                                    else val,
+                                )
+                                for key, val in net_setting.items()
+                            ]
+                        )
+                        loss, (top1, top5) = run_manager.validate(
+                            run_str=net_setting_str,
+                            net=ofa_net,
+                            data_loader=val_dataset,
+                            no_logs=True,
+                        )
+                        data_shape = val_dataset[0][0].shape[1:]
+                        info_val = {
+                            "ft_extr_params": ft_extr_params,
+                            "data_shape": data_shape,
+                            "top1": top1,
+                            "net_info": get_net_info(ofa_net,
+                                                     input_shape=data_shape,
+                                                     measure_latency="gpu4#cpu",
+                                                     print_info=False),  # Gets n_params, flops, latency for gpu4, cpu
+                        }
                         t.set_postfix(
                             {
                                 "net_id": net_id,
                                 "ft_extr_params": ft_extr_params,
-                                "info_val": perf_dict[key],
-                                "status": "loading",
+                                "info_val": info_val,
                             }
                         )
                         t.update()
-                        continue
-                    ofa_net.set_active_subnet(**net_setting)
-                    run_manager.reset_running_statistics(ofa_net)
-                    net_setting_str = ",".join(
-                        [
-                            "%s_%s"
-                            % (
-                                key,
-                                "%.1f" % list_mean(val)
-                                if isinstance(val, list)
-                                else val,
-                            )
-                            for key, val in net_setting.items()
-                        ]
-                    )
-                    loss, (top1, top5) = run_manager.validate(
-                        run_str=net_setting_str,
-                        net=ofa_net,
-                        data_loader=val_dataset,
-                        no_logs=True,
-                    )
-                    data_shape = val_dataset[0][0].shape[1:]
-                    info_val = {
-                        "ft_extr_params": ft_extr_params,
-                        "data_shape": data_shape,
-                        "top1": top1,
-                        "net_info": get_net_info(ofa_net,
-                                                 input_shape=data_shape,
-                                                 measure_latency="gpu4#cpu",
-                                                 print_info=False),  # Gets n_params, flops, latency for gpu4, cpu
-                    }
-                    t.set_postfix(
-                        {
-                            "net_id": net_id,
-                            "ft_extr_params": ft_extr_params,
-                            "info_val": info_val,
-                        }
-                    )
-                    t.update()
 
-                    perf_dict.update({key: info_val})  # Save accuracy, net_info
-                    json.dump(perf_dict, open(perf_save_path, "w"), indent=4)
+                        perf_dict.update({key: info_val})  # Save accuracy, net_info
+                        json.dump(perf_dict, open(perf_save_path, "w"), indent=4)
 
     def merge_acc_dataset(self, ft_extr_params_list=None):
         # load existing data
