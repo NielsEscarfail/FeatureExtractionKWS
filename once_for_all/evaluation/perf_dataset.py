@@ -19,7 +19,7 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return net_id.as_type(object).to_dict()
+            return net_id.to_dict()
             """return {'w': net_id['w'],
                     'ks': net_id['ks'],
                     'd': net_id['d'],
