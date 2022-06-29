@@ -107,7 +107,7 @@ class PerformanceDataset:
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
                     perf_list = []
-                    perf_df = None
+
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
@@ -129,13 +129,13 @@ class PerformanceDataset:
                         if existing_perf_df is not None:
                             already_evaluated = self.net_setting_in_df(net_setting, existing_perf_df)
                             if already_evaluated:  # If setting already logged, don't test
-                                perf_df.append(existing_perf_df[key])
-                                perf_df.append(existing_perf_df[already_evaluated], ignore_index=False)
+                                # perf_df.append(existing_perf_df[key])
+                                perf_list = perf_list.append(existing_perf_df[already_evaluated])
                                 t.set_postfix(
                                     {
                                         "net_id": net_id,
                                         "ft_extr_params": ft_extr_params,
-                                        "info_val": perf_df[key],
+                                        "info_val": existing_perf_df[already_evaluated],
                                         "status": "loading",
                                     }
                                 )
@@ -180,6 +180,10 @@ class PerformanceDataset:
                         norm_net_info["data_shape"] = str(data_shape)
                         norm_net_info["top1"] = top1
                         norm_net_info['key'] = key
+                        norm_net_info['w'] = net_setting['w']
+                        norm_net_info['ks'] = net_setting['ks']
+                        norm_net_info['e'] = net_setting['e']
+                        norm_net_info['d'] = net_setting['d']
 
                         # Display
                         t.set_postfix(
@@ -192,18 +196,23 @@ class PerformanceDataset:
                         t.update()
 
                         """Save the performance data"""
-                        if perf_df is None:
+                        perf_list = perf_list.append(norm_net_info)
+
+
+                        """ if perf_df is None:
                             # print("perf df is none before : ", perf_df)
                             perf_df = pd.DataFrame(data=norm_net_info)
                             perf_df.set_index(['w', 'ks', 'e', 'd'])
                         else:
-                            info = pd.DataFrame(data=norm_net_info)
-                            info.set_index(['w', 'ks', 'e', 'd'])
+                            # info = pd.DataFrame(data=norm_net_info)
+                            # info.set_index(['w', 'ks', 'e', 'd'])
                             perf_df = perf_df.append(info)
-                            print("perf df not none afterupdate : ", perf_df)
+                            print("perf df not none afterupdate : ", perf_df)"""
 
-                        print("pref df : ", perf_df)
+                        print("pref df : ", perf_list)
 
+                    perf_df = pd.DataFrame(data=perf_list)
+                    perf_df.set_index(['w', 'ks', 'e', 'd'])
                     perf_df.to_csv(perf_save_path)
                     print("Saved to csv: ")
                     print(perf_df)
