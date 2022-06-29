@@ -19,7 +19,7 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return json.loads(net_id) # net_id.to_dict()
+            return net_id.to_json()  # net_id.to_dict()
         else:
             return json.loads(net_id)
 
