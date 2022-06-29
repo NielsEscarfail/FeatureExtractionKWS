@@ -77,7 +77,7 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_df = pd.DataFrame()
+                    perf_df = None
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
@@ -92,8 +92,9 @@ class PerformanceDataset:
                         print("key : ", key)
                         print("type key : ", type(key))
                         print("net setting : ", net_setting)
+                        print("type net set : ", type(net_setting))
                         """Add to already loaded performance"""
-                        if existing_perf_df is not None:
+                        if existing_perf_df is not None and perf_df is not None:
                             if key in existing_perf_df.index:  # If setting already logged, don't test
                                 perf_df[key] = existing_perf_df[key]
                                 t.set_postfix(
@@ -157,10 +158,16 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
-                        print("pref df : ", perf_df)
 
                         """Save the performance data"""
-                        perf_df[key] = norm_net_info
+                        if perf_df is None:
+                            perf_df = pd.DataFrame(index=key, data=norm_net_info)
+                        else:
+                            perf_df[key] = norm_net_info
+
+                        print("pref df : ", perf_df)
+
+                        # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
                         print("pref df : ", perf_df)
                         print("perf df key ", perf_df[key])
