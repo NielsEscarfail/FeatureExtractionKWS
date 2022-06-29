@@ -36,10 +36,10 @@ class PerformanceDataset:
             return json.loads(net_id)
 
     def net_setting_in_df(self, net_setting, df):
-        equal_condition = df['w'] == net_setting['w'] &\
-                          df['ks'] == net_setting['ks'] &\
-                          df['d'] == net_setting['d'] &\
-                        df['e'] == net_setting['e']
+        equal_condition = df['w'] == net_setting['w'] & \
+                          df['ks'] == net_setting['ks'] & \
+                          df['d'] == net_setting['d'] & \
+                          df['e'] == net_setting['e']
 
         return equal_condition
 
@@ -110,7 +110,12 @@ class PerformanceDataset:
 
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
-                        existing_perf_df = pd.read_csv(perf_save_path)
+                        existing_perf_df = pd.read_csv(perf_save_path,
+                                                       converters={"w": lambda x: x.strip("[]").split(", "),
+                                                                   "ks": lambda x: x.strip("[]").split(", "),
+                                                                   "d": lambda x: x.strip("[]").split(", "),
+                                                                   "e": lambda x: x.strip("[]").split(", ")
+                                                                   })
                         print("Loaded existing performance: ", existing_perf_df.head(2))
                         existing_perf_list = existing_perf_df.values.tolist()
                     else:
@@ -118,7 +123,8 @@ class PerformanceDataset:
                         existing_perf_list = []
 
                     for net_id in net_id_list:
-                        net_setting = self.net_id2setting(net_id)
+                        # net_setting = self.net_id2setting(net_id)
+                        net_setting = net_id
                         print("net setting ", net_setting)
                         print("type net setting ", type(net_setting))
                         print("type wi ", type(net_setting['w']))
@@ -162,6 +168,7 @@ class PerformanceDataset:
                             data_loader=val_dataset,
                             no_logs=True,
                         )
+                        """Create net_info/perf dict and append to net_perf_list"""
                         data_shape = val_dataset[0][0].shape[1:]
                         # Gets n_params, flops, latency for gpu4, cpu
                         net_info = get_net_info(ofa_net,
@@ -175,6 +182,7 @@ class PerformanceDataset:
                         norm_net_info["data_shape"] = str(data_shape)
                         norm_net_info["top1"] = top1
                         norm_net_info['key'] = key
+
                         norm_net_info['w'] = net_setting['w']
                         norm_net_info['ks'] = net_setting['ks']
                         norm_net_info['e'] = net_setting['e']
@@ -195,7 +203,6 @@ class PerformanceDataset:
 
                         """Save the performance data"""
                         perf_list = perf_list.append(norm_net_info)
-
 
                         """ if perf_df is None:
                             # print("perf df is none before : ", perf_df)
