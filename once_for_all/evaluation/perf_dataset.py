@@ -162,10 +162,10 @@ class PerformanceDataset:
 
                         """Save the performance data"""
                         if perf_df is None:
-                            perf_df = pd.DataFrame(data=norm_net_info)
+                            perf_df = pd.Series(data=norm_net_info)
                             perf_df = perf_df.set_index('key')
                         else:
-                            perf_df[key] = norm_net_info
+                            perf_df.update({key: norm_net_info})
 
                         print("pref df : ", perf_df)
 
