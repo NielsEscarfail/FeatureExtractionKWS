@@ -19,7 +19,10 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return net_id.to_json()  # net_id.to_dict()
+            return {'w': list(net_id['w']),
+                    'ks': list(net_id['w']),
+                    'd': list(net_id['w']),
+                    'e': list(net_id['w'])}
         else:
             return json.loads(net_id)
 
