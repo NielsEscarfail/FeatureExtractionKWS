@@ -50,16 +50,13 @@ class PerformanceDataset:
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
                 net_id_list = pd.read_csv(self.net_id_path)
-                print("loaded net id list : ", net_id_list)
             else:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
                     net_setting = ofa_net.sample_active_subnet()
                     net_id_list.append(net_setting)
 
-                print("net_id_list before save : ", net_id_list)
                 net_id_list = pd.DataFrame(net_id_list)
-                print("net_id_list df : ", net_id_list)
                 net_id_list.to_csv(self.net_id_path, index=False)
             # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
             ft_extr_params_list = (
@@ -79,22 +76,15 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_df = None
+                    perf_dict = {}
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
                     else:
                         existing_perf_df = {}
 
-                    print("net_id_list : ", net_id_list)
-                    print("type ", type(net_id_list))
-                    print("cols : ", net_id_list.columns)
                     for index, net_id in net_id_list.iterrows():
-                        print("net_id : ", net_id)
-                        print(type(net_id))
                         net_setting = self.net_id2setting(net_id)
-                        print("net setting : ", net_setting)
-                        print("type net setting : ", type(net_setting))
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_df:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
@@ -129,7 +119,7 @@ class PerformanceDataset:
                             no_logs=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
-                        print("testing: data_shape: ", data_shape)
+                        # print("testing: data_shape: ", data_shape)
                         info_val = {
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
@@ -140,6 +130,7 @@ class PerformanceDataset:
                                                      print_info=False),
                             # Gets n_params, flops, latency for gpu4, cpu
                         }
+                        # info_val_df = pd.json_normalize(info_val, sep='_')
                         t.set_postfix(
                             {
                                 "net_id": net_id,
@@ -149,7 +140,8 @@ class PerformanceDataset:
                         )
                         t.update()
 
-                        perf_df.update({key: info_val})  # Save accuracy, net_info
+                        perf_dict.update({key: info_val})  # Save accuracy, net_info
+                        perf_df = pd.json_normalize(perf_dict, sep='_')
                         perf_df.to_csv(perf_save_path)
 
         else:  # Use json
