@@ -46,6 +46,9 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
+
+    def net_in_df(self, ):
+
     def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
@@ -106,14 +109,12 @@ class PerformanceDataset:
                         print("net_id before : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         print("net setting : ", net_setting)
+                        print("netdsad ", type(net_setting['w']))
+                        print("netdsad2 ", type(net_setting['w'][0]))
                         print("type net set : ", type(net_setting))
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         print("key : ", key)
                         print("type key : ", type(key))
-
-                        #
-                        # net_setting = json.loads(net_setting)
-                        # print("json.load : ", net_setting)
 
                         """Add to already loaded performance"""
                         if existing_perf_df is not None and perf_df is not None:
