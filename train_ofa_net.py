@@ -42,13 +42,11 @@ parser.add_argument("--ft_extr_type",
                     ]
                     )
 
-parser.add_argument("--n_mfcc_bins",
-                    type=int,
-                    default=10)
+parser.add_argument("--params_id", type=int,  default=1)
 
 args = parser.parse_args()
 
-args.path = "exp/" + args.ft_extr_type
+args.path = "exp/" + args.ft_extr_type + args.params_id
 if args.ft_extr_type == "mfcc":
     args.path += "_" + str(args.n_mfcc_bins)
 
@@ -186,10 +184,11 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     """MFCC params, shape (n_mels, win_len), n_mfcc is fixed to 10.
     We choose to fix n_mels to 10, 40, 80 in each runs, as OFA tends to learn only one n_mels configuration when mixing them.
     used:
-        - [(40, 40)]
-        - [(10, 30), (10, 40), (10, 50)], n_bin_count=10
-        - [(40, 30), (40, 40), (40, 50)], n_bin_count=10, 40
-        - [(80, 30), (80, 40), (80, 50)], n_bin_count=10, 40, 80
+        - [(40, 40)] n_bin_count=10 #1
+        - [(10, 30), (10, 40), (10, 50)], n_bin_count=10 #2
+        - [(40, 30), (40, 40), (40, 50)], n_bin_count=10 #3, 40 #5
+        - [(80, 30), (80, 40), (80, 50)], n_bin_count=10 #4, 40 #6, 80 #7
+        - [(40, 40)] n_bin_count=10 #8
         Experimental:
         - [(40, 40)]
         - [(40, 30), (40, 40), (40, 50),
@@ -200,14 +199,46 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
             (30, 30), (30, 40), (30, 50),
             (40, 30), (40, 40), (40, 50)]
     """
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
+    if args.params_id == 1:
+        args.n_mfcc_bins = 10
+        args.ft_extr_params_list = [(40, 40)]
+    elif args.params_id == 2:
+        args.n_mfcc_bins = 10
+        args.ft_extr_params_list = [(10, 30), (10, 40), (10, 50)]
+    elif args.params_id == 3:
+        args.n_mfcc_bins = 10
+        args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
+    elif args.params_id == 4:
+        args.n_mfcc_bins = 10
+        args.ft_extr_params_list = [(80, 30), (80, 40), (80, 50)]
+    elif args.params_id == 5:
+        args.n_mfcc_bins = 40
+        args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
+    elif args.params_id == 6:
+        args.n_mfcc_bins = 40
+        args.ft_extr_params_list = [(80, 30), (80, 40), (80, 50)]
+    elif args.params_id == 7:
+        args.n_mfcc_bins = 80
+        args.ft_extr_params_list = [(80, 30), (80, 40), (80, 50)]
+    if args.params_id == 8:
+        args.n_mfcc_bins = 40
+        args.ft_extr_params_list = [(40, 40)]
+    else:
+        raise NotImplementedError("params_id not implemented")
+
 
 elif args.ft_extr_type == "mel_spectrogram":
     """MelSpectrogram params, shape (n_mels, win_len)
     used:
         - [(10, 20), (10, 25), (10, 30)]
+        - [(40, 20), (40, 30), (40, 40)]
     """
-    args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
+    if args.params_id == 1:
+        args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
+    elif args.params_id  == 2:
+        args.ft_extr_params_list = [(40, 20), (40, 30), (40, 40)]
+    else:
+        raise NotImplementedError("params_id not implemented")
 
 elif args.ft_extr_type == "linear_stft":  # n_mels unused
     """Linear STFT params, shape (_, win_len)
