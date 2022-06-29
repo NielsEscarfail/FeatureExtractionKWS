@@ -22,11 +22,11 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return net_id
-            """return {'w': net_id['w'],
+            # return net_id
+            return {'w': net_id['w'],
                     'ks': net_id['ks'],
                     'd': net_id['d'],
-                    'e': net_id['e']}"""
+                    'e': net_id['e']}
 
             # net_id = net_id.apply(lambda x: x.strip("[]").split(", "))
             # return net_id.to_dict()
