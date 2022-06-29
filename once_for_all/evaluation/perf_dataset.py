@@ -60,6 +60,7 @@ class PerformanceDataset:
                                                                         "e": lambda x: x.strip("[]").split(", ")
                                                                         })
                 print("Loaded : ", net_id_list)
+                print("\n\n")
             else:
                 net_id_list = []
                 while len(net_id_list) < n_arch:
@@ -93,16 +94,16 @@ class PerformanceDataset:
                     else:
                         existing_perf_df = None
 
-                    print("existing perf df", existing_perf_df)
+                    # print("existing perf df", existing_perf_df)
 
                     for index, net_id in net_id_list.iterrows():
-                        print("net_id : ", net_id)
+                        # print("net_id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                        print("key : ", key)
-                        print("type key : ", type(key))
-                        print("net setting : ", net_setting)
-                        print("type net set : ", type(net_setting))
+                        # print("key : ", key)
+                        # print("type key : ", type(key))
+                        # print("net setting : ", net_setting)
+                        # print("type net set : ", type(net_setting))
                         # net_setting = json.loads(net_setting)
                         # print("json.load : ", net_setting)
 
@@ -161,7 +162,6 @@ class PerformanceDataset:
                         norm_net_info["data_shape"] = str(data_shape)
                         norm_net_info["top1"] = top1
                         norm_net_info['key'] = key
-                        print("norm net info: ", norm_net_info)
 
                         # Display
                         t.set_postfix(
@@ -175,19 +175,26 @@ class PerformanceDataset:
 
                         """Save the performance data"""
                         if perf_df is None:
+                            print("perf df is none before : ", perf_df)
                             perf_df = pd.DataFrame(data=norm_net_info)
-                            perf_df.set_index('key', drop=True)
+                            print("perf df is none mid : ", perf_df)
+                            perf_df.set_index('key', drop=True, inplace=True)
+                            print("perf df is none after : ", perf_df)
                         else:
+                            print("perf df not none before : ", perf_df)
                             info = pd.DataFrame(data=norm_net_info)
-                            info.set_index('key', drop=True)
+                            print("perf df not none beforeinfo: ", info)
+                            info.set_index('key', drop=True, inplace=True)
+                            print("perf df not none afterinfo : ", info)
                             perf_df.update(info)
+                            print("perf df not none afterupdate : ", perf_df)
 
                         print("pref df : ", perf_df)
 
                         # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
                         print("pref df : ", perf_df)
-                        print("perf df key ", perf_df[key])
+                        # print("perf df key ", perf_df[key])
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
