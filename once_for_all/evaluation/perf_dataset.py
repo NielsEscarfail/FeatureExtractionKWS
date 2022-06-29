@@ -183,6 +183,11 @@ class PerformanceDataset:
                         norm_net_info["top1"] = top1
                         norm_net_info['key'] = key
 
+                        print("NORM NET INFO ")
+                        print(norm_net_info)
+                        print()
+                        print(norm_net_info.keys())
+
                         norm_net_info['w'] = net_setting['w']
                         norm_net_info['ks'] = net_setting['ks']
                         norm_net_info['e'] = net_setting['e']
