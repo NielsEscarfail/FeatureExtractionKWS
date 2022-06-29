@@ -90,18 +90,19 @@ class PerformanceDataset:
                         net_setting = self.net_id2setting(net_id)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
-                        if key in existing_perf_df.index and existing_perf_df is not None:  # If setting already logged, don't test
-                            perf_df[key] = existing_perf_df[key]
-                            t.set_postfix(
-                                {
-                                    "net_id": net_id,
-                                    "ft_extr_params": ft_extr_params,
-                                    "info_val": perf_df[key],
-                                    "status": "loading",
-                                }
-                            )
-                            t.update()
-                            continue
+                        if existing_perf_df is not None:
+                            if key in existing_perf_df.index:  # If setting already logged, don't test
+                                perf_df[key] = existing_perf_df[key]
+                                t.set_postfix(
+                                    {
+                                        "net_id": net_id,
+                                        "ft_extr_params": ft_extr_params,
+                                        "info_val": perf_df[key],
+                                        "status": "loading",
+                                    }
+                                )
+                                t.update()
+                                continue
                         ofa_net.set_active_subnet(**net_setting)
                         run_manager.reset_running_statistics(ofa_net)
                         net_setting_str = ",".join(
