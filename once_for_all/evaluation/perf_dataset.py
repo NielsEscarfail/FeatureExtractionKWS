@@ -22,9 +22,13 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
+            return {'w': net_id['w'],
+                    'ks': net_id['ks'],
+                    'd': net_id['d'],
+                    'e': net_id['e']}
 
-            net_id = net_id.apply(lambda x: x.strip("[]").split(", "))
-            return net_id.to_dict()
+            # net_id = net_id.apply(lambda x: x.strip("[]").split(", "))
+            # return net_id.to_dict()
             # return {col: net_id[col] for col in net_id.index}
             # return net_id.to_dict(orient='list')
         else:
@@ -94,10 +98,9 @@ class PerformanceDataset:
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
+                        print("Loaded existing performance: ", existing_perf_df.head(2))
                     else:
                         existing_perf_df = None
-
-                    # print("existing perf df", existing_perf_df)
 
                     for index, net_id in net_id_list.iterrows():
                         print("net_id before : ", net_id)
