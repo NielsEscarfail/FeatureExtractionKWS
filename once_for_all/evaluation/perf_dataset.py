@@ -22,7 +22,7 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            return json.loads(net_id)
+            return net_id
             """return {'w': net_id['w'],
                     'ks': net_id['ks'],
                     'd': net_id['d'],
@@ -117,7 +117,11 @@ class PerformanceDataset:
                         existing_perf_list = []
 
                     for net_id in net_id_list:
+                        print("net id  ", net_id)
+                        print("type net id  ", type(net_id))
                         net_setting = self.net_id2setting(net_id)
+                        print("net setting ", net_setting)
+                        print("type net setting ", type(net_setting))
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
                         """Add to already loaded performance if it exists"""
