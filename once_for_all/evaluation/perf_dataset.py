@@ -1,5 +1,6 @@
 import json
 import os
+from ast import literal_eval
 
 import pandas as pd
 from tqdm import tqdm
@@ -20,13 +21,10 @@ class PerformanceDataset:
     def net_id2setting(self, net_id):
         if self.use_csv:
             dict = net_id.to_dict()
-            # from ast import literal_eval
-            dict = dict([key, float(val)] for key, val in dict.items())
-            return dict
-            """return {'w': net_id['w'],
-                    'ks': net_id['ks'],
-                    'd': net_id['d'],
-                    'e': net_id['e']}"""
+            return {'w': literal_eval(net_id['w']),
+                    'ks': literal_eval(net_id['ks']),
+                    'd': literal_eval(net_id['d']),
+                    'e': literal_eval(net_id['e'])}
         else:
             return json.loads(net_id)
 
