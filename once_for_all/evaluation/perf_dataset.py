@@ -186,12 +186,14 @@ class PerformanceDataset:
                         print("NORM NET INFO ")
                         print(norm_net_info)
                         print()
-                        print(norm_net_info.keys())
 
-                        norm_net_info['w'] = net_setting['w']
-                        norm_net_info['ks'] = net_setting['ks']
+                        norm_net_info.update({'w':net_setting['w']})
+                        norm_net_info.update({'ks': net_setting['ks']})
+                        norm_net_info.update({'e': net_setting['e']})
+                        norm_net_info.update({'d': net_setting['d']})
+                        """norm_net_info['ks'] = net_setting['ks']
                         norm_net_info['e'] = net_setting['e']
-                        norm_net_info['d'] = net_setting['d']
+                        norm_net_info['d'] = net_setting['d']"""
 
                         # Display
                         info_val = {  # For display purposes for now
