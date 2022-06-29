@@ -46,9 +46,9 @@ parser.add_argument("--params_id", type=int,  default=1)
 
 args = parser.parse_args()
 
-args.path = "exp/" + args.ft_extr_type + args.params_id
+args.path = "exp/" + args.ft_extr_type + str(args.params_id)
 if args.ft_extr_type == "mfcc":
-    args.path += "_" + str(args.n_mfcc_bins)
+    args.path += "_" + str(args.n_mfcc_bins) + "bins"
 
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
