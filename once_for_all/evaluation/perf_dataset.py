@@ -82,7 +82,7 @@ class PerformanceDataset:
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
                     else:
-                        existing_perf_df = {}
+                        existing_perf_df = None
 
                     print("existing perf df", existing_perf_df)
 
@@ -90,7 +90,7 @@ class PerformanceDataset:
                         net_setting = self.net_id2setting(net_id)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
-                        if key in existing_perf_df.index:  # If setting already logged, don't test
+                        if key in existing_perf_df.index and existing_perf_df is not None:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
                             t.set_postfix(
                                 {
@@ -145,6 +145,9 @@ class PerformanceDataset:
                         perf_dict.update({key: info_val})  # Save accuracy, net_info
                         perf_df = pd.json_normalize(perf_dict, sep='_')
                         perf_df.to_csv(perf_save_path)
+                        print("Saved to csv: ")
+                        print(perf_df)
+                        print()
 
         else:  # Use json
             # Load a net_id_list
