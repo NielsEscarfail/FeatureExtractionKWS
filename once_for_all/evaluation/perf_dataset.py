@@ -86,6 +86,8 @@ class PerformanceDataset:
                     for index, net_id in net_id_list.iterrows():
                         net_setting = self.net_id2setting(net_id)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+
+
                         if key in existing_perf_df:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
                             t.set_postfix(
