@@ -20,11 +20,12 @@ class PerformanceDataset:
 
     def net_id2setting(self, net_id):
         if self.use_csv:
-            dict = net_id.to_dict()
-            return {'w': literal_eval(net_id['w']),
+            return net_id.to_dict()
+            # dict = net_id.to_dict()
+            """return {'w': literal_eval(net_id['w']),
                     'ks': literal_eval(net_id['ks']),
                     'd': literal_eval(net_id['d']),
-                    'e': literal_eval(net_id['e'])}
+                    'e': literal_eval(net_id['e'])}"""
         else:
             return json.loads(net_id)
 
