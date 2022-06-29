@@ -21,11 +21,6 @@ class PerformanceDataset:
     def net_id2setting(self, net_id):
         if self.use_csv:
             return net_id.to_dict()
-            # dict = net_id.to_dict()
-            """return {'w': literal_eval(net_id['w']),
-                    'ks': literal_eval(net_id['ks']),
-                    'd': literal_eval(net_id['d']),
-                    'e': literal_eval(net_id['e'])}"""
         else:
             return json.loads(net_id)
 
@@ -89,13 +84,13 @@ class PerformanceDataset:
                     else:
                         existing_perf_df = {}
 
+                    print("existing perf df", existing_perf_df)
+
                     for index, net_id in net_id_list.iterrows():
-                        print("net id : ", net_id)
                         net_setting = self.net_id2setting(net_id)
-                        print("net setting : ", net_setting)
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                        print("key : ", key)
-                        if key in existing_perf_df:  # If setting already logged, don't test
+
+                        if key in existing_perf_df.index:  # If setting already logged, don't test
                             perf_df[key] = existing_perf_df[key]
                             t.set_postfix(
                                 {
@@ -128,7 +123,6 @@ class PerformanceDataset:
                             no_logs=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
-                        # print("testing: data_shape: ", data_shape)
                         info_val = {
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
@@ -139,7 +133,6 @@ class PerformanceDataset:
                                                      print_info=False),
                             # Gets n_params, flops, latency for gpu4, cpu
                         }
-                        # info_val_df = pd.json_normalize(info_val, sep='_')
                         t.set_postfix(
                             {
                                 "net_id": net_id,
@@ -194,7 +187,6 @@ class PerformanceDataset:
 
                     for net_id in net_id_list:
                         net_setting = self.net_id2setting(net_id)
-                        print("net setting dict : ", net_setting)
 
                         key = net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_dict:  # If setting already logged, don't test
