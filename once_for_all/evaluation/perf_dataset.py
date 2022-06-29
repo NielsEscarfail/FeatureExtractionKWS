@@ -190,7 +190,7 @@ class PerformanceDataset:
                             perf_df = pd.DataFrame(data=norm_net_info)
                             # print("perf df is none mid : ", perf_df)
                             perf_df.set_index('key', drop=True, inplace=True)
-                            print("perf df is none after : ", perf_df)
+                            # print("perf df is none after : ", perf_df)
                         else:
                             print("perf df not none before : ", perf_df)
                             info = pd.DataFrame(data=norm_net_info)
@@ -204,7 +204,7 @@ class PerformanceDataset:
 
                         # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
-                        print("perf df key ", perf_df[key])
+                        print("perf df key ", perf_df.loc[key])
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
