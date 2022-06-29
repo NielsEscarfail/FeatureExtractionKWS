@@ -118,11 +118,10 @@ class PerformanceDataset:
                         existing_perf_list = []
 
                     for net_id in net_id_list:
-                        print("net id  ", net_id)
-                        print("type net id  ", type(net_id))
                         net_setting = self.net_id2setting(net_id)
                         print("net setting ", net_setting)
                         print("type net setting ", type(net_setting))
+                        print("type wi ", type(net_setting['w']))
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
                         """Add to already loaded performance if it exists"""
@@ -170,10 +169,6 @@ class PerformanceDataset:
                                                 measure_latency="gpu4#cpu",
                                                 print_info=False)
 
-                        info_val = {  # For display purposes for now
-                            "top1": top1,
-                        }
-
                         norm_net_info = pd.json_normalize(net_info, sep='_')
                         norm_net_info["ft_extr_params_1"] = ft_extr_params[0]
                         norm_net_info["ft_extr_params_2"] = ft_extr_params[1]
@@ -186,6 +181,9 @@ class PerformanceDataset:
                         norm_net_info['d'] = net_setting['d']
 
                         # Display
+                        info_val = {  # For display purposes for now
+                            "top1": top1,
+                        }
                         t.set_postfix(
                             {
                                 "net_id": net_id,
@@ -212,7 +210,7 @@ class PerformanceDataset:
                         print("pref df : ", perf_list)
 
                     perf_df = pd.DataFrame(data=perf_list)
-                    perf_df.set_index(['w', 'ks', 'e', 'd'])
+                    perf_df.set_index(['w', 'ks', 'e', 'd', 'ft_extr_params1', 'ft_extr_params2'])
                     perf_df.to_csv(perf_save_path)
                     print("Saved to csv: ")
                     print(perf_df)
