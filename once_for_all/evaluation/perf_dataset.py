@@ -147,6 +147,7 @@ class PerformanceDataset:
                         norm_net_info["ft_extr_params_2"] = ft_extr_params[1]
                         norm_net_info["data_shape"] = str(data_shape)
                         norm_net_info["top1"] = top1
+                        norm_net_info['key'] = key
                         print("norm net info: ", norm_net_info)
 
                         # Display
@@ -161,7 +162,8 @@ class PerformanceDataset:
 
                         """Save the performance data"""
                         if perf_df is None:
-                            perf_df = pd.DataFrame(index=key, data=norm_net_info)
+                            perf_df = pd.DataFrame(data=norm_net_info)
+                            perf_df = perf_df.set_index('key')
                         else:
                             perf_df[key] = norm_net_info
 
