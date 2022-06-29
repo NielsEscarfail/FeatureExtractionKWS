@@ -105,13 +105,14 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_df = []
+                    perf_list = []
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
                         print("Loaded existing performance: ", existing_perf_df.head(2))
+                        existing_perf_list = existing_perf_df.values.tolist()
                     else:
-                        existing_perf_df = None
+                        existing_perf_list = []
 
                     for net_id in net_id_list:
                         net_setting = self.net_id2setting(net_id)
@@ -120,22 +121,9 @@ class PerformanceDataset:
                         """Add to already loaded performance if it exists"""
                         if existing_perf_df is not None:
                             already_evaluated = self.net_setting_in_df(net_setting, existing_perf_df)
-                            if already_evaluated: # If setting already logged, don't test
+                            if already_evaluated:  # If setting already logged, don't test
+                                perf_df.append(existing_perf_df[key])
                                 perf_df.append(existing_perf_df[already_evaluated], ignore_index=False)
-                                t.set_postfix(
-                                    {
-                                        "net_id": net_id,
-                                        "ft_extr_params": ft_extr_params,
-                                        "info_val": perf_df[key],
-                                        "status": "loading",
-                                    }
-                                )
-                                t.update()
-                                continue
-
-                            if key in existing_perf_df.index:  # If setting already logged, don't test
-                                perf_df.loc[key] = existing_perf_df[key]
-                                # perf_df[key] = existing_perf_df[key]
                                 t.set_postfix(
                                     {
                                         "net_id": net_id,
@@ -195,22 +183,16 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
+                        perf_df =
 
                         """Save the performance data"""
                         if perf_df is None:
                             # print("perf df is none before : ", perf_df)
                             perf_df = pd.DataFrame(data=norm_net_info)
-                            # print("perf df is none mid : ", perf_df)
-                            perf_df.set_index('key', drop=True, inplace=True)
-                            # print("perf df is none after : ", perf_df)
+                            perf_df.set_index(['w', 'ks', 'e', 'd'])
                         else:
-                            print("perf df not none before : ", perf_df)
                             info = pd.DataFrame(data=norm_net_info)
-                            # print("perf df not none beforeinfo: ", info)
-                            info.set_index('key', drop=True, inplace=True)
-                            # print("perf df not none afterinfo : ", info)
-                            if perf_df.loc[key] is not None:
-                                pass
+                            info.set_index(['w', 'ks', 'e', 'd'])
                             perf_df = perf_df.append(info)
                             print("perf df not none afterupdate : ", perf_df)
 
