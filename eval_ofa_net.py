@@ -27,6 +27,8 @@ parser.add_argument("--ft_extr_type",
                     ])
 
 parser.add_argument("--n_arch", type=int, default=5)
+parser.add_argument("--use_csv", type=bool, default=True)
+
 
 args = parser.parse_args()
 
@@ -137,7 +139,7 @@ if __name__ == "__main__":
     Create & build the performance dataset
     build_dataset randomly samples n_arch subnets and saves their config, accuracy, n_params, flops, latency
     """
-    performance_dataset = PerformanceDataset(args.path, use_csv=False)
+    performance_dataset = PerformanceDataset(args.path, use_csv=args.use_csv)
     # if not args.load:
     performance_dataset.build_dataset(run_manager, ofa_net,
                                       n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
