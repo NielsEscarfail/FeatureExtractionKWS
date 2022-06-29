@@ -143,8 +143,8 @@ class PerformanceDataset:
                         )
                         t.update()
 
-                        perf_dict.update({key: info_val})  # Save accuracy, net_info
-                        perf_df = pd.json_normalize(perf_dict, sep='_')
+                        perf_dict.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
+                        perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
                         print(perf_df)
