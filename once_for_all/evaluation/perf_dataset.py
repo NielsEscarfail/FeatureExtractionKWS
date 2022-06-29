@@ -140,7 +140,8 @@ class PerformanceDataset:
                         }
 
                         norm_net_info = pd.json_normalize(net_info, sep='_')
-                        norm_net_info["ft_extr_params"] = ft_extr_params
+                        norm_net_info["ft_extr_params_1"] = ft_extr_params[0]
+                        norm_net_info["ft_extr_params_2"] = ft_extr_params[1]
                         norm_net_info["data_shape"] = data_shape
                         norm_net_info["top1"] = top1
                         print("norm net info: ", norm_net_info)
@@ -154,6 +155,7 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
+                        print("pref df : ", perf_df)
 
                         """Save the performance data"""
                         perf_df.update({key: norm_net_info})  # Save accuracy, net_info
