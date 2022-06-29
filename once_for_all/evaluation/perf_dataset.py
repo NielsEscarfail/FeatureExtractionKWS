@@ -128,22 +128,22 @@ class PerformanceDataset:
                         )
                         data_shape = val_dataset[0][0].shape[1:]
                         # Gets n_params, flops, latency for gpu4, cpu
+                        net_info = get_net_info(ofa_net,
+                                                input_shape=data_shape,
+                                                measure_latency="gpu4#cpu",
+                                                print_info=False)
                         info_val = {
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
                             "top1": top1,
-                            "net_info": get_net_info(ofa_net,
-                                                     input_shape=data_shape,
-                                                     measure_latency="gpu4#cpu",
-                                                     print_info=False),
-                            # Gets n_params, flops, latency for gpu4, cpu
+                            "net_info": net_info,
                         }
-                        perf_df[key] = {"ft_extr_params": ft_extr_params,
-                            "data_shape": data_shape,
-                            "top1": top1, get_net_info(ofa_net,
-                                                     input_shape=data_shape,
-                                                     measure_latency="gpu4#cpu",
-                                                     print_info=False)}
+                        print(info_val)
+                        print("net info")
+                        print(net_info)
+                        norm_net_info = pd.json_normalize(net_info, sep='_')
+                        print("norm net info: ", norm_net_info)
+
                         print("pref df : ", perf_df)
                         print("perf df key ", perf_df[key])
                         # Display
@@ -156,13 +156,11 @@ class PerformanceDataset:
                         )
                         t.update()
                         print("INFO VAL")
-                        print()
                         print(info_val)
                         print("")
 
                         """Save the performance data"""
-                        print("normalized info : ", pd.json_normalize(info_val, sep='_'))
-                        # perf_df.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
+                        perf_df.update({key: info_val})  # Save accuracy, net_info
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
