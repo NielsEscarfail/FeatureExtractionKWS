@@ -138,6 +138,14 @@ class PerformanceDataset:
                                                      print_info=False),
                             # Gets n_params, flops, latency for gpu4, cpu
                         }
+                        perf_df[key] = {"ft_extr_params": ft_extr_params,
+                            "data_shape": data_shape,
+                            "top1": top1, get_net_info(ofa_net,
+                                                     input_shape=data_shape,
+                                                     measure_latency="gpu4#cpu",
+                                                     print_info=False)}
+                        print("pref df : ", perf_df)
+                        print("perf df key ", perf_df[key])
                         # Display
                         t.set_postfix(
                             {
@@ -154,7 +162,7 @@ class PerformanceDataset:
 
                         """Save the performance data"""
                         print("normalized info : ", pd.json_normalize(info_val, sep='_'))
-                        perf_df.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
+                        # perf_df.update({key: pd.json_normalize(info_val, sep='_')})  # Save accuracy, net_info
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
