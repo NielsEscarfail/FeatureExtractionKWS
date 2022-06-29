@@ -21,7 +21,7 @@ class PerformanceDataset:
         if self.use_csv:
             dict = net_id.to_dict()
             # from ast import literal_eval
-            dict = [dict([a, float(x)] for a, x in b.items()) for b in dict]
+            dict = dict([key, float(val)] for key, val in dict.items())
             return dict
             """return {'w': net_id['w'],
                     'ks': net_id['ks'],
