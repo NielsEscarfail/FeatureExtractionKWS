@@ -50,7 +50,7 @@ args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type
 if args.ft_extr_type == "mfcc":
-    args.path += args.n_mfcc_bins
+    args.path += "_" + str(args.n_mfcc_bins)
 
 # args.kd_ratio = 1.0
 args.kd_ratio = 0
