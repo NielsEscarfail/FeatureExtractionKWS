@@ -132,20 +132,19 @@ class PerformanceDataset:
                                                 input_shape=data_shape,
                                                 measure_latency="gpu4#cpu",
                                                 print_info=False)
-                        info_val = {
+                        info_val = {  # For display purposes for now
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
                             "top1": top1,
                             "net_info": net_info,
                         }
-                        print(info_val)
-                        print("net info")
-                        print(net_info)
+
                         norm_net_info = pd.json_normalize(net_info, sep='_')
+                        norm_net_info["ft_extr_params"] = ft_extr_params
+                        norm_net_info["data_shape"] = data_shape
+                        norm_net_info["top1"] = top1
                         print("norm net info: ", norm_net_info)
 
-                        print("pref df : ", perf_df)
-                        print("perf df key ", perf_df[key])
                         # Display
                         t.set_postfix(
                             {
@@ -155,12 +154,11 @@ class PerformanceDataset:
                             }
                         )
                         t.update()
-                        print("INFO VAL")
-                        print(info_val)
-                        print("")
 
                         """Save the performance data"""
-                        perf_df.update({key: info_val})  # Save accuracy, net_info
+                        perf_df.update({key: norm_net_info})  # Save accuracy, net_info
+                        print("pref df : ", perf_df)
+                        print("perf df key ", perf_df[key])
                         # perf_df = pd.DataFrame(perf_dict)
                         perf_df.to_csv(perf_save_path)
                         print("Saved to csv: ")
