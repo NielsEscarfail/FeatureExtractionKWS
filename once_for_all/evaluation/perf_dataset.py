@@ -34,6 +34,14 @@ class PerformanceDataset:
         else:
             return json.loads(net_id)
 
+    def net_setting_in_df(self, net_setting, df):
+        equal_condition = df['w'] == net_setting['w'] &\
+                          df['ks'] == net_setting['ks'] &\
+                          df['d'] == net_setting['d'] &\
+                        df['e'] == net_setting['e']
+
+        return equal_condition
+
     @property
     def net_id_path(self):
         return os.path.join(self.path, "net_id.csv") if self.use_csv else os.path.join(self.path, "net_id.dict")
@@ -45,7 +53,6 @@ class PerformanceDataset:
     @property
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
-
 
     # def net_in_df(self, ):
 
@@ -65,10 +72,10 @@ class PerformanceDataset:
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
                 net_id_df = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
-                                                                        "ks": lambda x: x.strip("[]").split(", "),
-                                                                        "d": lambda x: x.strip("[]").split(", "),
-                                                                        "e": lambda x: x.strip("[]").split(", ")
-                                                                        })
+                                                                      "ks": lambda x: x.strip("[]").split(", "),
+                                                                      "d": lambda x: x.strip("[]").split(", "),
+                                                                      "e": lambda x: x.strip("[]").split(", ")
+                                                                      })
                 print("Loaded : ", net_id_df)
                 print("\n\n")
                 net_id_list = net_id_df.values.tolist()
@@ -80,7 +87,7 @@ class PerformanceDataset:
 
                 net_id_df = pd.DataFrame(net_id_list)
                 net_id_df.to_csv(self.net_id_path, index=False)
-            # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
+
             ft_extr_params_list = (
                 [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
             )
@@ -98,7 +105,7 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_df = None
+                    perf_df = []
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_df = pd.read_csv(perf_save_path)
@@ -111,9 +118,24 @@ class PerformanceDataset:
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
 
                         """Add to already loaded performance if it exists"""
-                        if existing_perf_df is not None and perf_df is not None:
+                        if existing_perf_df is not None:
+                            already_evaluated = self.net_setting_in_df(net_setting, existing_perf_df)
+                            if already_evaluated: # If setting already logged, don't test
+                                perf_df.append(existing_perf_df[already_evaluated], ignore_index=False)
+                                t.set_postfix(
+                                    {
+                                        "net_id": net_id,
+                                        "ft_extr_params": ft_extr_params,
+                                        "info_val": perf_df[key],
+                                        "status": "loading",
+                                    }
+                                )
+                                t.update()
+                                continue
+
                             if key in existing_perf_df.index:  # If setting already logged, don't test
-                                perf_df[key] = existing_perf_df[key]
+                                perf_df.loc[key] = existing_perf_df[key]
+                                # perf_df[key] = existing_perf_df[key]
                                 t.set_postfix(
                                     {
                                         "net_id": net_id,
@@ -154,7 +176,6 @@ class PerformanceDataset:
                                                 print_info=False)
 
                         info_val = {  # For display purposes for now
-                            "ft_extr_params": ft_extr_params,
                             "top1": top1,
                         }
 
@@ -188,11 +209,14 @@ class PerformanceDataset:
                             # print("perf df not none beforeinfo: ", info)
                             info.set_index('key', drop=True, inplace=True)
                             # print("perf df not none afterinfo : ", info)
-                            perf_df.update(info)
+                            if perf_df.loc[key] is not None:
+                                pass
+                            perf_df = perf_df.append(info)
                             print("perf df not none afterupdate : ", perf_df)
 
                         print("pref df : ", perf_df)
 
+                    perf_df.to_csv(perf_save_path)
                         # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
                         # print("perf df key ", perf_df.loc[key])
@@ -317,6 +341,7 @@ class PerformanceDataset:
         json.dump(merged_perf_dict, open(self.perf_dict_path, "w"), indent=4)
         return merged_perf_dict
 
-    def load_dataset(self):
+    def json_to_csv_dataset(self):
         # load data
-        return json.load(open(self.perf_dict_path))  # eval/perf.dict
+        data = json.load(open(self.perf_dict_path))  # eval/perf.dict
+        df = pd.DataFrame(data)
