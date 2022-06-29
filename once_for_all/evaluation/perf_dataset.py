@@ -112,6 +112,7 @@ class PerformanceDataset:
                         print("Loaded existing performance: ", existing_perf_df.head(2))
                         existing_perf_list = existing_perf_df.values.tolist()
                     else:
+                        existing_perf_df = None
                         existing_perf_list = []
 
                     for net_id in net_id_list:
