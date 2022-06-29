@@ -216,7 +216,6 @@ class PerformanceDataset:
 
                         print("pref df : ", perf_df)
 
-                    perf_df.to_csv(perf_save_path)
                         # perf_df[key] = norm_net_info
                         # perf_df.update({key: norm_net_info})  # Save accuracy, net_info
                         # print("perf df key ", perf_df.loc[key])
