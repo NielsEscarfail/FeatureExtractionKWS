@@ -106,7 +106,7 @@ class PerformanceDataset:
                     os.makedirs(self.perf_src_folder, exist_ok=True)
 
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_list = []
+                    perf_list = {}
 
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
@@ -120,7 +120,7 @@ class PerformanceDataset:
                         existing_perf_list = existing_perf_df.values.tolist()
                     else:
                         existing_perf_df = None
-                        existing_perf_list = []
+                        existing_perf_list = {}
 
                     for net_id in net_id_list:
                         # net_setting = self.net_id2setting(net_id)
