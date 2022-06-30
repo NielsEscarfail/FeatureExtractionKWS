@@ -233,7 +233,7 @@ elif args.ft_extr_type == "mel_spectrogram":
     """
     if args.params_id == 1:
         args.ft_extr_params_list = [(10, 20), (10, 25), (10, 30)]
-    elif args.params_id  == 2:
+    elif args.params_id == 2:
         args.ft_extr_params_list = [(40, 20), (40, 30), (40, 40)]
     else:
         raise NotImplementedError("params_id not implemented")
