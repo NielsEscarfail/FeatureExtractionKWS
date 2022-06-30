@@ -218,7 +218,7 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
     elif args.params_id == 7:
         args.n_mfcc_bins = 80
         args.ft_extr_params_list = [(80, 30), (80, 40), (80, 50)]
-    if args.params_id == 8:
+    elif args.params_id == 8:
         args.n_mfcc_bins = 40
         args.ft_extr_params_list = [(40, 40)]
     else:
