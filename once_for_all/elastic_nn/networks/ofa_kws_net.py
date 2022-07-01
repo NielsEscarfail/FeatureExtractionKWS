@@ -44,7 +44,7 @@ class OFAKWSNet(KWSNet):
             DynamicConvLayer(
                 in_channel_list=val2list(1),
                 out_channel_list=input_channel,
-                kernel_size=(5, 3),  # (9, 3) or (9, 5)
+                kernel_size=3,  # (9, 3) or (9, 5)
                 stride=2,
                 use_bn=True,
                 act_func="relu")
