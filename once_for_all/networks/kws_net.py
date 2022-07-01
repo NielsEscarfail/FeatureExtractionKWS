@@ -141,19 +141,19 @@ class KWSNetLarge(KWSNet):
             ConvLayer(
                 in_channels=1,
                 out_channels=input_channel,
-                kernel_size=(9, 5),
+                kernel_size=(5, 3),
                 stride=2,
                 use_bn=True,
                 act_func="relu")
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 2, 2, 1, 2]
-        act_stages = ["relu", "relu", "relu", "relu", "relu"]
-        se_stages = [False, False, False, False, True]
-        n_block_list = [depth] * 5
+        stride_stages = [1, 2, 2, 2]
+        act_stages = ["relu", "relu", "relu", "relu"]
+        se_stages = [False, False, False, False]
+        n_block_list = [depth] * 4
 
-        stage_width_list = [64, 64, 64, 64, 64]
+        stage_width_list = [64, 64, 64, 64]
 
         for i, width in enumerate(stage_width_list):
             stage_width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
