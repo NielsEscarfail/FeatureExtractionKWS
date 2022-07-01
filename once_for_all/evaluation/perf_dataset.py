@@ -58,6 +58,11 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+        ofa_net.to(device)
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
@@ -297,7 +302,7 @@ class PerformanceDataset:
                                     disable=False,
                             ) as t2:
                                 for i, (images, labels) in enumerate(val_dataset):
-                                    images, labels = images.to(self.device), labels.to(self.device)
+                                    images, labels = images.to(run_manager.device), labels.to(self.device)
                                     # compute output
                                     output = ofa_net(images)
                                     loss = run_manager.test_criterion(output, labels)
