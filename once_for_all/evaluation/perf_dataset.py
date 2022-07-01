@@ -2,10 +2,11 @@ import json
 import os
 
 import pandas as pd
+import torch
 from torch import nn
 from tqdm import tqdm
 
-from utils import list_mean, get_net_info
+from utils import list_mean, get_net_info, AverageMeter
 
 
 class PerformanceDataset:
@@ -285,12 +286,35 @@ class PerformanceDataset:
                                 for key, val in net_setting.items()
                             ]
                         )
-                        loss, (top1, top5) = run_manager.validate(
+                        # get accuracy
+                        ofa_net.eval()
+                        losses = AverageMeter()
+                        metric_dict = run_manager.get_metric_dict()
+                        with torch.no_grad():
+                            with tqdm(
+                                    total=len(val_dataset),
+                                    desc="Validate net {}".format(net_setting_str),
+                                    disable=False,
+                            ) as t2:
+                                for i, (images, labels) in enumerate(val_dataset):
+                                    images, labels = images.to(self.device), labels.to(self.device)
+                                    # compute output
+                                    output = ofa_net(images)
+                                    loss = run_manager.test_criterion(output, labels)
+                                    # measure accuracy and record loss
+                                    self.update_metric(metric_dict, output, labels)
+
+                                    losses.update(loss.item(), images.size(0))
+
+                        loss = losses.avg
+                        (top1, top5) = run_manager.get_metric_vals(metric_dict)
+
+                        """loss, (top1, top5) = run_manager.validate(
                             run_str=net_setting_str,
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
-                        )
+                        )"""
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {
                             "ft_extr_params": ft_extr_params,
