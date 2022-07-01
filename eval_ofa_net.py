@@ -139,7 +139,7 @@ if __name__ == "__main__":
         args.path,
         ofa_net,
         run_config,
-        init=False
+        init=True
     )
 
     load_models(

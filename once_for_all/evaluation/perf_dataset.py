@@ -1,12 +1,11 @@
 import json
 import os
-from ast import literal_eval
 
 import pandas as pd
 from torch import nn
 from tqdm import tqdm
 
-from utils import list_mean, count_parameters, count_net_flops, get_net_info
+from utils import list_mean, get_net_info
 
 
 class PerformanceDataset:
@@ -24,15 +23,6 @@ class PerformanceDataset:
     def net_id2setting(self, net_id):
         if self.use_csv:
             return net_id
-            """return {'w': net_id['w'],
-                    'ks': net_id['ks'],
-                    'd': net_id['d'],
-                    'e': net_id['e']}"""
-
-            # net_id = net_id.apply(lambda x: x.strip("[]").split(", "))
-            # return net_id.to_dict()
-            # return {col: net_id[col] for col in net_id.index}
-            # return net_id.to_dict(orient='list')
         else:
             return json.loads(net_id)
 
@@ -67,9 +57,6 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
-        if isinstance(ofa_net, nn.DataParallel):
-            ofa_net = ofa_net.module
-
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
@@ -285,6 +272,8 @@ class PerformanceDataset:
                             t.update()
                             continue
                         ofa_net.set_active_subnet(**net_setting)
+                        active_net_config = ofa_net.get_active_net_config()
+                        print(active_net_config)
                         run_manager.reset_running_statistics(ofa_net, data_loader=val_dataset)
                         net_setting_str = ",".join(
                             [
