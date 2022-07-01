@@ -66,7 +66,6 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
-        ofa_net.eval()
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
@@ -284,7 +283,6 @@ class PerformanceDataset:
                             t.update()
                             continue
                         ofa_net.set_active_subnet(**net_setting)
-                        print(ofa_net)
                         run_manager.reset_running_statistics(ofa_net, data_loader=val_dataset)
                         net_setting_str = ",".join(
                             [
@@ -303,7 +301,7 @@ class PerformanceDataset:
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
-                            train_mode=False,
+                            train_mode=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {
