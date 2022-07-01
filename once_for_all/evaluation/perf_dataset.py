@@ -3,6 +3,7 @@ import os
 from ast import literal_eval
 
 import pandas as pd
+from torch import nn
 from tqdm import tqdm
 
 from utils import list_mean, count_parameters, count_net_flops, get_net_info
@@ -66,6 +67,9 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
+        if isinstance(run_manager.net, nn.DataParallel):
+            run_manager.net = run_manager.net.module
+
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
