@@ -138,8 +138,7 @@ if __name__ == "__main__":
     run_manager = RunManager(
         args.path,
         ofa_net,
-        run_config,
-        init=False
+        run_config
     )
 
     load_models(
@@ -153,6 +152,6 @@ if __name__ == "__main__":
     build_dataset randomly samples n_arch subnets and saves their config, accuracy, n_params, flops, latency
     """
     performance_dataset = PerformanceDataset(args.path, use_csv=args.use_csv)
-    # if not args.load:
+
     performance_dataset.build_dataset(run_manager, ofa_net,
                                       n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
