@@ -55,8 +55,6 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
-    # def net_in_df(self, ):
-
     def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
@@ -248,9 +246,7 @@ class PerformanceDataset:
                 json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
 
             # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
-            ft_extr_params_list = (
-                [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
-            )
+            ft_extr_params_list = ([(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list)
 
             with tqdm(
                     total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
@@ -288,7 +284,8 @@ class PerformanceDataset:
                             t.update()
                             continue
                         ofa_net.set_active_subnet(**net_setting)
-                        run_manager.reset_running_statistics(ofa_net)
+                        print(ofa_net)
+                        run_manager.reset_running_statistics(ofa_net, data_loader=val_dataset)
                         net_setting_str = ",".join(
                             [
                                 "%s_%s"
