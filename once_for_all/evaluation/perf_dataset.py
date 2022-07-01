@@ -47,7 +47,7 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
-    def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
+    def build_dataset(self, run_manager, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
         - network configuration:
@@ -58,11 +58,12 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
-        ofa_net.to(device)
+
+        ofa_net = run_manager.net
+        if isinstance(ofa_net, nn.DataParallel):
+            ofa_net = ofa_net.module
+        ofa_net.eval()
+
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
@@ -291,35 +292,12 @@ class PerformanceDataset:
                                 for key, val in net_setting.items()
                             ]
                         )
-                        # get accuracy
-                        ofa_net.eval()
-                        losses = AverageMeter()
-                        metric_dict = run_manager.get_metric_dict()
-                        with torch.no_grad():
-                            with tqdm(
-                                    total=len(val_dataset),
-                                    desc="Validate net {}".format(net_setting_str),
-                                    disable=False,
-                            ) as t2:
-                                for i, (images, labels) in enumerate(val_dataset):
-                                    images, labels = images.to(device), labels.to(device)
-                                    # compute output
-                                    output = ofa_net(images)
-                                    loss = run_manager.test_criterion(output, labels)
-                                    # measure accuracy and record loss
-                                    run_manager.update_metric(metric_dict, output, labels)
-
-                                    losses.update(loss.item(), images.size(0))
-
-                        loss = losses.avg
-                        (top1, top5) = run_manager.get_metric_vals(metric_dict)
-
-                        """loss, (top1, top5) = run_manager.validate(
+                        loss, (top1, top5) = run_manager.validate(
                             run_str=net_setting_str,
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
-                        )"""
+                        )
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {
                             "ft_extr_params": ft_extr_params,
