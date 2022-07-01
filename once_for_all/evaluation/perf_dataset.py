@@ -248,11 +248,10 @@ class PerformanceDataset:
                 # Save sampled net_id_list
                 json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
 
-            # ft_extr_type = "mfcc" if ft_extr_type is None else ft_extr_type
             ft_extr_params_list = ([(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list)
 
             with tqdm(
-                    total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
+                total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
             ) as t:
                 for ft_extr_params in ft_extr_params_list:
                     # load val dataset into memory
@@ -304,7 +303,6 @@ class PerformanceDataset:
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
-                            train_mode=False,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {
