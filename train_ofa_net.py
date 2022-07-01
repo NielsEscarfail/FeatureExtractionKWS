@@ -337,7 +337,7 @@ if __name__ == "__main__":
     args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
     if args.task == "normal":
         if args.resume:
-            args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
+            args.ofa_checkpoint_path += "/normal/checkpoint/model_best.pth.tar"
             load_models(
                 run_manager,
                 run_manager.net,
