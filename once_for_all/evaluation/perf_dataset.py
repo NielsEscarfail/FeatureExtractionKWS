@@ -59,11 +59,6 @@ class PerformanceDataset:
         - net_encoding: Encoding which can be used to recover the network
         """
 
-        ofa_net = run_manager.net
-        if isinstance(ofa_net, nn.DataParallel):
-            ofa_net = ofa_net.module
-        ofa_net.eval()
-
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list
@@ -253,10 +248,12 @@ class PerformanceDataset:
                     run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
                     for images, labels in run_manager.run_config.valid_loader:
                         val_dataset.append((images, labels))
+
                     # save path
                     os.makedirs(self.perf_src_folder, exist_ok=True)
                     perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
                     perf_dict = {}
+
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_dict = json.load(open(perf_save_path, "r"))
@@ -279,6 +276,7 @@ class PerformanceDataset:
                             t.update()
                             continue
 
+                        # Set sampled subnet
                         ofa_net.set_active_subnet(**net_setting)
                         run_manager.reset_running_statistics(ofa_net)
                         net_setting_str = ",".join(
@@ -293,6 +291,8 @@ class PerformanceDataset:
                                 for key, val in net_setting.items()
                             ]
                         )
+
+                        # Gather performance results
                         loss, (top1, top5) = run_manager.validate(
                             run_str=net_setting_str,
                             net=ofa_net,
