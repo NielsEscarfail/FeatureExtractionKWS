@@ -57,7 +57,7 @@ if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 140  # 50  # 80  # 140  # 120  # 180 paper
-    args.base_lr = 0.08125  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 3e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
@@ -68,7 +68,7 @@ elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 100  # 120
-    args.base_lr = 3e-2  # 1e-3
+    args.base_lr = 3e-3  # 1e-3
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
@@ -89,7 +89,7 @@ elif args.task == "depth":
 
     elif args.phase == 2:
         args.n_epochs = 25  # 120  # 125 (120 + 5)
-        args.base_lr = 5e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.base_lr = 3e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -98,7 +98,7 @@ elif args.task == "depth":
 
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
-        args.base_lr = 7.5e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.base_lr = 3e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -120,7 +120,7 @@ elif args.task == "expand":
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
-        args.base_lr = 7.5e-3
+        args.base_lr = 3e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -142,7 +142,7 @@ elif args.task == "width":  # Unused for now
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
-        args.base_lr = 7.5e-3
+        args.base_lr = 3e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
