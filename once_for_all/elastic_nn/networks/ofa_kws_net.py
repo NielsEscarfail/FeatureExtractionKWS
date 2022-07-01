@@ -44,14 +44,14 @@ class OFAKWSNet(KWSNet):
             DynamicConvLayer(
                 in_channel_list=val2list(1),
                 out_channel_list=input_channel,
-                kernel_size=(7, 5),  # (9, 3) or (9, 5)
+                kernel_size=(9, 5),  # (9, 3) or (9, 5)
                 stride=2,
                 use_bn=True,
                 act_func="relu")
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 2, 2, 2]  # [1, 2, 2, 2]
+        stride_stages = [1, 1, 1, 1]  # [1, 2, 2, 2]
         act_stages = ["relu", "relu", "relu", "relu"]
         se_stages = [False, False, False, False]
         n_block_list = [max(self.depth_list)] * 4  # block depth = 4 blocks
