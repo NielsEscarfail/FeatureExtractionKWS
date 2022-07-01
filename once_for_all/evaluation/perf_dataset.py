@@ -302,7 +302,7 @@ class PerformanceDataset:
                                     disable=False,
                             ) as t2:
                                 for i, (images, labels) in enumerate(val_dataset):
-                                    images, labels = images.to(run_manager.device), labels.to(self.device)
+                                    images, labels = images.to(device), labels.to(device)
                                     # compute output
                                     output = ofa_net(images)
                                     loss = run_manager.test_criterion(output, labels)
