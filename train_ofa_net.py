@@ -48,18 +48,18 @@ args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type + str(args.params_id)
 
-# args.kd_ratio = 1.0
-args.kd_ratio = 0
+args.kd_ratio = 1.0
+# args.kd_ratio = 0
 args.width_mult_list = "1.0"
 
 if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 140  # 50  # 80  # 140  # 120  # 180 paper
-    args.base_lr = 1e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 0.08125  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
-    args.ks_list = "7"  # 7
+    args.ks_list = "7"
     args.depth_list = "4"
     args.expand_list = "3"
     args.kd_ratio = 0
@@ -67,7 +67,7 @@ elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 100  # 120
-    args.base_lr = 1e-3  # 1e-3
+    args.base_lr = 3e-2  # 1e-3
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
@@ -79,7 +79,7 @@ elif args.task == "depth":
     args.dynamic_batch_size = 2
     if args.phase == 1:
         args.n_epochs = 25  # 25
-        args.base_lr = 1e-3  # 1e-3  # 2.5e-3 - 0.08 paper
+        args.base_lr = 2.5e-3  # 1e-3  # 2.5e-3 - 0.08 paper
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -88,7 +88,7 @@ elif args.task == "depth":
 
     elif args.phase == 2:
         args.n_epochs = 25  # 120  # 125 (120 + 5)
-        args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.base_lr = 5e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -97,11 +97,11 @@ elif args.task == "depth":
 
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
-        args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.base_lr = 7.5e-3  # 1e-3  # 7.5e-3 - 0.24 paper
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"
+        args.depth_list = "1,2,3,4"
         args.expand_list = "3"
 
 
@@ -110,38 +110,38 @@ elif args.task == "expand":
     args.dynamic_batch_size = 4
     if args.phase == 1:
         args.n_epochs = 25  # 25
-        args.base_lr = 1e-3
+        args.base_lr = 2.5e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"
+        args.depth_list = "1,2,3,4"
         args.expand_list = "2,3"
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
-        args.base_lr = 1e-3
+        args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"
+        args.depth_list = "1,2,3,4"
         args.expand_list = "1,2,3"
 
-elif args.task == "width":
+elif args.task == "width":  # Unused for now
     args.path += "/kernel_depth2kernel_depth_expand_width/phase%d" % args.phase
     args.dynamic_batch_size = 8
     if args.phase == 1:
         args.n_epochs = 25  # 25
-        args.base_lr = 1e-3
+        args.base_lr = 2.5e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"
+        args.depth_list = "1,2,3,4"
         args.expand_list = "1,2,3"
         args.width_mult_list = "0.75,1.0"
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
-        args.base_lr = 1e-3
+        args.base_lr = 7.5e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -154,8 +154,8 @@ else:
 
 args.manual_seed = 0
 
-args.base_batch_size = 512
-args.valid_size = .1
+args.base_batch_size = 128
+args.valid_size = 10000
 
 args.momentum = 0.9
 args.no_nesterov = False
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     # build run config from args
     args.lr_schedule_param = None
     args.lr_schedule_type = "cosine"
-    args.opt_type = "adam"  # cosine, sgd, adam
+    args.opt_type = "sgd"  # cosine, sgd, adam
 
     args.opt_param = {
         "momentum": args.momentum,
