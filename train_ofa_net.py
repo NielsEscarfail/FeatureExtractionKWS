@@ -334,7 +334,7 @@ if __name__ == "__main__":
     print("Validation feature extraction type: ", validate_func_dict['ft_extr_type'])
     print("Validation feature extraction parameter search space: ", validate_func_dict['ft_extr_params_list'])
 
-    args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
+    args.ofa_checkpoint_path = "exp/" + args.ft_extr_type + str(args.params_id)
     if args.task == "normal":
         if args.resume:
             args.ofa_checkpoint_path += "/normal/checkpoint/model_best.pth.tar"
