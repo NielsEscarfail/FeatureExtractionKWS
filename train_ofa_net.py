@@ -232,7 +232,7 @@ if __name__ == "__main__":
     else:
         print('Using CPU.')
 
-    args.teacher_path = "exp/" + args.ft_extr_type
+    args.teacher_path = "exp/" + args.ft_extr_type + str(args.params_id)
     args.teacher_path += "/normal/checkpoint/checkpoint.pth.tar"
 
     # build run config from args
