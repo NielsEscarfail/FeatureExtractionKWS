@@ -307,6 +307,7 @@ class PerformanceDataset:
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
+                            train_mode=False,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {

@@ -38,7 +38,7 @@ args = parser.parse_args()
 args.width_mult_list = "1.0"
 args.ks_list = "3,5,7"
 args.expand_list = "1,2,3"
-args.depth_list = "0,1,2,3,4"
+args.depth_list = "1,2,3,4"
 
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
