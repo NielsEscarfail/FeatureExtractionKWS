@@ -307,7 +307,7 @@ class PerformanceDataset:
                                     output = ofa_net(images)
                                     loss = run_manager.test_criterion(output, labels)
                                     # measure accuracy and record loss
-                                    self.update_metric(metric_dict, output, labels)
+                                    run_manager.update_metric(metric_dict, output, labels)
 
                                     losses.update(loss.item(), images.size(0))
 
