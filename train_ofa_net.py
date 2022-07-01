@@ -61,7 +61,7 @@ if args.task == "normal":
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "3"
-    args.depth_list = "1"
+    args.depth_list = "2"
     args.expand_list = "1"
     args.kd_ratio = 0
 elif args.task == "kernel":
