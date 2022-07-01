@@ -60,9 +60,9 @@ if args.task == "normal":
     args.base_lr = 1e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
-    args.ks_list = "7"
-    args.depth_list = "4"
-    args.expand_list = "3"
+    args.ks_list = "3"
+    args.depth_list = "1"
+    args.expand_list = "1"
     args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
