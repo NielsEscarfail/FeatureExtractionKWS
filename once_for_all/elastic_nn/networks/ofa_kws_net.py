@@ -44,14 +44,14 @@ class OFAKWSNet(KWSNet):
             DynamicConvLayer(
                 in_channel_list=val2list(1),
                 out_channel_list=input_channel,
-                kernel_size=(9, 5),  # (9, 3) or (9, 5)
+                kernel_size=(5, 3),  # (9, 3) or (9, 5)
                 stride=2,
                 use_bn=True,
                 act_func="relu")
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 1, 1, 1]  # [1, 2, 2, 2]
+        stride_stages = [1, 2, 2, 2]  # [1, 2, 2, 2]
         act_stages = ["relu", "relu", "relu", "relu"]
         se_stages = [False, False, False, False]
         n_block_list = [max(self.depth_list)] * 4  # block depth = 4 blocks
@@ -196,6 +196,7 @@ class OFAKWSNet(KWSNet):
         depth = val2list(d, len(self.block_group_info))
         expand_ratio = val2list(e, len(self.blocks))
 
+        """
         # set width mult
         if width_mult[0] is not None:  # input stem
             self.input_stem[0].conv.active_out_channel = self.input_stem[0].active_out_channel = \
@@ -205,7 +206,7 @@ class OFAKWSNet(KWSNet):
             if width is not None:
                 for idx in block_idx:
                     if self.blocks[idx].shortcut is None:
-                        self.blocks[idx].conv.active_out_channel = self.blocks[idx].conv.out_channel_list[width]
+                        self.blocks[idx].conv.active_out_channel = self.blocks[idx].conv.out_channel_list[width]"""
 
         # set kernel size and expand ratio
         for i, (block, k, e) in enumerate(zip(self.blocks, ks, expand_ratio)):
