@@ -141,7 +141,7 @@ class KWSNetLarge(KWSNet):
             ConvLayer(
                 in_channels=1,
                 out_channels=input_channel,
-                kernel_size=3,
+                kernel_size=(7,5),
                 stride=2,
                 use_bn=True,
                 act_func="relu")
