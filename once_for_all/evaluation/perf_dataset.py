@@ -272,8 +272,8 @@ class PerformanceDataset:
                             t.update()
                             continue
                         ofa_net.set_active_subnet(**net_setting)
-                        active_net_config = ofa_net.get_active_net_config()
-                        print(active_net_config)
+                        active_net = ofa_net.get_active_subnet()
+                        print(active_net)
                         run_manager.reset_running_statistics(ofa_net, data_loader=val_dataset)
                         net_setting_str = ",".join(
                             [

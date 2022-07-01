@@ -296,7 +296,7 @@ class OFAKWSNet(KWSNet):
 
     def get_active_subnet(self, preserve_weight=True):
         input_stem = [copy.deepcopy(self.input_stem[0])]
-        input_channel = self.input_stem[0].conv.active_out_channel  # .conv or not
+        input_channel = self.input_stem[0].active_out_channel
         # blocks
         blocks = []
         for stage_id, block_idx in enumerate(self.block_group_info):
@@ -322,7 +322,7 @@ class OFAKWSNet(KWSNet):
 
     def get_active_net_config(self):
         input_stem_config = [self.input_stem[0].get_active_subnet_config(1)]
-        input_channel = self.input_stem_config["conv"]["out_channels"]
+        input_channel = self.input_stem[0]["conv"]["out_channels"]
 
         block_config_list = []
         for stage_id, block_idx in enumerate(self.block_group_info):
