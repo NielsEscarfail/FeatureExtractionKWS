@@ -151,7 +151,7 @@ class PerformanceDataset:
 
                         """Set subnet and record performance"""
                         ofa_net.set_active_subnet(**net_setting)
-                        run_manager.reset_running_statistics(ofa_net)
+                        run_manager.reset_running_statistics(ofa_net, )
                         net_setting_str = ",".join(
                             [
                                 "%s_%s"
@@ -272,7 +272,6 @@ class PerformanceDataset:
 
                     for net_id in net_id_list:
                         net_setting = self.net_id2setting(net_id)
-
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_dict:  # If setting already logged, don't test
                             perf_dict[key] = existing_perf_dict[key]
@@ -302,6 +301,8 @@ class PerformanceDataset:
                         )
                         loss, (top1, top5) = run_manager.validate(
                             run_str=net_setting_str,
+                            net=ofa_net,
+                            data_loader=val_dataset,
                             no_logs=True,
                             train_mode=False,
                         )
