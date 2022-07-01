@@ -24,7 +24,7 @@ class OFAKWSNet(KWSNet):
             ks_list=3,
             depth_list=4,
             width_mult_list=1.0,
-            expand_ratio_list=3,
+            expand_ratio_list=5,
     ):
 
         self.ks_list = val2list(ks_list, 1)
@@ -51,11 +51,11 @@ class OFAKWSNet(KWSNet):
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 1, 1, 1]  # [1, 2, 2, 2]
-        act_stages = ["relu", "relu", "relu", "relu"]
-        se_stages = [False, False, False, False]
-        n_block_list = [max(self.depth_list)] * 4  # block depth = 4 blocks
-        stage_width_list = [64, 64, 64, 64]
+        stride_stages = [1, 2, 2, 1, 2]  # [1, 2, 2, 2]
+        act_stages = ["relu", "relu", "relu", "relu", "relu"]
+        se_stages = [False, False, False, False, True]
+        n_block_list = [max(self.depth_list)] * 5  # block depth = 4 blocks
+        stage_width_list = [64, 64, 64, 64, 64]
 
         for i, width in enumerate(stage_width_list):
             stage_width_list[i] = [int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))

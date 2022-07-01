@@ -49,7 +49,7 @@ args = parser.parse_args()
 
 args.path = "exp/" + args.ft_extr_type + str(args.params_id)
 
-args.kd_ratio = 1.0
+args.kd_ratio = .3
 # args.kd_ratio = 0
 args.width_mult_list = "1.0"
 
@@ -62,7 +62,7 @@ if args.task == "normal":
     args.warmup_lr = -1
     args.ks_list = "7"
     args.depth_list = "4"
-    args.expand_list = "3"
+    args.expand_list = "5"
     args.kd_ratio = 0
 elif args.task == "kernel":
     args.path += "/normal2kernel"
@@ -73,7 +73,7 @@ elif args.task == "kernel":
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
     args.depth_list = "4"  # "4" 3 2 1
-    args.expand_list = "3"
+    args.expand_list = "5"
 
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
@@ -85,7 +85,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "3,4"  # "3,4"
-        args.expand_list = "3"
+        args.expand_list = "5"
 
     elif args.phase == 2:
         args.n_epochs = 25  # 120  # 125 (120 + 5)
@@ -94,7 +94,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "2,3,4"  # "2,3,4"
-        args.expand_list = "3"
+        args.expand_list = "5"
 
     else:
         args.n_epochs = 100  # 120  # 125 (120 + 5)
@@ -103,7 +103,7 @@ elif args.task == "depth":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "1,2,3,4"
-        args.expand_list = "3"
+        args.expand_list = "5"
 
 
 elif args.task == "expand":
@@ -116,7 +116,7 @@ elif args.task == "expand":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "1,2,3,4"
-        args.expand_list = "2,3"
+        args.expand_list = "2,3,5"
 
     elif args.phase == 2:
         args.n_epochs = 100  # 55 # 120
@@ -125,7 +125,7 @@ elif args.task == "expand":
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "1,2,3,4"
-        args.expand_list = "1,2,3"
+        args.expand_list = "1,2,3,5"
 
 elif args.task == "width":  # Unused for now
     args.path += "/kernel_depth2kernel_depth_expand_width/phase%d" % args.phase
@@ -137,7 +137,7 @@ elif args.task == "width":  # Unused for now
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
         args.depth_list = "1,2,3,4"
-        args.expand_list = "1,2,3"
+        args.expand_list = "1,2,3,5"
         args.width_mult_list = "0.75,1.0"
 
     elif args.phase == 2:
@@ -146,10 +146,9 @@ elif args.task == "width":  # Unused for now
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2"
-        args.expand_list = "1,2"
+        args.depth_list = "1,2,3,4"
+        args.expand_list = "1,2,3,5"
         args.width_mult_list = "0.5,0.75,1.0"
-
 else:
     raise NotImplementedError
 

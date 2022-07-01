@@ -131,9 +131,9 @@ class KWSNetLarge(KWSNet):
             width_mult=1.0,
             ks=7,
             depth=4,
-            expand_ratio=3,
+            expand_ratio=5,
     ):
-        expand_ratio = 3 if expand_ratio is None else expand_ratio
+        expand_ratio = 5 if expand_ratio is None else expand_ratio
         input_channel = int(make_divisible(64 * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
 
         # build input stem
@@ -148,12 +148,12 @@ class KWSNetLarge(KWSNet):
         ]
 
         # Set stride, activation function, and SE dim reduction
-        stride_stages = [1, 1, 1, 1]
-        act_stages = ["relu", "relu", "relu", "relu"]
-        se_stages = [False, False, False, False]
-        n_block_list = [depth] * 4
+        stride_stages = [1, 2, 2, 1, 2]
+        act_stages = ["relu", "relu", "relu", "relu", "relu"]
+        se_stages = [False, False, False, False, True]
+        n_block_list = [depth] * 5
 
-        stage_width_list = [64, 64, 64, 64]
+        stage_width_list = [64, 64, 64, 64, 64]
 
         for i, width in enumerate(stage_width_list):
             stage_width_list[i] = int(make_divisible(width * width_mult, MyNetwork.CHANNEL_DIVISIBLE))
