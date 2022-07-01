@@ -68,6 +68,7 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
+        ofa_net.eval()
         if self.use_csv:
             print("Using csv")
             # Load a net_id_list

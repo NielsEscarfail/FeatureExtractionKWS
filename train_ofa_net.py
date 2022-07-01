@@ -145,8 +145,8 @@ elif args.task == "width":
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "0,1,2,3,4"
-        args.expand_list = "1,2,3"
+        args.depth_list = "0,1,2"
+        args.expand_list = "1,2"
         args.width_mult_list = "0.5,0.75,1.0"
 
 else:
@@ -186,7 +186,7 @@ if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
         - [(10, 30), (10, 40), (10, 50)], n_bin_count=10 #2
         - [(40, 30), (40, 40), (40, 50)], n_bin_count=10 #3, 40 #5
         - [(80, 30), (80, 40), (80, 50)], n_bin_count=10 #4, 40 #6, 80 #7
-        - [(40, 40)] n_bin_count=10 #8
+        - [(40, 40)] n_bin_count=40 #8
         Experimental:
         - [(40, 40)]
         - [(40, 30), (40, 40), (40, 50),
