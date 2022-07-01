@@ -57,7 +57,7 @@ if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
     args.n_epochs = 140  # 50  # 80  # 140  # 120  # 180 paper
-    args.base_lr = 3e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
+    args.base_lr = 1e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
     args.warmup_epochs = 5  # 5
     args.warmup_lr = -1
     args.ks_list = "7"
@@ -68,7 +68,7 @@ elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
     args.n_epochs = 100  # 120
-    args.base_lr = 3e-3  # 1e-3
+    args.base_lr = 1e-3  # 1e-3
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     # build run config from args
     args.lr_schedule_param = None
     args.lr_schedule_type = "cosine"
-    args.opt_type = "sgd"  # cosine, sgd, adam
+    args.opt_type = "adam"  # cosine, sgd, adam
 
     args.opt_param = {
         "momentum": args.momentum,
