@@ -62,7 +62,7 @@ class PerformanceDataset:
         ofa_net = run_manager.net
         if isinstance(ofa_net, nn.DataParallel):
             ofa_net = ofa_net.module
-        # ofa_net.eval()
+        ofa_net.eval()
 
         if self.use_csv:
             print("Using csv")
@@ -278,6 +278,7 @@ class PerformanceDataset:
                             )
                             t.update()
                             continue
+
                         ofa_net.set_active_subnet(**net_setting)
                         run_manager.reset_running_statistics(ofa_net)
                         net_setting_str = ",".join(
@@ -297,7 +298,6 @@ class PerformanceDataset:
                             net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
-                            train_mode=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
                         info_val = {
