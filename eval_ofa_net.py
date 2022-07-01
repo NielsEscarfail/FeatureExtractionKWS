@@ -15,6 +15,7 @@ from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.elastic_nn.training.progressive_shrinking import load_models
 from once_for_all.evaluation.perf_dataset import PerformanceDataset
 from once_for_all.run_manager import RunManager, KWSRunConfig
+from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params
 
 parser = argparse.ArgumentParser()
 
@@ -25,50 +26,61 @@ parser.add_argument("--ft_extr_type",
                         "mfcc",
                         "mel_spectrogram",
                     ])
-
+parser.add_argument("--params_id", type=int,  default=1)
 parser.add_argument("--n_arch", type=int, default=5)
 parser.add_argument('--use_csv', action='store_true')
 parser.add_argument('--use_json', dest='use_csv', action='store_false')
 parser.set_defaults(use_csv=True)
+parser.add_argument("--load_from",
+                    type=str,
+                    default="expand",
+                    choices=[
+                        "normal",
+                        "kernel",
+                        "depth",
+                        "expand",
+                    ])
 
 args = parser.parse_args()
 
-"""Set width_mult_list, ks_list, expand_list and depth_list"""
+# Path parameters
+args.path = "eval/"
+args.ofa_checkpoint_path = "exp/" + args.ft_extr_type + str(args.params_id)
 
-args.width_mult_list = "1.0"
-args.ks_list = "3,5,7"
-args.expand_list = "1,2,3"
-args.depth_list = "1,2,3,4"
+"""Set which model step to evaluate, width_mult_list, ks_list, expand_list and depth_list"""
 
+if args.load_from == "normal":
+    args.width_mult_list = "1.0"
+    args.ks_list = "7"
+    args.depth_list = "4"
+    args.expand_list = "3"
+    args.ofa_checkpoint_path += "/normal/checkpoint/model_best.pth.tar"
+elif args.load_from == "kernel":
+    args.width_mult_list = "1.0"
+    args.ks_list = "3,5,7"
+    args.depth_list = "4"
+    args.expand_list = "3"
+    args.ofa_checkpoint_path += "/normal2kernel/checkpoint/model_best.pth.tar"
+elif args.load_from == "depth":
+    args.width_mult_list = "1.0"
+    args.ks_list = "3,5,7"
+    args.depth_list = "1,2,3,4"
+    args.expand_list = "3"
+    args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
+elif args.load_from == "expand":
+    args.width_mult_list = "1.0"
+    args.ks_list = "3,5,7"
+    args.depth_list = "1,2,3,4"
+    args.expand_list = "1,2,3"
+    args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
-if args.ft_extr_type == "mfcc":  # n_mfcc/n_mels, win_len
-    """MFCC params, shape (n_mels, win_len), n_mfcc is fixed to 10.
-    We choose to fix n_mels to 10, 40, 80 in each runs,
-    as OFA tends to learn only one n_mels configuration when mixing them.
-    params used:
-        - [(40, 40)]
-        - [(10, 30), (10, 40), (10, 50)], n_bin_count=10
-        - [(40, 30), (40, 40), (40, 50)], n_bin_count=10, 40
-        - [(80, 30), (80, 40), (80, 50)], n_bin_count=10, 40, 80
-        Experimental:
-        - [(40, 40)]
-        - [(40, 30), (40, 40), (40, 50),
-            (80, 30), (80, 30), (80, 30)] works but 80 is meh
-        - [(40, 30), (40, 40), (40, 50)]
-        - [(10, 30), (10, 40), (10, 50),
-            (20, 30), (20, 40), (20, 50),
-            (30, 30), (30, 40), (30, 50),
-            (40, 30), (40, 40), (40, 50)]
-    """
-    args.ft_extr_params_list = [(40, 30), (40, 40), (40, 50)]
+if args.ft_extr_type == "mfcc":
+    args.n_mfcc_bins, args.ft_extr_params_list = get_mfcc_params(args.params_id)
 
-
-# Fixed path parameters
-args.path = "eval/"
-args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
-args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
+elif args.ft_extr_type == "mel_spectrogram":
+    args.ft_extr_params_list = get_mel_spectrogram_params(args.params_id)
 
 # Other parameters
 args.manual_seed = 0

@@ -409,7 +409,7 @@ if __name__ == "__main__":
             args.ofa_checkpoint_path += "/kernel2kernel_depth/phase2/checkpoint/model_best.pth.tar"
         elif args.phase == 2:
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase1/checkpoint/model_best.pth.tar"
-        else: # unused
+        else:  # unused
             args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
         print("Start elastic expand training")
