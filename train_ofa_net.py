@@ -336,19 +336,19 @@ if __name__ == "__main__":
 
     args.ofa_checkpoint_path = "exp/" + args.ft_extr_type
     if args.task == "normal":
-        # Uncomment to resume training large net only
-        """args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
-        load_models(
-            run_manager,
-            run_manager.net,
-            args.ofa_checkpoint_path,
-        )
-        run_manager.write_log(
-            "%.3f\t%.3f\t%.3f\t%s"
-            % validate(run_manager, is_test=True, **validate_func_dict),
-            "valid",
-        )
-        print("Resuming training ")"""
+        if args.resume:
+            args.ofa_checkpoint_path = "exp/normal/checkpoint/model_best.pth.tar"
+            load_models(
+                run_manager,
+                run_manager.net,
+                args.ofa_checkpoint_path,
+            )
+            run_manager.write_log(
+                "%.3f\t%.3f\t%.3f\t%s"
+                % validate(run_manager, is_test=True, **validate_func_dict),
+                "valid",
+            )
+            print("Resuming training ")
         print("Start large net training")
         train(
             run_manager,
