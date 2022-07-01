@@ -56,7 +56,7 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
-    def build_dataset(self, run_manager, n_arch=1000, ft_extr_params_list=None):
+    def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
         - network configuration:
@@ -67,8 +67,8 @@ class PerformanceDataset:
         MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
-        if isinstance(run_manager.net, nn.DataParallel):
-            run_manager.net = run_manager.net.module
+        if isinstance(ofa_net, nn.DataParallel):
+            ofa_net = ofa_net.module
 
         if self.use_csv:
             print("Using csv")
@@ -240,7 +240,7 @@ class PerformanceDataset:
             else:
                 net_id_list = set()
                 while len(net_id_list) < n_arch:
-                    net_setting = run_manager.net.sample_active_subnet()
+                    net_setting = ofa_net.sample_active_subnet()
                     net_id = self.net_setting2id(net_setting)
                     net_id_list.add(net_id)
                 net_id_list = list(net_id_list)
@@ -286,8 +286,8 @@ class PerformanceDataset:
                             )
                             t.update()
                             continue
-                        run_manager.net.set_active_subnet(**net_setting)
-                        run_manager.reset_running_statistics(run_manager.net, data_loader=val_dataset)
+                        ofa_net.set_active_subnet(**net_setting)
+                        run_manager.reset_running_statistics(ofa_net, data_loader=val_dataset)
                         net_setting_str = ",".join(
                             [
                                 "%s_%s"
@@ -310,7 +310,7 @@ class PerformanceDataset:
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
                             "top1": top1,
-                            "net_info": get_net_info(run_manager.net,
+                            "net_info": get_net_info(ofa_net,
                                                      input_shape=data_shape,
                                                      measure_latency="gpu4#cpu",
                                                      print_info=False),  # Gets n_params, flops, latency for gpu4, cpu

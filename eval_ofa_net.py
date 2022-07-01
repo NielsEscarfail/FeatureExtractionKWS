@@ -44,7 +44,7 @@ parser.add_argument("--load_from",
 args = parser.parse_args()
 
 # Path parameters
-args.path = "eval/"
+args.path = "eval/" + args.ft_extr_type + str(args.params_id) + "/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type + str(args.params_id)
 
 """Set which model step to evaluate, width_mult_list, ks_list, expand_list and depth_list"""
@@ -154,4 +154,4 @@ if __name__ == "__main__":
     """
     performance_dataset = PerformanceDataset(args.path, use_csv=args.use_csv)
 
-    performance_dataset.build_dataset(run_manager, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
+    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
