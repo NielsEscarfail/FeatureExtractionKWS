@@ -283,6 +283,8 @@ def get_net_info(net, input_shape=(1, 224, 224), measure_latency=None, print_inf
     if isinstance(net, nn.DataParallel):
         net = net.module
 
+    net.eval()
+
     # parameters
     net_info["params"] = count_parameters(net) / 1e6
 
