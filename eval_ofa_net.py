@@ -153,4 +153,4 @@ if __name__ == "__main__":
     """
     performance_dataset = PerformanceDataset(args.path, use_csv=args.use_csv)
 
-    performance_dataset.build_dataset(run_manager, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
+    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
