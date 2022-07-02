@@ -304,11 +304,11 @@ class PerformanceDataset:
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
                             "top1": top1,
-                            "net_info": get_net_info(ofa_net,
-                                                     input_shape=data_shape,
-                                                     measure_latency="gpu4#cpu",
-                                                     print_info=False),  # Gets n_params, flops, latency for gpu4, cpu
                         }
+                        """ "net_info": get_net_info(ofa_net,
+                                                 input_shape=data_shape,
+                                                 measure_latency="gpu4#cpu",
+                                                 print_info=False),  # Gets n_params, flops, latency for gpu4, cpu"""
                         t.set_postfix(
                             {
                                 "net_id": net_id,
