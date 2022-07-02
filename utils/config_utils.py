@@ -1,4 +1,4 @@
-__all__ = []
+__all__ = ['get_mfcc_params', 'get_mel_spectrogram_params']
 
 
 def get_mfcc_params(params_id):

@@ -30,7 +30,7 @@ parser.add_argument("--params_id", type=int,  default=1)
 parser.add_argument("--n_arch", type=int, default=5)
 parser.add_argument('--use_csv', action='store_true')
 parser.add_argument('--use_json', dest='use_csv', action='store_false')
-parser.set_defaults(use_csv=True)
+parser.set_defaults(use_csv=False)
 parser.add_argument("--load_from",
                     type=str,
                     default="expand",
