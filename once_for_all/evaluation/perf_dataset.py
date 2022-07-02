@@ -237,10 +237,11 @@ class PerformanceDataset:
                 # Save sampled net_id_list
                 json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
 
-            ft_extr_params_list = ([(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list)
+            ft_extr_params_list = (
+                [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list)
 
             with tqdm(
-                total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
+                    total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
             ) as t:
                 for ft_extr_params in ft_extr_params_list:
                     # load val dataset into memory
@@ -300,21 +301,23 @@ class PerformanceDataset:
                             no_logs=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
+
+                        # Gets n_params, flops, latency for gpu4, cpu
+                        net_info = get_net_info(ofa_net,
+                                                input_shape=data_shape,
+                                                measure_latency=None,  # "gpu4#cpu",
+                                                print_info=False)
                         info_val = {
                             "ft_extr_params": ft_extr_params,
                             "data_shape": data_shape,
                             "top1": top1,
-                            "net_info": get_net_info(ofa_net,
-                                                     input_shape=data_shape,
-                                                     measure_latency="gpu4#cpu",
-                                                     print_info=False),  # Gets n_params, flops, latency for gpu4, cpu
+                            "net_info": net_info,
                         }
 
                         t.set_postfix(
                             {
                                 "net_id": net_id,
-                                "ft_extr_params": ft_extr_params,
-                                "info_val": info_val,
+                                "acc": top1,
                             }
                         )
                         t.update()
