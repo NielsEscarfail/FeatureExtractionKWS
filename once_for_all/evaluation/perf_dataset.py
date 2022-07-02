@@ -59,7 +59,7 @@ class PerformanceDataset:
         - net_encoding: Encoding which can be used to recover the network
         """
 
-        if self.use_csv:
+        if self.use_csv: # DO NOT USE
             print("Using csv")
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
@@ -91,7 +91,7 @@ class PerformanceDataset:
                     # load val dataset into memory
                     val_dataset = []
                     run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
-                    for images, labels in run_manager.run_config.valid_loader:
+                    for images, labels in run_manager.run_config.test_loader:
                         val_dataset.append((images, labels))
                     # save path
                     os.makedirs(self.perf_src_folder, exist_ok=True)
@@ -343,7 +343,8 @@ class PerformanceDataset:
         json.dump(merged_perf_dict, open(self.perf_dict_path, "w"), indent=4)
         return merged_perf_dict
 
-    def json_to_csv_dataset(self):
+    def load_dataset(self, ft_extr_params):
+        perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
         # load data
-        data = json.load(open(self.perf_dict_path))  # eval/perf.dict
-        df = pd.DataFrame(data)
+        data = json.load(open(perf_save_path))
+        return data
