@@ -302,8 +302,10 @@ class PerformanceDataset:
                         )
                         data_shape = val_dataset[0][0].shape[1:]
 
-                        # Gets n_params, flops, latency for gpu4, cpu
-                        net_info = get_net_info(ofa_net,
+                        # Gets n_params, flops,
+
+                        active_subnet = ofa_net.get_active_subnet()
+                        net_info = get_net_info(active_subnet,
                                                 input_shape=data_shape,
                                                 measure_latency=None,  # "gpu4#cpu",
                                                 print_info=False)
