@@ -47,7 +47,7 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
-    def build_dataset(self, run_manager, n_arch=1000, ft_extr_params_list=None):
+    def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
         - network configuration:
