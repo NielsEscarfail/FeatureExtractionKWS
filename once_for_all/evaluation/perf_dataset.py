@@ -293,17 +293,17 @@ class PerformanceDataset:
                             ]
                         )
 
-                        active_subnet = ofa_net.get_active_subnet()
                         # Gather performance results
                         loss, (top1, top5) = run_manager.validate(
                             run_str=net_setting_str,
-                            net=active_subnet,
+                            net=ofa_net,
                             data_loader=val_dataset,
                             no_logs=True,
                         )
                         data_shape = val_dataset[0][0].shape[1:]
 
                         # Gets n_params, flops,
+                        active_subnet = ofa_net.get_active_subnet()
                         net_info = get_net_info(active_subnet,
                                                 input_shape=data_shape,
                                                 measure_latency="gpu4#cpu",
