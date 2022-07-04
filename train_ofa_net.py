@@ -285,7 +285,6 @@ if __name__ == "__main__":
 
     # Instantiate largest KWS model possible
     if args.kd_ratio > 0:
-
         args.teacher_model = KWSNetLarge(
             n_classes=12,
             bn_param=(args.bn_momentum, args.bn_eps),

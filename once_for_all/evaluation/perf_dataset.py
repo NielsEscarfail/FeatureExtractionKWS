@@ -47,6 +47,25 @@ class PerformanceDataset:
     def perf_dict_path(self):
         return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
 
+    def load_net_id_list(self, ofa_net, n_arch):
+        # Load a net_id_list if the net_id_list already gathered is long enough
+        if os.path.isfile(self.net_id_path):
+            net_id_list = json.load(open(self.net_id_path))
+            if len(net_id_list) > n_arch:
+                return net_id_list
+
+        # Reload completely otherwise
+        net_id_list = set()
+        while len(net_id_list) < n_arch:
+            net_setting = ofa_net.sample_active_subnet()
+            net_id = self.net_setting2id(net_setting)
+            net_id_list.add(net_id)
+        net_id_list = list(net_id_list)
+        net_id_list.sort()
+        # Save sampled net_id_list
+        json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
+        return net_id_list
+
     def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None):
         """
         Samples network architectures and saves the :
@@ -59,7 +78,7 @@ class PerformanceDataset:
         - net_encoding: Encoding which can be used to recover the network
         """
 
-        if self.use_csv: # DO NOT USE
+        if self.use_csv:  # DO NOT USE
             print("Using csv")
             # Load a net_id_list
             if os.path.isfile(self.net_id_path):
@@ -223,22 +242,9 @@ class PerformanceDataset:
 
         else:  # Use json
             print("Using json")
-            # Load a net_id_list
-            if os.path.isfile(self.net_id_path):
-                net_id_list = json.load(open(self.net_id_path))
-            else:
-                net_id_list = set()
-                while len(net_id_list) < n_arch:
-                    net_setting = ofa_net.sample_active_subnet()
-                    net_id = self.net_setting2id(net_setting)
-                    net_id_list.add(net_id)
-                net_id_list = list(net_id_list)
-                net_id_list.sort()
-                # Save sampled net_id_list
-                json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
+            net_id_list = self.load_net_id_list(ofa_net, n_arch)
 
-            ft_extr_params_list = (
-                [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list)
+            print("Evaluating %i sub-networks for %i ft_extr_params: " % (len(net_id_list), len(ft_extr_params_list)))
 
             with tqdm(
                     total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
@@ -258,6 +264,7 @@ class PerformanceDataset:
                     # load existing performance dict
                     if os.path.isfile(perf_save_path):
                         existing_perf_dict = json.load(open(perf_save_path, "r"))
+                        print("Loaded existing performance dict of length: ", len(existing_perf_dict))
                     else:
                         existing_perf_dict = {}
 
@@ -266,6 +273,7 @@ class PerformanceDataset:
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_dict:  # If setting already logged, don't test
                             perf_dict[key] = existing_perf_dict[key]
+
                             t.set_postfix(
                                 {
                                     "net_id": net_id,
