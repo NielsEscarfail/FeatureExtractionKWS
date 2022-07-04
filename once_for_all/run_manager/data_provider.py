@@ -177,16 +177,20 @@ class KWSDataProvider:
     def init_transformations(self, n_mfcc_bins):
         """ Transformations:
         mfcc:
-            n_mfcc : number of mel bins
-            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
+            n_mfcc : Number of mel bins
+            win_size_ms : Window size, in ms ; window_stride_ms is set to window_size/2
 
         mel_spectrogram
-            n_mels : number of mel bins
-            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
+            n_mels : Number of mel bins
+            win_size_ms : Window size, in ms ; window_stride_ms is set to window_size/2
+
+        spectrogram:
+            n_fft: Size of FFT, creates n_fft // 2 + 1 bins
+            win_size_ms : Window size, in ms ; window_stride_ms is set to window_size/2
 
         linear_stft
-            n_fft : number of ffts
-            win_size_ms : window size, in ms ; window_stride_ms is set to window_size/2
+            n_fft: Number of ffts
+            win_size_ms: Window size, in ms ; window_stride_ms is set to window_size/2
         """
         self.transformations = []
         if self.ft_extr_type == 'mfcc':
@@ -212,9 +216,20 @@ class KWSDataProvider:
                 melspect_transformation = torchaudio.transforms.MelSpectrogram(
                     sample_rate=self.audio_processor.desired_samples,
                     n_fft=2048, win_length=win_length,  # Resolution 1
-                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels # Resolution 2
+                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels  # Resolution 2
                 )
                 self.transformations.append(melspect_transformation)
+
+        elif self.ft_extr_type == 'spectrogram':
+            for (n_fft, win_size_ms) in self.ft_extr_params_list:
+                window_stride_ms = win_size_ms / 2
+                win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
+                hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
+
+                spect_transformation = torchaudio.transforms.MelSpectrogram(
+                    n_fft=n_fft, win_length=win_length,
+                    hop_length=hop_length)
+                self.transformations.append(spect_transformation)
 
     def collate_batch(self, batch):
         """Collates batches and applies self.ft_extr_type.
@@ -235,7 +250,7 @@ class KWSDataProvider:
                 labels_placeholder.append(label)
 
         # Preloaded transformations
-        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram' or transformation_type == 'spectrogram':
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
             transformation = self.transformations[transformation_idx]
             for (data, label) in batch:
@@ -252,14 +267,14 @@ class KWSDataProvider:
             win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
             hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
 
-            n_fft = win_length  # n_fft not used
+            n_fft = win_length if n_fft < win_length else n_fft
 
             for (data, label) in batch:
                 stft_sample = torch.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
                 out_real = stft_sample[:, :, 0]
                 out_imag = stft_sample[:, :, 1]
 
-                data = np.abs(out_real ** 2 + out_imag ** 2).transpose(0, -1)
+                data = np.sqrt(out_real ** 2 + out_imag ** 2).transpose(0, -1)
 
                 data = torch.unsqueeze(data, 0)
 
@@ -312,7 +327,7 @@ class KWSDataProvider:
                 labels_placeholder.append(label)
 
         # Preloaded transformations
-        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram':
+        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram' or transformation_type == 'spectrogram':
             for (data, label) in batch:
                 data = active_transformation(data).transpose(0, -1)
                 data = torch.unsqueeze(data, dim=0)
@@ -338,6 +353,8 @@ class KWSDataProvider:
 
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
+
+        # Unused
 
         elif transformation_type == 'lpcc':
             order = active_ft_extr_params

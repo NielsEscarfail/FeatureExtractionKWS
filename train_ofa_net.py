@@ -12,13 +12,14 @@ from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
 
 from once_for_all.elastic_nn.training.progressive_shrinking import load_models
-from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params
+from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params, get_spectrogram_params, \
+    set_ft_extr_params_to_args
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--task",
     type=str,
-    default="normal",  # kernel
+    default="normal",
     choices=[
         "normal",
         "kernel",
@@ -35,6 +36,7 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
+                        "spectrogram",
                         "linear_stft",
                         "lpcc",
                         "plp",
@@ -178,11 +180,16 @@ args.kd_type = "ce"
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
+args = set_ft_extr_params_to_args(args)
+
 if args.ft_extr_type == "mfcc":
     args.n_mfcc_bins, args.ft_extr_params_list = get_mfcc_params(args.params_id)
 
 elif args.ft_extr_type == "mel_spectrogram":
     args.ft_extr_params_list = get_mel_spectrogram_params(args.params_id)
+
+elif args.ft_extr_type == "spectrogram":
+    args.ft_extr_params_list = get_spectrogram_params(args.params_id)
 
 elif args.ft_extr_type == "linear_stft":  # n_mels unused
     """Linear STFT params, shape (_, win_len)
