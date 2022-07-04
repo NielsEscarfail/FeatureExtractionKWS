@@ -170,7 +170,7 @@ class KWSDataProvider:
 
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
-        if self.ft_extr_type == 'mfcc' or self.ft_extr_type == 'mel_spectrogram':
+        if self.ft_extr_type == 'mfcc' or self.ft_extr_type == 'mel_spectrogram' or 'spectrogram':
             transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
             self.active_transformation = self.transformations[transformation_idx]
 
@@ -226,7 +226,7 @@ class KWSDataProvider:
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
                 hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
 
-                spect_transformation = torchaudio.transforms.MelSpectrogram(
+                spect_transformation = torchaudio.transforms.Spectrogram(
                     n_fft=n_fft, win_length=win_length,
                     hop_length=hop_length)
                 self.transformations.append(spect_transformation)
