@@ -15,7 +15,7 @@ from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.elastic_nn.training.progressive_shrinking import load_models
 from once_for_all.evaluation.perf_dataset import PerformanceDataset
 from once_for_all.run_manager import RunManager, KWSRunConfig
-from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params
+from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params, set_ft_extr_params_to_args
 
 parser = argparse.ArgumentParser()
 
@@ -25,6 +25,9 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
+                        "spectrogram",
+                        "linear_stft",
+                        "raw"
                     ])
 parser.add_argument("--params_id", type=int,  default=1)
 parser.add_argument("--n_arch", type=int, default=5)
@@ -76,11 +79,7 @@ elif args.load_from == "expand":
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
-if args.ft_extr_type == "mfcc":
-    args.n_mfcc_bins, args.ft_extr_params_list = get_mfcc_params(args.params_id)
-
-elif args.ft_extr_type == "mel_spectrogram":
-    args.ft_extr_params_list = get_mel_spectrogram_params(args.params_id)
+args = set_ft_extr_params_to_args(args)
 
 # Other parameters
 args.manual_seed = 0

@@ -14,6 +14,9 @@ def set_ft_extr_params_to_args(args):
     elif args.ft_extr_type == "linear_stft":  # n_mels unused
         args.ft_extr_params_list = get_linear_stft_params(args.params_id)
 
+    elif args.ft_extr_type == "raw":
+        args.ft_extr_params_list = [(125, 128)]
+
     # Unused for now
     elif args.ft_extr_type == "lpcc":
         args.ft_extr_params_list = [7, 9, 11, 13, 15]
@@ -27,8 +30,8 @@ def set_ft_extr_params_to_args(args):
                                     (30, 24), (30, 48), (30, 64),
                                     (40, 24), (40, 48), (40, 64)]
 
-    elif args.ft_extr_type == "raw":
-        args.ft_extr_params_list = [(125, 128)]
+    else:
+        raise NotImplementedError
 
 
 def get_mfcc_params(params_id):

@@ -182,40 +182,6 @@ args.kd_type = "ce"
 
 args = set_ft_extr_params_to_args(args)
 
-if args.ft_extr_type == "mfcc":
-    args.n_mfcc_bins, args.ft_extr_params_list = get_mfcc_params(args.params_id)
-
-elif args.ft_extr_type == "mel_spectrogram":
-    args.ft_extr_params_list = get_mel_spectrogram_params(args.params_id)
-
-elif args.ft_extr_type == "spectrogram":
-    args.ft_extr_params_list = get_spectrogram_params(args.params_id)
-
-elif args.ft_extr_type == "linear_stft":  # n_mels unused
-    """Linear STFT params, shape (_, win_len)
-    in progress: first dimension is unused
-        used:
-            - [(1, 10), (1, 20), (1, 30), (1, 40), (1, 50), (1, 60)]
-            - (1024, 40), (1024, 60), (1024, 80),
-            (2048, 40), (2048, 60), (2048, 80)]
-    """
-    args.ft_extr_params_list = [(1, 10), (1, 20), (1, 30), (1, 40), (1, 50), (1, 60)]
-
-elif args.ft_extr_type == "lpcc":
-    args.ft_extr_params_list = [7, 9, 11, 13, 15]
-
-elif args.ft_extr_type == "plp":  # Mega slow?
-    args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
-
-elif args.ft_extr_type == "ngcc":  # n_ceps/order, nfilts TODO in progress, might be dropped
-    args.ft_extr_params_list = [(10, 24), (10, 48), (10, 64),
-                                (20, 24), (20, 48), (20, 64),
-                                (30, 24), (30, 48), (30, 64),
-                                (40, 24), (40, 48), (40, 64)]
-
-elif args.ft_extr_type == "raw":
-    args.ft_extr_params_list = [(125, 128)]
-
 if __name__ == "__main__":
     os.makedirs(args.path, exist_ok=True)
     start = time.time()
