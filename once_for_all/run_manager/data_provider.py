@@ -216,7 +216,7 @@ class KWSDataProvider:
                 melspect_transformation = torchaudio.transforms.MelSpectrogram(
                     sample_rate=self.audio_processor.desired_samples,
                     n_fft=2048, win_length=win_length,  # Resolution 1
-                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels, center=True, normalized=True  # Resolution 2
+                    hop_length=hop_length, f_min=20, f_max=4000, n_mels=n_mels, normalized=True  # Resolution 2
                 )
                 self.transformations.append(melspect_transformation)
 
