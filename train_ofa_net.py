@@ -1,19 +1,17 @@
 import argparse
+import os
+import random
 import time
 
 import numpy as np
-import os
-import random
 import torch
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
+from once_for_all.elastic_nn.training.progressive_shrinking import load_models
 from once_for_all.networks.kws_net import KWSNetLarge
 from once_for_all.run_manager.run_config import KWSRunConfig
 from once_for_all.run_manager.run_manager import RunManager
-
-from once_for_all.elastic_nn.training.progressive_shrinking import load_models
-from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params, get_spectrogram_params, \
-    set_ft_extr_params_to_args
+from utils.config_utils import set_ft_extr_params_to_args
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

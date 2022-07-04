@@ -1,4 +1,8 @@
-__all__ = ['get_mfcc_params', 'get_mel_spectrogram_params']
+__all__ = ['set_ft_extr_params_to_args',
+           'get_mfcc_params',
+           'get_mel_spectrogram_params',
+           'get_spectrogram_params',
+           'get_linear_stft_params']
 
 
 def set_ft_extr_params_to_args(args):
@@ -32,6 +36,8 @@ def set_ft_extr_params_to_args(args):
 
     else:
         raise NotImplementedError
+
+    return args
 
 
 def get_mfcc_params(params_id):
