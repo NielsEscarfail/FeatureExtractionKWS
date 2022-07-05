@@ -80,8 +80,7 @@ elif args.load_from == "expand":
     args.expand_list = "1,2,3"
     args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
-if args.measure_latency:
-    args.measure_latency = "gpu4#cpu"
+args.measure_latency = "gpu4#cpu" if args.measure_latency else None
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 

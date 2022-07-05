@@ -66,7 +66,7 @@ class PerformanceDataset:
         json.dump(net_id_list, open(self.net_id_path, "w"), indent=4)
         return net_id_list
 
-    def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None, measure_latency):
+    def build_dataset(self, run_manager, ofa_net, n_arch=1000, ft_extr_params_list=None, measure_latency=None):
         """
         Samples network architectures and saves the :
         - network configuration:
