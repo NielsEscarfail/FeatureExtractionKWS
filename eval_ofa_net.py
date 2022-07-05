@@ -44,6 +44,9 @@ parser.add_argument("--load_from",
                         "expand",
                     ])
 
+parser.add_argument('--measure_latency', action='store_true')
+parser.set_defaults(measure_latency=False)
+
 args = parser.parse_args()
 
 # Path parameters
@@ -76,6 +79,9 @@ elif args.load_from == "expand":
     args.depth_list = "1,2,3,4"
     args.expand_list = "1,2,3"
     args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
+
+if args.measure_latency:
+    args.measure_latency = "gpu4#cpu"
 
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
@@ -110,6 +116,9 @@ if __name__ == "__main__":
         print('Using GPU.')
     else:
         print('Using CPU.')
+
+    args.base_batch_size = 128
+    args.test_batch_size = args.base_batch_size * 4
 
     run_config = KWSRunConfig(**args.__dict__, num_replicas=num_gpus)
     # Print run config information
@@ -152,4 +161,5 @@ if __name__ == "__main__":
     """
     performance_dataset = PerformanceDataset(args.path, use_csv=args.use_csv)
 
-    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list)
+    performance_dataset.build_dataset(run_manager, ofa_net, n_arch=args.n_arch, ft_extr_params_list=args.ft_extr_params_list, measure_latency=args.measure_latency)
+

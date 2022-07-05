@@ -154,7 +154,7 @@ else:
 
 args.manual_seed = 0
 
-args.base_batch_size = 128  # 512
+args.base_batch_size = 256  # 512
 args.valid_size = 10000
 
 args.momentum = 0.9
