@@ -104,7 +104,7 @@ def get_spectrogram_params(params_id):
     """
     if params_id == 1:
         ft_extr_params_list = [(10, 20), (10, 30), (10, 40)]
-    elif params_id == 3:
+    elif params_id == 2:
         ft_extr_params_list = [(40, 20), (40, 30), (40, 40)]
     elif params_id == 3:
         ft_extr_params_list = [(80, 20), (80, 30), (80, 40)]
