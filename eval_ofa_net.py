@@ -25,7 +25,9 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
+                        "log_mel_spectrogram",
                         "spectrogram",
+                        "log_spectrogram",
                         "linear_stft",
                         "raw"
                     ])
@@ -45,7 +47,7 @@ parser.add_argument("--load_from",
                     ])
 
 parser.add_argument('--measure_latency', action='store_true')
-parser.set_defaults(measure_latency=False)
+parser.set_defaults(measure_latency=True)
 
 args = parser.parse_args()
 
