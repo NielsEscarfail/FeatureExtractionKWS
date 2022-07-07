@@ -257,7 +257,7 @@ class KWSDataProvider:
             for (data, label) in batch:
                 data = transformation(data).transpose(0, -1)
                 if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
-                    data = librosa.power_to_db(data, ref=np.max)
+                    data = torch.log(data + 1e-6)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
@@ -313,7 +313,7 @@ class KWSDataProvider:
             for (data, label) in batch:
                 data = active_transformation(data).transpose(0, -1)
                 if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
-                    data = librosa.power_to_db(data, ref=np.max)
+                    data = torch.log(data + 1e-6)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
