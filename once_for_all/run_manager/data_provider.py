@@ -31,7 +31,7 @@ class KWSDataProvider:
             n_worker=4
     ):
 
-        self.transformations = None
+
         warnings.filterwarnings("ignore")
         self._save_path = save_path
         # move network to GPU if available
@@ -48,7 +48,7 @@ class KWSDataProvider:
         self.active_ft_extr_type = self.ft_extr_type
         self.active_ft_extr_params = self.ft_extr_params_list[0]
         self.active_transformation = None
-
+        self.transformations = []
         self.init_transformations(n_mfcc_bins)
 
         train_loader_class = torch.utils.data.DataLoader
@@ -128,7 +128,7 @@ class KWSDataProvider:
     def data_shape(self):
         if self.ft_extr_type == "lpcc" or self.ft_extr_type == "plp":
             return 1, 1, self.active_ft_extr_params + 1
-        elif self.ft_extr_type == 'mfcc' or 'mel_spectrogram':
+        elif self.ft_extr_type in ['mfcc', 'mel_spectrogram', 'log_mel_spectrogram' 'spectrogram', 'log_spectrogram']:
             return 1, 51, 10
         else:
             return 1, self.active_ft_extr_params[0], self.active_ft_extr_params[1]
@@ -171,7 +171,9 @@ class KWSDataProvider:
 
     def assign_active_ft_extr_params(self, new_ft_extr_params):
         self.active_ft_extr_params = new_ft_extr_params
-        if self.ft_extr_type == 'mfcc' or self.ft_extr_type == 'mel_spectrogram' or self.ft_extr_type == 'spectrogram':
+        if self.ft_extr_type == 'mfcc' \
+                or self.ft_extr_type == 'mel_spectrogram' or self.ft_extr_type == 'log_mel_spectrogram' \
+                or self.ft_extr_type == 'spectrogram' or self.ft_extr_type == 'log_spectrogram':
             transformation_idx = self.ft_extr_params_list.index(new_ft_extr_params)
             self.active_transformation = self.transformations[transformation_idx]
 
@@ -221,7 +223,7 @@ class KWSDataProvider:
                 )
                 self.transformations.append(melspect_transformation)
 
-        elif self.ft_extr_type == 'spectrogram':
+        elif self.ft_extr_type == 'spectrogram' or self.ft_extr_type == 'log_spectrogram':
             for (n_fft, win_size_ms) in self.ft_extr_params_list:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
