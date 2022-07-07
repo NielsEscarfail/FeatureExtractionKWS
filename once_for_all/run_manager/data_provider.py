@@ -224,14 +224,10 @@ class KWSDataProvider:
                 self.transformations.append(melspect_transformation)
 
         elif self.ft_extr_type == 'spectrogram' or self.ft_extr_type == 'log_spectrogram':
-            for (n_fft, win_size_ms) in self.ft_extr_params_list:
-                window_stride_ms = win_size_ms / 2
-                win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
-                hop_length = int(self.audio_processor.desired_samples * window_stride_ms / 1000)
-
+            for (n_fft, hop_length_ms) in self.ft_extr_params_list:
+                hop_length = int(self.audio_processor.desired_samples * hop_length_ms / 1000)
                 spect_transformation = torchaudio.transforms.Spectrogram(
-                    n_fft=n_fft, win_length=win_length,
-                    hop_length=hop_length)
+                    n_fft=n_fft, hop_length=hop_length)
                 self.transformations.append(spect_transformation)
 
     def collate_batch(self, batch):
