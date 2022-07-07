@@ -24,13 +24,14 @@ class KWSDataProvider:
             test_batch_size=512,
             valid_size=None,
             ft_extr_type=["mel_spectrogram"],
-            # "mfcc", "mel_spectrogram", "dwt", "melscale_stft" // "linear_stft" , "lpc", "lpcc"
+            # "mfcc", "mel_spectrogram", "log_mel_spectrogram", "spectrogram", "log_spectrogram", "raw"
             ft_extr_params_list=None,
             n_mfcc_bins=10,
             rank=None,
             n_worker=4
     ):
 
+        self.transformations = None
         warnings.filterwarnings("ignore")
         self._save_path = save_path
         # move network to GPU if available
@@ -207,7 +208,7 @@ class KWSDataProvider:
                     norm='ortho')
                 self.transformations.append(mfcc_transformation)
 
-        elif self.ft_extr_type == 'mel_spectrogram':
+        elif self.ft_extr_type == 'mel_spectrogram' or self.ft_extr_type == 'log_mel_spectrogram':
             for (n_mels, win_size_ms) in self.ft_extr_params_list:
                 window_stride_ms = win_size_ms / 2
                 win_length = int(self.audio_processor.desired_samples * win_size_ms / 1000)
@@ -250,17 +251,21 @@ class KWSDataProvider:
                 labels_placeholder.append(label)
 
         # Preloaded transformations
-        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram' or transformation_type == 'spectrogram':
+        elif transformation_type == 'mfcc' \
+                or transformation_type == 'mel_spectrogram' or transformation_type == 'log_mel_spectrogram' \
+                or transformation_type == 'spectrogram' or transformation_type == 'log_spectrogram':
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
             transformation = self.transformations[transformation_idx]
             for (data, label) in batch:
                 data = transformation(data).transpose(0, -1)
+                if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
+                    data = librosa.power_to_db(data, ref=np.max)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
 
         # Transformation functions
-        elif transformation_type == 'linear_stft':
+        elif transformation_type == 'linear_stft':  # Unused (= Spectrogram)
             n_fft, win_size_ms = ft_extr_params
             window_stride_ms = win_size_ms / 2
 
@@ -278,29 +283,6 @@ class KWSDataProvider:
 
                 data = torch.unsqueeze(data, 0)
 
-                data_placeholder.append(data)
-                labels_placeholder.append(label)
-
-        elif transformation_type == 'lpcc':
-            order = ft_extr_params
-            for i, (data, label) in enumerate(batch):
-                # compute lpcs
-                data = librosa.lpc(np.array(data), order=order)
-                # compute lpccs
-                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order).reshape((-1, 2))
-                data = torch.tensor(data).float()
-                data = torch.unsqueeze(data, dim=0)
-                data_placeholder.append(data)
-                labels_placeholder.append(label)
-
-        elif transformation_type == 'plp':
-            order = ft_extr_params
-            for data, label in batch:
-                data = plp(sig=data,
-                           fs=self.audio_processor.desired_samples,
-                           modelorder=order)
-                data = torch.tensor(data).float()
-                data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
 
@@ -327,9 +309,13 @@ class KWSDataProvider:
                 labels_placeholder.append(label)
 
         # Preloaded transformations
-        elif transformation_type == 'mfcc' or transformation_type == 'mel_spectrogram' or transformation_type == 'spectrogram':
+        elif transformation_type == 'mfcc' \
+                or transformation_type == 'mel_spectrogram' or transformation_type == 'log_mel_spectrogram' \
+                or transformation_type == 'spectrogram' or transformation_type == 'log_spectrogram':
             for (data, label) in batch:
                 data = active_transformation(data).transpose(0, -1)
+                if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
+                    data = librosa.power_to_db(data, ref=np.max)
                 data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
@@ -351,33 +337,6 @@ class KWSDataProvider:
 
                 data = torch.unsqueeze(data, dim=0)
 
-                data_placeholder.append(data)
-                labels_placeholder.append(label)
-
-        # Unused
-
-        elif transformation_type == 'lpcc':
-            order = active_ft_extr_params
-
-            for i, (data, label) in enumerate(batch):
-                # compute lpcs
-                data = librosa.lpc(np.array(data), order=order)
-                # compute lpccs
-                data = self.audio_processor.get_lpcc(sample=data[:, None], order=order).reshape((-1, 2))
-                data = torch.tensor(data).float()
-                data = torch.unsqueeze(data, dim=0)
-                data_placeholder.append(data)
-                labels_placeholder.append(label)
-
-        elif transformation_type == 'plp':
-            order = active_ft_extr_params
-            for i, (data, label) in enumerate(batch):
-                # compute lpcs
-                data = plp(sig=data,
-                           fs=self.audio_processor.desired_samples,
-                           modelorder=order)
-                data = torch.tensor(data).float()
-                data = torch.unsqueeze(data, dim=0)
                 data_placeholder.append(data)
                 labels_placeholder.append(label)
 

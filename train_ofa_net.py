@@ -34,11 +34,10 @@ parser.add_argument("--ft_extr_type",
                     choices=[
                         "mfcc",
                         "mel_spectrogram",
+                        "log_mel_spectrogram",
                         "spectrogram",
+                        "log_spectrogram",
                         "linear_stft",
-                        "lpcc",
-                        "plp",
-                        "ngcc",
                         "raw"
                     ]
                     )

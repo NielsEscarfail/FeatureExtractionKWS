@@ -9,10 +9,10 @@ def set_ft_extr_params_to_args(args):
     if args.ft_extr_type == "mfcc":
         args.n_mfcc_bins, args.ft_extr_params_list = get_mfcc_params(args.params_id)
 
-    elif args.ft_extr_type == "mel_spectrogram":
+    elif args.ft_extr_type == "mel_spectrogram" or args.ft_extr_type == "log_mel_spectrogram":
         args.ft_extr_params_list = get_mel_spectrogram_params(args.params_id)
 
-    elif args.ft_extr_type == "spectrogram":
+    elif args.ft_extr_type == "spectrogram" or args.ft_extr_type == "log_spectrogram":
         args.ft_extr_params_list = get_spectrogram_params(args.params_id)
 
     elif args.ft_extr_type == "linear_stft":  # n_mels unused
@@ -20,19 +20,6 @@ def set_ft_extr_params_to_args(args):
 
     elif args.ft_extr_type == "raw":
         args.ft_extr_params_list = [(125, 128)]
-
-    # Unused for now
-    elif args.ft_extr_type == "lpcc":
-        args.ft_extr_params_list = [7, 9, 11, 13, 15]
-
-    elif args.ft_extr_type == "plp":  # Mega slow?
-        args.ft_extr_params_list = [10, 15, 20, 25, 30, 35, 40]
-
-    elif args.ft_extr_type == "ngcc":  # n_ceps/order, nfilts TODO in progress, might be dropped
-        args.ft_extr_params_list = [(10, 24), (10, 48), (10, 64),
-                                    (20, 24), (20, 48), (20, 64),
-                                    (30, 24), (30, 48), (30, 64),
-                                    (40, 24), (40, 48), (40, 64)]
 
     else:
         raise NotImplementedError
@@ -110,16 +97,19 @@ def get_mel_spectrogram_params(params_id):
 def get_spectrogram_params(params_id):
     """Spectrogram params, shape (n_fft, win_len)
         used:
+            - [(10, 20), (10, 30), (10, 40)]
+            - [(40, 20), (40, 30), (40, 40)]
+            - [(80, 20), (80, 30), (80, 40)]
             - [(400, 20), (400, 30), (400, 40)]
-            - [(1024, 20), (1024, 30), (1024, 40)]
-            - [(2048, 20), (2048, 30), (2048, 40)]
     """
     if params_id == 1:
-        ft_extr_params_list = [(640, 20), (640, 30), (640, 40)]
+        ft_extr_params_list = [(10, 20), (10, 30), (10, 40)]
     elif params_id == 3:
-        ft_extr_params_list = [(1024, 20), (1024, 30), (1024, 40)]
+        ft_extr_params_list = [(40, 20), (40, 30), (40, 40)]
     elif params_id == 3:
-        ft_extr_params_list = [(2048, 20), (2048, 30), (2048, 40)]
+        ft_extr_params_list = [(80, 20), (80, 30), (80, 40)]
+    elif params_id == 4:
+        ft_extr_params_list = [(400, 20), (400, 30), (400, 40)]
     else:
         raise NotImplementedError("params_id %i is not implemented" % params_id)
     return ft_extr_params_list
