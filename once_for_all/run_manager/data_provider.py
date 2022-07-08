@@ -255,7 +255,10 @@ class KWSDataProvider:
             transformation_idx = self.ft_extr_params_list.index(ft_extr_params)
             transformation = self.transformations[transformation_idx]
             for (data, label) in batch:
-                data = transformation(data).transpose(0, -1)
+                if transformation_type == "spectrogram" or transformation_type == "log_spectrogram":
+                    data = transformation(data)
+                else:
+                    data = transformation(data).transpose(0, -1)
                 if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
                     data = torch.log(data + 1e-6)
                 data = torch.unsqueeze(data, dim=0)
@@ -311,7 +314,10 @@ class KWSDataProvider:
                 or transformation_type == 'mel_spectrogram' or transformation_type == 'log_mel_spectrogram' \
                 or transformation_type == 'spectrogram' or transformation_type == 'log_spectrogram':
             for (data, label) in batch:
-                data = active_transformation(data).transpose(0, -1)
+                if transformation_type == "spectrogram" or transformation_type == "log_spectrogram":
+                    data = active_transformation(data)
+                else:
+                    data = active_transformation(data).transpose(0, -1)
                 if transformation_type == 'log_mel_spectrogram' or transformation_type == 'log_spectrogram':
                     data = torch.log(data + 1e-6)
                 data = torch.unsqueeze(data, dim=0)
