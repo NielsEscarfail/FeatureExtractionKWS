@@ -52,7 +52,7 @@ parser.set_defaults(measure_latency=True)
 args = parser.parse_args()
 
 # Path parameters
-args.path = "eval/" + args.ft_extr_type + str(args.params_id) + "/"
+args.path = "eval/" + args.ft_extr_type + str(args.params_id) + "_v2" + "/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type + str(args.params_id)
 
 """Set which model step to evaluate, width_mult_list, ks_list, expand_list and depth_list"""
@@ -83,7 +83,7 @@ elif args.load_from == "expand":
     args.ofa_checkpoint_path += "/kernel_depth2kernel_depth_expand/phase2/checkpoint/model_best.pth.tar"
 
 args.measure_latency = "gpu4#cpu" if args.measure_latency else None
-
+args.measure_latency = None
 """Set ft_extr_params_list depending on the ft_extr_type"""
 
 args = set_ft_extr_params_to_args(args)
