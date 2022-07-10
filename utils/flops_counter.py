@@ -81,21 +81,21 @@ def profile(model, input_size, custom_ops=None, get_bottleneck=False):
 
     total_ops = 0
     total_params = 0
-    max_params = 0
+    max_mem = 0
     for m in model.modules():
         if len(list(m.children())) > 0:  # skip for non-leaf module
             continue
         total_ops += m.total_ops
         total_params += m.total_params
-        if max_params < m.total_params and get_bottleneck:
-            max_params = m.total_params
+        if max_mem < m.total_params + m.total_ops and get_bottleneck:
+            max_mem = m.total_params + m.total_ops
 
     total_ops = total_ops.item()
     total_params = total_params.item()
-    max_params = max_params.item()
+    max_mem = max_mem.item()
 
     model.train(training).to(original_device)
     for handler in handler_collection:
         handler.remove()
 
-    return total_ops, total_params, max_params
+    return total_ops, total_params, max_mem
