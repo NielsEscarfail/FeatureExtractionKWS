@@ -70,6 +70,16 @@ def get_mfcc_params(params_id):
     elif params_id == 8:
         n_mfcc_bins = 40
         ft_extr_params_list = [(40, 40)]
+
+    elif params_id == 9:
+        n_mfcc_bins = 10
+        ft_extr_params_list = [(10, 30), (10, 35), (10, 40),
+                               (15, 30), (15, 35), (15, 40),
+                               (20, 30), (20, 35), (20, 40),
+                               (25, 30), (25, 35), (25, 40),
+                               (30, 30), (30, 35), (30, 40),
+                               (35, 30), (35, 35), (35, 40),
+                               (40, 30), (40, 35), (40, 40)]
     else:
         raise NotImplementedError("params_id not implemented")
 
