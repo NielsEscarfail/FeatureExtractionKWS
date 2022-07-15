@@ -105,7 +105,7 @@ def get_mel_spectrogram_params(params_id):
                                (20, 20), (20, 25), (20, 30),
                                (25, 20), (25, 25), (25, 30),
                                (30, 20), (30, 25), (30, 30),
-                               (35, 20), (35, 25), (35, 30)
+                               (35, 20), (35, 25), (35, 30),
                                (40, 20), (40, 25), (40, 30)]
     else:
         raise NotImplementedError("params_id %i is not implemented" % params_id)
