@@ -100,13 +100,13 @@ def get_mel_spectrogram_params(params_id):
     elif params_id == 3:
         ft_extr_params_list = [(80, 20), (80, 30), (80, 40)]
     elif params_id == 4:
-        ft_extr_params_list = [(10, 20), (10, 25), (10, 30),
-                               (15, 20), (15, 25), (15, 30),
-                               (20, 20), (20, 25), (20, 30),
-                               (25, 20), (25, 25), (25, 30),
-                               (30, 20), (30, 25), (30, 30),
-                               (35, 20), (35, 25), (35, 30),
-                               (40, 20), (40, 25), (40, 30)]
+        ft_extr_params_list = [(10, 20), (10, 24), (10, 28), (10, 32), (10, 36), (10, 40)]
+    elif params_id == 5:
+        ft_extr_params_list = [(20, 20), (20, 24), (20, 28), (20, 32), (20, 36), (20, 40)]
+    elif params_id == 6:
+        ft_extr_params_list = [(30, 20), (30, 24), (30, 28), (30, 32), (30, 36), (30, 40)]
+    elif params_id == 7:
+        ft_extr_params_list = [(40, 20), (40, 24), (40, 28), (40, 32), (40, 36), (40, 40)]
     else:
         raise NotImplementedError("params_id %i is not implemented" % params_id)
     return ft_extr_params_list
