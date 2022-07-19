@@ -35,7 +35,7 @@ Here, an overview over the files is given. The main components are the **dataset
 ├── run_all.sh              <--- Run all training phases then evaluate 1000 subnets
 ├── train_ofa_net.py        <--- Training script
 └── eval_ofa_net.py         <--- Evaluation data-gathering script
-
+```
 
 ### Setup
 Create a new conda environment and install the packages from *environment.yml* (Linux):
