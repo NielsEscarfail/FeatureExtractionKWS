@@ -30,7 +30,7 @@ class KWSDataProvider:
             rank=None,
             n_worker=4
     ):
-
+        # n_worker=0 # local dev Mac usage
 
         warnings.filterwarnings("ignore")
         self._save_path = save_path
@@ -119,6 +119,9 @@ class KWSDataProvider:
         print("Train length: ", len(self.train))
         print("Valid length: ", len(self.valid))
         print("Test length: ", len(self.test))
+        print("Train length: ", len(self.train.dataset))
+        print("Valid length: ", len(self.valid.dataset))
+        print("Test length: ", len(self.test.dataset))
 
     @staticmethod
     def name():

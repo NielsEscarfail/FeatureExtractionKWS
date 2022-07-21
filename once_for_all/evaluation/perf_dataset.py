@@ -250,11 +250,13 @@ class PerformanceDataset:
                     total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
             ) as t:
                 for ft_extr_params in ft_extr_params_list:
+                    print(ft_extr_params)
                     # load val dataset into memory
                     val_dataset = []
                     run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
                     for images, labels in run_manager.run_config.valid_loader:
                         val_dataset.append((images, labels))
+                    print("loaded dataset")
 
                     # save path
                     os.makedirs(self.perf_src_folder, exist_ok=True)
@@ -270,6 +272,8 @@ class PerformanceDataset:
 
                     for net_id in net_id_list:
                         net_setting = self.net_id2setting(net_id)
+                        """net_setting = {"w": [0, 0, 0, 0, 0], "ks": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                         "d": [1, 1, 1, 1], "e": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}"""
                         key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
                         if key in existing_perf_dict:  # If setting already logged, don't test
                             perf_dict[key] = existing_perf_dict[key]
@@ -300,6 +304,7 @@ class PerformanceDataset:
                                 for key, val in net_setting.items()
                             ]
                         )
+                        print("validating")
 
                         # Gather performance results
                         loss, (top1, top5) = run_manager.validate(

@@ -52,7 +52,7 @@ parser.set_defaults(measure_latency=True)
 args = parser.parse_args()
 
 # Path parameters
-args.path = "eval/" + args.ft_extr_type + str(args.params_id) + "_v3" + "/"
+args.path = "eval/" + args.ft_extr_type + str(args.params_id) + "_v4" + "/"
 args.ofa_checkpoint_path = "exp/" + args.ft_extr_type + str(args.params_id)
 
 """Set which model step to evaluate, width_mult_list, ks_list, expand_list and depth_list"""

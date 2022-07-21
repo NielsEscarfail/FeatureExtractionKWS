@@ -144,8 +144,8 @@ def count_net_flops(net, data_shape=(1, 3, 224, 224)):
     if isinstance(net, nn.DataParallel):
         net = net.module
 
-    flop, _, macs = profile(copy.deepcopy(net), data_shape, get_bottleneck=True)
-    return flop, macs
+    flop, _, mem = profile(copy.deepcopy(net), data_shape, get_bottleneck=True)
+    return flop, mem
 
 
 def measure_net_latency(

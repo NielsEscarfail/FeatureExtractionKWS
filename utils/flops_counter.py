@@ -10,22 +10,29 @@ from .my_modules import MyConv2d
 __all__ = ["profile"]
 
 
-def count_convNd(m, _, y):
+def count_convNd(m, x, y):
     cin = m.in_channels
-
     kernel_ops = m.weight.size()[2] * m.weight.size()[3]
     ops_per_element = kernel_ops
-    output_elements = y.nelement()
+    input_elements = x[0].nelement()
+    output_elements = y.nelement()  # cout x oW x oH
 
-    # cout x oW x oH
     total_ops = cin * output_elements * ops_per_element // m.groups
     m.total_ops = torch.zeros(1).fill_(total_ops)
 
+    mem = input_elements + m.total_params.item() + output_elements
+    m.mem = torch.zeros(1).fill_(mem)
 
-def count_linear(m, _, __):
+
+def count_linear(m, x, y):
+    input_elements = x[0].nelement()
+    output_elements = y.nelement()
+
     total_ops = m.in_features * m.out_features
-
     m.total_ops = torch.zeros(1).fill_(total_ops)
+
+    mem = input_elements + m.total_params.item() + output_elements
+    m.mem = torch.zeros(1).fill_(mem)
 
 
 register_hooks = {
@@ -40,6 +47,14 @@ register_hooks = {
     nn.Dropout2d: None,
     nn.Dropout3d: None,
     nn.BatchNorm2d: None,
+}
+
+skip_mem = {
+    nn.Dropout,
+    nn.Dropout2d,
+    nn.Dropout3d,
+    nn.BatchNorm2d,
+    nn.ReLU,
 }
 
 
@@ -87,12 +102,21 @@ def profile(model, input_size, custom_ops=None, get_bottleneck=False):
             continue
         total_ops += m.total_ops
         total_params += m.total_params
-        if max_mem < m.total_params + m.total_ops and get_bottleneck:
-            max_mem = m.total_params + m.total_ops
+        try:
+            mem = m.mem
+        except:
+            continue
+        if type(m) in skip_mem:
+            continue
+        if max_mem < m.mem and get_bottleneck:
+            max_mem = m.mem
 
     total_ops = total_ops.item()
     total_params = total_params.item()
-    max_mem = max_mem.item()
+    try:
+        max_mem = max_mem.item()
+    except:
+        max_mem = -1
 
     model.train(training).to(original_device)
     for handler in handler_collection:
