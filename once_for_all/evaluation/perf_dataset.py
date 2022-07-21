@@ -304,7 +304,6 @@ class PerformanceDataset:
                                 for key, val in net_setting.items()
                             ]
                         )
-                        print("validating")
 
                         # Gather performance results
                         loss, (top1, top5) = run_manager.validate(
