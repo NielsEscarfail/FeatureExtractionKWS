@@ -1,21 +1,21 @@
 """
-Randomly samples N subnets from a given OFAKWSNet.
-Evaluates them and saves their performance results to a csv file.
+Randomly samples --n_arch subnets from a given OFAKWSNet.
+Evaluates them and saves their performance results to json files.
 """
 
+import argparse
 import os
 import random
 import time
 
 import numpy as np
 import torch
-import argparse
 
 from once_for_all.elastic_nn.networks.ofa_kws_net import OFAKWSNet
 from once_for_all.elastic_nn.training.progressive_shrinking import load_models
 from once_for_all.evaluation.perf_dataset import PerformanceDataset
 from once_for_all.run_manager import RunManager, KWSRunConfig
-from utils.config_utils import get_mfcc_params, get_mel_spectrogram_params, set_ft_extr_params_to_args
+from utils.config_utils import set_ft_extr_params_to_args
 
 parser = argparse.ArgumentParser()
 

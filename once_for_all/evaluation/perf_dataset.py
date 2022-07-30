@@ -1,31 +1,26 @@
+# Created by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
+
 import json
 import os
 
-import pandas as pd
-import torch
-from torch import nn
 from tqdm import tqdm
 
-from utils import list_mean, get_net_info, AverageMeter
+from utils import list_mean, get_net_info
 
 
 class PerformanceDataset:
-    def __init__(self, path, use_csv):
+    def __init__(self, path):
         self.path = path
-        self.use_csv = use_csv
         os.makedirs(self.path, exist_ok=True)
 
-    def net_setting2id(self, net_setting):
-        if self.use_csv:
-            return json.dumps(net_setting)
-        else:
-            return json.dumps(net_setting)
+    @staticmethod
+    def net_setting2id(net_setting):
+        return json.dumps(net_setting)
 
+    @staticmethod
     def net_id2setting(self, net_id):
-        if self.use_csv:
-            return net_id
-        else:
-            return json.loads(net_id)
+        return json.loads(net_id)
 
     def net_setting_in_df(self, net_setting, df):
         equal_condition = df['w'] == net_setting['w'] & \
@@ -37,7 +32,7 @@ class PerformanceDataset:
 
     @property
     def net_id_path(self):
-        return os.path.join(self.path, "net_id.csv") if self.use_csv else os.path.join(self.path, "net_id.dict")
+        return os.path.join(self.path, "net_id.dict")
 
     @property
     def perf_src_folder(self):
@@ -45,7 +40,7 @@ class PerformanceDataset:
 
     @property
     def perf_dict_path(self):
-        return os.path.join(self.path, "perf.csv") if self.use_csv else os.path.join(self.path, "perf.dict")
+        return os.path.join(self.path, "perf.dict")
 
     def load_net_id_list(self, ofa_net, n_arch):
         # Load a net_id_list if the net_id_list already gathered is long enough
@@ -74,269 +69,103 @@ class PerformanceDataset:
         - params: number of network parameters in M (/1e6)
         - flops: flops in M (/1e6)
         - latencies: (val, hist) latency and measured latency latencies for selected types, in ms
-        MIGHT BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
+        CAN BE ADDED IF CONFIGURATION ITSELF IS NOT VIABLE / TOO LARGE
         - net_encoding: Encoding which can be used to recover the network
         """
+        print("Using json")
+        net_id_list = self.load_net_id_list(ofa_net, n_arch)
 
-        if self.use_csv:  # DO NOT USE
-            print("Using csv")
-            # Load a net_id_list
-            if os.path.isfile(self.net_id_path):
-                net_id_df = pd.read_csv(self.net_id_path, converters={"w": lambda x: x.strip("[]").split(", "),
-                                                                      "ks": lambda x: x.strip("[]").split(", "),
-                                                                      "d": lambda x: x.strip("[]").split(", "),
-                                                                      "e": lambda x: x.strip("[]").split(", ")
-                                                                      })
-                print("Loaded : ", net_id_df)
-                print("\n\n")
-                net_id_list = net_id_df.values.tolist()
-            else:
-                net_id_list = []
-                while len(net_id_list) < n_arch:
-                    net_setting = ofa_net.sample_active_subnet()
-                    net_id_list.append(net_setting)
+        print("Evaluating %i sub-networks for %i ft_extr_params: " % (len(net_id_list), len(ft_extr_params_list)))
 
-                net_id_df = pd.DataFrame(net_id_list)
-                net_id_df.to_csv(self.net_id_path, index=False)
+        with tqdm(
+                total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
+        ) as t:
+            for ft_extr_params in ft_extr_params_list:
+                print(ft_extr_params)
+                # load val dataset into memory
+                val_dataset = []
+                run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
+                for images, labels in run_manager.run_config.valid_loader:
+                    val_dataset.append((images, labels))
+                print("loaded dataset")
 
-            ft_extr_params_list = (
-                [(40, 30), (40, 40), (40, 50)] if ft_extr_params_list is None else ft_extr_params_list
-            )
+                # save path
+                os.makedirs(self.perf_src_folder, exist_ok=True)
+                perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
+                perf_dict = {}
 
-            with tqdm(
-                    total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
-            ) as t:
-                for ft_extr_params in ft_extr_params_list:
-                    # load val dataset into memory
-                    val_dataset = []
-                    run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
-                    for images, labels in run_manager.run_config.test_loader:
-                        val_dataset.append((images, labels))
-                    # save path
-                    os.makedirs(self.perf_src_folder, exist_ok=True)
+                # load existing performance dict
+                if os.path.isfile(perf_save_path):
+                    existing_perf_dict = json.load(open(perf_save_path, "r"))
+                    print("Loaded existing performance dict of length: ", len(existing_perf_dict))
+                else:
+                    existing_perf_dict = {}
 
-                    perf_save_path = os.path.join(self.perf_src_folder, "%s.csv" % str(list(ft_extr_params)))
-                    perf_list = []
+                for net_id in net_id_list:
+                    net_setting = self.net_id2setting(net_id)
+                    key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
+                    if key in existing_perf_dict:  # If setting already logged, don't test
+                        perf_dict[key] = existing_perf_dict[key]
 
-                    # load existing performance dict
-                    if os.path.isfile(perf_save_path):
-                        existing_perf_df = pd.read_csv(perf_save_path,
-                                                       converters={"w": lambda x: x.strip("[]").split(", "),
-                                                                   "ks": lambda x: x.strip("[]").split(", "),
-                                                                   "d": lambda x: x.strip("[]").split(", "),
-                                                                   "e": lambda x: x.strip("[]").split(", ")
-                                                                   })
-                        print("Loaded existing performance: ", existing_perf_df.head(2))
-                        existing_perf_list = existing_perf_df.values.tolist()
-                    else:
-                        existing_perf_df = None
-                        existing_perf_list = []
-
-                    for net_id in net_id_list:
-                        # net_setting = self.net_id2setting(net_id)
-                        net_setting = net_id
-                        print("net setting ", net_setting)
-                        print("type net setting ", type(net_setting))
-                        print("type wi ", type(net_setting['w']))
-                        key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-
-                        """Add to already loaded performance if it exists"""
-                        if existing_perf_df is not None:
-                            already_evaluated = self.net_setting_in_df(net_setting, existing_perf_df)
-                            if already_evaluated:  # If setting already logged, don't test
-                                # perf_df.append(existing_perf_df[key])
-                                perf_list = perf_list.append(existing_perf_df[already_evaluated])
-                                t.set_postfix(
-                                    {
-                                        "net_id": net_id,
-                                        "ft_extr_params": ft_extr_params,
-                                        "info_val": existing_perf_df[already_evaluated],
-                                        "status": "loading",
-                                    }
-                                )
-                                t.update()
-                                continue
-
-                        """Set subnet and record performance"""
-                        ofa_net.set_active_subnet(**net_setting)
-                        run_manager.reset_running_statistics(ofa_net, )
-                        net_setting_str = ",".join(
-                            [
-                                "%s_%s"
-                                % (
-                                    key,
-                                    "%.1f" % list_mean(val)
-                                    if isinstance(val, list)
-                                    else val,
-                                )
-                                for key, val in net_setting.items()
-                            ]
-                        )
-                        loss, (top1, top5) = run_manager.validate(
-                            run_str=net_setting_str,
-                            net=ofa_net,
-                            data_loader=val_dataset,
-                            no_logs=True,
-                        )
-                        """Create net_info/perf dict and append to net_perf_list"""
-                        data_shape = val_dataset[0][0].shape[1:]
-                        # Gets n_params, flops, latency for gpu4, cpu
-                        net_info = get_net_info(ofa_net,
-                                                input_shape=data_shape,
-                                                measure_latency="gpu4#cpu",
-                                                print_info=False)
-
-                        norm_net_info = pd.json_normalize(net_info, sep='_')
-                        norm_net_info["ft_extr_params_1"] = ft_extr_params[0]
-                        norm_net_info["ft_extr_params_2"] = ft_extr_params[1]
-                        norm_net_info["data_shape"] = str(data_shape)
-                        norm_net_info["top1"] = top1
-                        norm_net_info['key'] = key
-
-                        print("NORM NET INFO ")
-                        print(norm_net_info)
-                        print()
-
-                        norm_net_info.update({'w': net_setting['w']})
-                        norm_net_info.update({'ks': net_setting['ks']})
-                        norm_net_info.update({'e': net_setting['e']})
-                        norm_net_info.update({'d': net_setting['d']})
-                        """norm_net_info['ks'] = net_setting['ks']
-                        norm_net_info['e'] = net_setting['e']
-                        norm_net_info['d'] = net_setting['d']"""
-
-                        # Display
-                        info_val = {  # For display purposes for now
-                            "top1": top1,
-                        }
                         t.set_postfix(
                             {
                                 "net_id": net_id,
                                 "ft_extr_params": ft_extr_params,
-                                "info_val": info_val,
+                                "info_val": perf_dict[key],
+                                "status": "loading",
                             }
                         )
                         t.update()
+                        continue
 
-                        """Save the performance data"""
-                        perf_list.append(norm_net_info)
-
-                        """ if perf_df is None:
-                            # print("perf df is none before : ", perf_df)
-                            perf_df = pd.DataFrame(data=norm_net_info)
-                            perf_df.set_index(['w', 'ks', 'e', 'd'])
-                        else:
-                            # info = pd.DataFrame(data=norm_net_info)
-                            # info.set_index(['w', 'ks', 'e', 'd'])
-                            perf_df = perf_df.append(info)
-                            print("perf df not none afterupdate : ", perf_df)"""
-
-                        print("pref df : ", perf_list)
-
-                    perf_df = pd.DataFrame(data=perf_list)
-                    perf_df.set_index(['w', 'ks', 'e', 'd', 'ft_extr_params1', 'ft_extr_params2'])
-                    perf_df.to_csv(perf_save_path)
-                    print("Saved to csv: ")
-                    print(perf_df)
-                    print()
-
-        else:  # Use json
-            print("Using json")
-            net_id_list = self.load_net_id_list(ofa_net, n_arch)
-
-            print("Evaluating %i sub-networks for %i ft_extr_params: " % (len(net_id_list), len(ft_extr_params_list)))
-
-            with tqdm(
-                    total=len(net_id_list) * len(ft_extr_params_list), desc="Building Performance Dataset"
-            ) as t:
-                for ft_extr_params in ft_extr_params_list:
-                    print(ft_extr_params)
-                    # load val dataset into memory
-                    val_dataset = []
-                    run_manager.run_config.data_provider.assign_active_ft_extr_params(ft_extr_params)
-                    for images, labels in run_manager.run_config.valid_loader:
-                        val_dataset.append((images, labels))
-                    print("loaded dataset")
-
-                    # save path
-                    os.makedirs(self.perf_src_folder, exist_ok=True)
-                    perf_save_path = os.path.join(self.perf_src_folder, "%s.dict" % str(list(ft_extr_params)))
-                    perf_dict = {}
-
-                    # load existing performance dict
-                    if os.path.isfile(perf_save_path):
-                        existing_perf_dict = json.load(open(perf_save_path, "r"))
-                        print("Loaded existing performance dict of length: ", len(existing_perf_dict))
-                    else:
-                        existing_perf_dict = {}
-
-                    for net_id in net_id_list:
-                        net_setting = self.net_id2setting(net_id)
-                        """net_setting = {"w": [0, 0, 0, 0, 0], "ks": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-                         "d": [1, 1, 1, 1], "e": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}"""
-                        key = self.net_setting2id({**net_setting, "ft_extr_params": ft_extr_params})
-                        if key in existing_perf_dict:  # If setting already logged, don't test
-                            perf_dict[key] = existing_perf_dict[key]
-
-                            t.set_postfix(
-                                {
-                                    "net_id": net_id,
-                                    "ft_extr_params": ft_extr_params,
-                                    "info_val": perf_dict[key],
-                                    "status": "loading",
-                                }
+                    # Set sampled subnet
+                    ofa_net.set_active_subnet(**net_setting)
+                    run_manager.reset_running_statistics(ofa_net)
+                    net_setting_str = ",".join(
+                        [
+                            "%s_%s"
+                            % (
+                                key,
+                                "%.1f" % list_mean(val)
+                                if isinstance(val, list)
+                                else val,
                             )
-                            t.update()
-                            continue
+                            for key, val in net_setting.items()
+                        ]
+                    )
 
-                        # Set sampled subnet
-                        ofa_net.set_active_subnet(**net_setting)
-                        run_manager.reset_running_statistics(ofa_net)
-                        net_setting_str = ",".join(
-                            [
-                                "%s_%s"
-                                % (
-                                    key,
-                                    "%.1f" % list_mean(val)
-                                    if isinstance(val, list)
-                                    else val,
-                                )
-                                for key, val in net_setting.items()
-                            ]
-                        )
+                    # Gather performance results
+                    loss, (top1, top5) = run_manager.validate(
+                        run_str=net_setting_str,
+                        net=ofa_net,
+                        data_loader=val_dataset,
+                        no_logs=True,
+                    )
+                    data_shape = val_dataset[0][0].shape[1:]
 
-                        # Gather performance results
-                        loss, (top1, top5) = run_manager.validate(
-                            run_str=net_setting_str,
-                            net=ofa_net,
-                            data_loader=val_dataset,
-                            no_logs=True,
-                        )
-                        data_shape = val_dataset[0][0].shape[1:]
+                    # Gets n_params, flops,
+                    active_subnet = ofa_net.get_active_subnet()
+                    net_info = get_net_info(active_subnet,
+                                            input_shape=data_shape,
+                                            measure_latency=measure_latency,
+                                            print_info=False)
+                    info_val = {
+                        "ft_extr_params": ft_extr_params,
+                        "data_shape": data_shape,
+                        "top1": top1,
+                        "net_info": net_info,
+                    }
 
-                        # Gets n_params, flops,
-                        active_subnet = ofa_net.get_active_subnet()
-                        net_info = get_net_info(active_subnet,
-                                                input_shape=data_shape,
-                                                measure_latency=measure_latency,
-                                                print_info=False)
-                        info_val = {
-                            "ft_extr_params": ft_extr_params,
-                            "data_shape": data_shape,
-                            "top1": top1,
-                            "net_info": net_info,
+                    t.set_postfix(
+                        {
+                            "net_id": net_id,
+                            "acc": top1,
                         }
+                    )
+                    t.update()
 
-                        t.set_postfix(
-                            {
-                                "net_id": net_id,
-                                "acc": top1,
-                            }
-                        )
-                        t.update()
-
-                        perf_dict.update({key: info_val})  # Save accuracy, net_info
-                        json.dump(perf_dict, open(perf_save_path, "w"), indent=4)
+                    perf_dict.update({key: info_val})  # Save accuracy, net_info
+                    json.dump(perf_dict, open(perf_save_path, "w"), indent=4)
 
     def merge_acc_dataset(self, ft_extr_params_list=None):
         # load existing data

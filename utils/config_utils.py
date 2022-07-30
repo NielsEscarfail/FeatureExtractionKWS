@@ -1,3 +1,7 @@
+"""Manages runs parameters with respect to the run id (args.params_id)"""
+
+# Created by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
 __all__ = ['set_ft_extr_params_to_args',
            'get_mfcc_params',
            'get_mel_spectrogram_params',

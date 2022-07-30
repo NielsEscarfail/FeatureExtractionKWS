@@ -1,11 +1,12 @@
+# Modified by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
 import os
 import random
 import warnings
-import librosa
+
 import numpy as np
 import torch.utils.data
 import torchaudio
-from spafe.features.rplp import plp
 from torchaudio.transforms import MFCC
 
 from .dataset import AudioGenerator, AudioProcessor
@@ -115,13 +116,6 @@ class KWSDataProvider:
 
         if self.valid is None:
             self.valid = self.test
-
-        print("Train length: ", len(self.train))
-        print("Valid length: ", len(self.valid))
-        print("Test length: ", len(self.test))
-        print("Train length: ", len(self.train.dataset))
-        print("Valid length: ", len(self.valid.dataset))
-        print("Test length: ", len(self.test.dataset))
 
     @staticmethod
     def name():
@@ -367,18 +361,9 @@ class KWSDataProvider:
 
             new_train_dataset = self.train_dataset()
             chosen_indexes = rand_indexes[:n_images]
-            if num_replicas is not None:
-                sub_sampler = MyDistributedSampler(
-                    new_train_dataset,
-                    num_replicas,
-                    rank,
-                    True,
-                    np.array(chosen_indexes),
-                )
-            else:
-                sub_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-                    chosen_indexes
-                )
+            sub_sampler = torch.utils.data.sampler.SubsetRandomSampler(
+                chosen_indexes
+            )
             sub_data_loader = torch.utils.data.DataLoader(
                 new_train_dataset,
                 batch_size=batch_size,

@@ -1,7 +1,11 @@
-import torch.nn as nn
+# Modified by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
+
 import random
 import time
+
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 
@@ -16,7 +20,7 @@ __all__ = [
 ]
 
 from once_for_all.run_manager.distributed_run_manager import DistributedRunManager
-from utils import val2list, AverageMeter, DistributedMetric, list_mean, cross_entropy_loss_with_soft_target, subset_mean
+from utils import AverageMeter, DistributedMetric, list_mean, cross_entropy_loss_with_soft_target, subset_mean
 
 
 def validate(

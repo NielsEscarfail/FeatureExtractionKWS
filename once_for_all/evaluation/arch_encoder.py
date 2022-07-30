@@ -1,3 +1,6 @@
+# Created by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
+
 import random
 import numpy as np
 

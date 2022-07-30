@@ -1,5 +1,8 @@
-import copy
+# Created by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
+
 import torch.nn as nn
+
 from utils import MyNetwork
 from utils.layers import set_layer_from_config, ResidualBlock, MBConvLayer, IdentityLayer, LinearLayer, \
     ConvLayer
@@ -75,8 +78,8 @@ class KWSNet(MyNetwork):
                 ):
                     m.conv.point_linear.bn.weight.data.zero_()
 
-    """  @property
-    def grouped_block_index(self):
+    @property
+    def grouped_block_index(self):  # Unused in KWSNet, cf OFAKWSNet
         info_list = []
         block_index_list = []
         for i, block in enumerate(self.blocks):
@@ -86,7 +89,7 @@ class KWSNet(MyNetwork):
             block_index_list.append(i)
         if len(block_index_list) > 0:
             info_list.append(block_index_list)
-        return info_list"""
+        return info_list
 
     @staticmethod
     def build_net_via_cfg():

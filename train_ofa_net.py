@@ -1,3 +1,8 @@
+"""
+Trains the OFAKWSNet.
+Please refer to the README.md or the report for more information.
+"""
+
 import argparse
 import os
 import random
@@ -49,15 +54,14 @@ args = parser.parse_args()
 args.path = "exp/" + args.ft_extr_type + str(args.params_id)
 
 args.kd_ratio = .3
-# args.kd_ratio = 0
 args.width_mult_list = "1.0"
 
 if args.task == "normal":
     args.path += "/normal"
     args.dynamic_batch_size = 1
-    args.n_epochs = 140  # 50  # 80  # 140  # 120  # 180 paper
-    args.base_lr = 1e-3  # 1e-3  # 0.001 # 3e-2  # 0.001  # 3e-2  # 1e-3  # 3e-2 - 2.6 paper -> .5-.7?
-    args.warmup_epochs = 5  # 5
+    args.n_epochs = 140
+    args.base_lr = 1e-3
+    args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "7"
     args.depth_list = "4"
@@ -66,38 +70,38 @@ if args.task == "normal":
 elif args.task == "kernel":
     args.path += "/normal2kernel"
     args.dynamic_batch_size = 1
-    args.n_epochs = 100  # 120
-    args.base_lr = 1e-3  # 1e-3
+    args.n_epochs = 100
+    args.base_lr = 1e-3
     args.warmup_epochs = 5
     args.warmup_lr = -1
     args.ks_list = "3,5,7"
-    args.depth_list = "4"  # "4" 3 2 1
+    args.depth_list = "4"
     args.expand_list = "3"
 
 elif args.task == "depth":
     args.path += "/kernel2kernel_depth/phase%d" % args.phase
     args.dynamic_batch_size = 2
     if args.phase == 1:
-        args.n_epochs = 25  # 25
-        args.base_lr = 1e-3  # 1e-3  # 2.5e-3 - 0.08 paper
+        args.n_epochs = 25
+        args.base_lr = 1e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "3,4"  # "3,4"
+        args.depth_list = "3,4"
         args.expand_list = "3"
 
     elif args.phase == 2:
-        args.n_epochs = 25  # 120  # 125 (120 + 5)
-        args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.n_epochs = 25
+        args.base_lr = 1e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
-        args.depth_list = "2,3,4"  # "2,3,4"
+        args.depth_list = "2,3,4"
         args.expand_list = "3"
 
     else:
-        args.n_epochs = 100  # 120  # 125 (120 + 5)
-        args.base_lr = 1e-3  # 1e-3  # 7.5e-3 - 0.24 paper
+        args.n_epochs = 100
+        args.base_lr = 1e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
         args.ks_list = "3,5,7"
@@ -109,7 +113,7 @@ elif args.task == "expand":
     args.path += "/kernel_depth2kernel_depth_expand/phase%d" % args.phase
     args.dynamic_batch_size = 4
     if args.phase == 1:
-        args.n_epochs = 25  # 25
+        args.n_epochs = 25
         args.base_lr = 1e-3
         args.warmup_epochs = 0
         args.warmup_lr = -1
@@ -118,7 +122,7 @@ elif args.task == "expand":
         args.expand_list = "2,3"
 
     elif args.phase == 2:
-        args.n_epochs = 100  # 55 # 120
+        args.n_epochs = 100
         args.base_lr = 1e-3
         args.warmup_epochs = 5
         args.warmup_lr = -1
@@ -126,7 +130,7 @@ elif args.task == "expand":
         args.depth_list = "1,2,3,4"
         args.expand_list = "1,2,3"
 
-elif args.task == "width":  # Unused for now
+elif args.task == "width":  # Unused in our implementation of OFAKWS
     args.path += "/kernel_depth2kernel_depth_expand_width/phase%d" % args.phase
     args.dynamic_batch_size = 8
     if args.phase == 1:
@@ -152,27 +156,21 @@ else:
     raise NotImplementedError
 
 args.manual_seed = 0
-
 args.base_batch_size = 256  # 512
 args.valid_size = 10000
-
 args.momentum = 0.9
 args.no_nesterov = False
 args.weight_decay = 3e-5
 args.label_smoothing = 0.1
 args.no_decay_keys = "bn#bias"
 args.fp16_allreduce = False
-
 args.model_init = "he_fout"
 args.validation_frequency = 3
 args.print_frequency = 5
-
 args.n_worker = 8
-
 args.bn_momentum = 0.1
 args.bn_eps = 1e-5
 args.dropout = 0.1
-
 args.kd_type = "ce"
 
 """Set ft_extr_params_list depending on the ft_extr_type"""

@@ -1,16 +1,18 @@
+# Created by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
+
+
 import copy
 import random
 
 from once_for_all.elastic_nn.modules.dynamic_layers import (
-    DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer, DynamicResBlock
+    DynamicMBConvLayer, DynamicConvLayer, DynamicLinearLayer
 )
 from once_for_all.networks.kws_net import KWSNet
 from utils import make_divisible, MyNetwork
 from utils.common_tools import val2list
 from utils.layers import (
     IdentityLayer,
-    ResidualBlock, ZeroLayer,
-)
+    ResidualBlock, )
 
 __all__ = ["OFAKWSNet"]
 

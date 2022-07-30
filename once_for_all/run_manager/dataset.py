@@ -15,7 +15,7 @@
 # ==============================================================================
 #
 # Adapted by: Cristian Cioflan, ETH (cioflanc@iis.ee.ethz.ch)
-# Modified by: Niels Escarfail, ETH (nescarfail@ethz.ch)
+# Modified by: Niels Escarfail, ETH (nescarfail@student.ethz.ch)
 
 __all__ = ["AudioProcessor", "AudioGenerator"]
 
